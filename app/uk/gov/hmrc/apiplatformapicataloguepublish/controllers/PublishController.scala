@@ -20,10 +20,10 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
-import uk.gov.hmrc.apiplatformapicataloguepublish.config.AppConfig
+
 
 @Singleton()
-class PublishController @Inject()(cc: ControllerComponents, appConfig: AppConfig)
+class PublishController @Inject()(cc: ControllerComponents)
     extends BackendController(cc) {
 
   def publish(serviceName: String): Action[AnyContent] = Action.async { implicit request =>

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.config.AppConfig
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status
@@ -26,9 +25,8 @@ import org.mockito.MockitoSugar
 
 class PublishControllerSpec extends AnyWordSpec with MockitoSugar with  Matchers {
 
-  private val mockAppConfig = mock[AppConfig]
   private val fakeRequest = FakeRequest("POST", "/")
-  private val controller = new PublishController(Helpers.stubControllerComponents(), mockAppConfig)
+  private val controller = new PublishController(Helpers.stubControllerComponents())
 
   "POST /publish/[service-name]" should {
     "return 200" in {

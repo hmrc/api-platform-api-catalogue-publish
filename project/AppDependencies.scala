@@ -10,7 +10,9 @@ object AppDependencies {
   lazy val scalaCheckVersion = "1.14.0"
 
   val compile = Seq(
-    "uk.gov.hmrc"             %% "bootstrap-backend-play-28"  % "5.12.0"
+    "uk.gov.hmrc"             %% "bootstrap-backend-play-28"  % "5.12.0",
+     "com.beachape"            %% "enumeratum-play-json"       % "1.6.0",
+    "org.typelevel"           %% "cats-core"                  % "2.0.0"
   )
 
   val test = Seq(
