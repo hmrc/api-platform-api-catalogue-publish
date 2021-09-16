@@ -16,20 +16,24 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
 
+import uk.gov.hmrc.apiplatformapicataloguepublish.config.AppConfig
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import org.mockito.MockitoSugar
 
-class MicroserviceHelloWorldControllerSpec extends AnyWordSpec with Matchers {
+class PublishControllerSpec extends AnyWordSpec with MockitoSugar with  Matchers {
 
-  private val fakeRequest = FakeRequest("GET", "/")
-  private val controller = new MicroserviceHelloWorldController(Helpers.stubControllerComponents())
+  private val mockAppConfig = mock[AppConfig]
+  private val fakeRequest = FakeRequest("POST", "/")
+  private val controller = new PublishController(Helpers.stubControllerComponents(), mockAppConfig)
 
-  "GET /" should {
+  "POST /publish/[service-name]" should {
     "return 200" in {
-      val result = controller.hello()(fakeRequest)
+      val serviceName = "service1"
+      val result = controller.publish(serviceName)(fakeRequest)
       status(result) shouldBe Status.OK
     }
   }

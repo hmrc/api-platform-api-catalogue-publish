@@ -1,5 +1,6 @@
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
+import bloop.integrations.sbt.BloopDefaults
 
 val appName = "api-platform-api-catalogue-publish"
 
@@ -22,9 +23,18 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(publishingSettings,
     scoverageSettings)
-  .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
   .settings(resolvers += Resolver.jcenterRepo)
+  .configs(IntegrationTest)
+   .settings(integrationTestSettings(): _*)
+   .settings(inConfig(IntegrationTest)(BloopDefaults.configSettings))
+   .settings(
+     Defaults.itSettings,
+     IntegrationTest / Keys.fork := false,
+     IntegrationTest / parallelExecution := false,
+     IntegrationTest / unmanagedSourceDirectories += baseDirectory(_ / "it").value,
+     IntegrationTest / unmanagedResourceDirectories += baseDirectory(_ / "it" / "resources").value,
+     (managedClasspath in IntegrationTest) += (packageBin in Assets).value
+   )
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
 
 
@@ -33,7 +43,7 @@ lazy val scoverageSettings = {
   Seq(
     // Semicolon-separated list of regexs matching classes to exclude
     ScoverageKeys.coverageExcludedPackages := ";.*\\.domain\\.models\\..*;uk\\.gov\\.hmrc\\.BuildInfo;.*\\.Routes;.*\\.RoutesPrefix;;Module;GraphiteStartUp;.*\\.Reverse[^.]*",
-    ScoverageKeys.coverageMinimum := 45,
+    ScoverageKeys.coverageMinimum := 95,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
     parallelExecution in Test := false

@@ -20,12 +20,17 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
+import uk.gov.hmrc.apiplatformapicataloguepublish.config.AppConfig
 
 @Singleton()
-class MicroserviceHelloWorldController @Inject()(cc: ControllerComponents)
+class PublishController @Inject()(cc: ControllerComponents, appConfig: AppConfig)
     extends BackendController(cc) {
 
-  def hello(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok("Hello world"))
+  def publish(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
+    //call api definition to get latest application version?(service name)
+    //get raml from api producer microservice (how do we determine the link for this?)
+    // convert raml to OAS and add our api catalogue specific items.
+    // publish api on api catalogue
+    Future.successful(Ok(s"Hello, $serviceName"))
   }
 }
