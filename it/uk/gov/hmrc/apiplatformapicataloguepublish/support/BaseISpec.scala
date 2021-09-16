@@ -2,8 +2,9 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.support
 
 
 import akka.stream.Materializer
-import org.scalatest.MustMatchers
 import org.scalatestplus.play.PlaySpec
+import org.scalatest._
+import org.scalatestplus.play.WsScalaTestClient
 import play.api.Application
 import play.api.i18n.{Lang, Messages, MessagesApi}
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -14,7 +15,7 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 
 
 abstract class BaseISpec
-  extends PlaySpec with WireMockSupport with MetricsTestSupport with MustMatchers {
+  extends  WordSpec  with OptionValues with WsScalaTestClient with WireMockSupport with MetricsTestSupport with Matchers {
 
   def app: Application
   protected def appBuilder: GuiceApplicationBuilder

@@ -62,10 +62,6 @@ case class ApiDefinition(
 
 case class ApiCategory(value: String) extends AnyVal
 
-case class ApiCategoryDetails(category: String, name: String) {
-  def asApiCategory(): ApiCategory = ApiCategory(category)
-}
-
 case class ApiVersionDefinition(version: ApiVersion, status: ApiStatus, access: ApiAccess, endpoints: NEL[Endpoint], endpointsEnabled: Boolean = false)
 
 sealed trait ApiStatus extends EnumEntry

@@ -26,7 +26,6 @@ trait BasicApiDefinitionJsonFormatters extends CommonJsonFormatters {
   implicit val formatApiContext: Format[ApiContext] = Json.valueFormat[ApiContext]
   implicit val formatApiVersion: Format[ApiVersion] = Json.valueFormat[ApiVersion]
   implicit val formatApiCategory: Format[ApiCategory] = Json.valueFormat[ApiCategory]
-  implicit val formatApiCategoryDetails: Format[ApiCategoryDetails] = Json.format[ApiCategoryDetails]
   implicit val formatApiIdentifier: Format[ApiIdentifier] = Json.format[ApiIdentifier]
 
   implicit val keyReadsApiContext: KeyReads[ApiContext] = key => JsSuccess(ApiContext(key))

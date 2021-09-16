@@ -18,7 +18,8 @@
 
 
 
- import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiDefinition, ApiDefinitionJsonFormatters}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiDefinition, ApiDefinitionJsonFormatters}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.Config
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -35,14 +36,12 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
    val http: HttpClient with WSGet,
    val config: Config)(implicit val ec: ExecutionContext) extends Logging with ApiDefinitionJsonFormatters {
 
-    private def  definitionsUrl(serviceBaseUrl: String) = s"$serviceBaseUrl/api-definition"
-
     private def definitionUrl(serviceBaseUrl: String, serviceName: String) =
       s"$serviceBaseUrl/api-definition/$serviceName"
 
     def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ApiDefinition]] = {
       logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition")
-      val r = http.GET[Option[ApiDefinition]](definitionUrl(config.serviceBaseUrl, serviceName))
+      val r = http.GET[Option[ApiDefinition]](definitionUrl(config.baseUrl, serviceName))
 
       r.recover {
         case NonFatal(e)          =>
@@ -52,7 +51,6 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
     }
   
 }
-
 
 object ApiDefinitionConnector {
   case class Config(baseUrl: String)

@@ -50,7 +50,7 @@ class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport {
       "respond with 200 " in new Setup {
 
         val result: WSResponse = callPublishEndpoint("hello")
-        result.status mustBe OK
+        result.status shouldBe OK
         
       }
 
