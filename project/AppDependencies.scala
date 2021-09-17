@@ -1,4 +1,3 @@
-import play.core.PlayVersion
 import play.core.PlayVersion.current
 import play.sbt.PlayImport._
 import sbt.Keys.libraryDependencies
@@ -8,11 +7,18 @@ import sbt._
 object AppDependencies {
 
   lazy val scalaCheckVersion = "1.14.0"
+  lazy val enumeratumVersion = "1.6.2"
+  lazy val jacksonVersion = "2.12.2"
 
   val compile = Seq(
     "uk.gov.hmrc"             %% "bootstrap-backend-play-28"  % "5.12.0",
-     "com.beachape"            %% "enumeratum-play-json"       % "1.6.0",
-    "org.typelevel"           %% "cats-core"                  % "2.0.0"
+    "com.typesafe.play"                 %% "play-json"                      % "2.9.2",
+    "com.typesafe.play"                 %% "play-json-joda"                 % "2.9.2",
+    "com.beachape"                      %% "enumeratum-play-json"           % enumeratumVersion,
+//    "com.fasterxml.jackson.core"        % "jackson-annotations"             % jacksonVersion,
+//    "com.fasterxml.jackson.core"        % "jackson-databind"                % jacksonVersion,
+//    "com.fasterxml.jackson.dataformat"  % "jackson-dataformat-yaml"         % jacksonVersion,
+    "org.typelevel"                     %% "cats-core"                      % "2.4.2"
   )
 
   val test = Seq(

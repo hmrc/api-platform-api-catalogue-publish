@@ -1,9 +1,7 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.support.{
-  ApiDefinitionStub,
-  ServerBaseISpec
-}
+import org.scalatest.BeforeAndAfterEach
+import uk.gov.hmrc.apiplatformapicataloguepublish.support.{ApiDefinitionStub, MetricsTestSupport, ServerBaseISpec}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -20,8 +18,8 @@ class ApiDefinitionConnectorISpec
     extends ServerBaseISpec
     with ApiDefinitionStub
     with ApiDefinitionBuilder
-    with ApiDefinitionJsonFormatters 
-    with ApiDefinitionData {
+    with ApiDefinitionJsonFormatters
+    with ApiDefinitionData  with BeforeAndAfterEach with MetricsTestSupport{
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -33,6 +31,11 @@ class ApiDefinitionConnectorISpec
         "microservice.services.api-definition.host" -> wireMockHost,
         "microservice.services.api-definition.port" -> wireMockPort
       )
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    givenCleanMetricRegistry()
+  }
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 

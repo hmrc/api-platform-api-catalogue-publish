@@ -1,17 +1,18 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
 
+import org.scalatest.BeforeAndAfterEach
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
+import uk.gov.hmrc.apiplatformapicataloguepublish.support.{AwaitTestSupport, MetricsTestSupport, ServerBaseISpec}
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.support.{AwaitTestSupport, ServerBaseISpec}
 import scala.collection.immutable
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport {
+class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport with BeforeAndAfterEach with MetricsTestSupport{
 
 
   protected override def appBuilder: GuiceApplicationBuilder =
@@ -23,7 +24,13 @@ class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport {
         "auditing.consumer.baseUri.port" -> wireMockPort
       )
 
-        val url = s"http://localhost:$port/api-platform-api-catalogue-publish/publish"
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    givenCleanMetricRegistry()
+  }
+
+  val url = s"http://localhost:$port/api-platform-api-catalogue-publish/publish"
 
   val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
