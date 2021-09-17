@@ -39,18 +39,18 @@ class ApiDefinitionConnectorISpec
       app.injector.instanceOf[ApiDefinitionConnector]
 
     val categories = List(ApiCategory("category1"), ApiCategory("category2"))
+    val serviceName = "my-service"
+    val versions = List(apiVersion(version = ApiVersion.random), apiVersion(version = (ApiVersion("2.0"))))
 
-    val apiDefinition1 = apiDefinition("my-service")
-          .withVersions(apiVersion(version = ApiVersion.random), apiVersion(version = ApiVersion.random))
-      .withCategories(categories)
+    val apiDefinition1 = ApiDefinition(serviceName, s"$serviceName-name", s"$serviceName-description", ApiContext.random, false, false, versions.toList, categories)
   }
 
   "ApiDeifintionConnector" should {
     "returns an api definition" in new Setup {
-      val serviceName = "my-service"
+      val jsonBody = Json.toJson(apiDefinition1).toString
       primeGetByServiceName(
         OK,
-        Json.toJson(apiDefinition1).toString,
+        jsonBody,
         serviceName
       )
       val result =
@@ -61,7 +61,6 @@ class ApiDefinitionConnectorISpec
         }
     }
     "return an exception" in new Setup {
-      val serviceName = "my-service"
       primeGetByServiceName(
         BAD_REQUEST,
         Json.toJson(apiDefinition1).toString,
