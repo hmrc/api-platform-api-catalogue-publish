@@ -12,6 +12,7 @@ lazy val microservice = Project(appName, file("."))
     majorVersion                     := 0,
     scalaVersion                     := "2.12.13",
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
+    Test / unmanagedSourceDirectories += baseDirectory(_ / "test-common").value,
     // ***************
     // Use the silencer plugin to suppress warnings
     scalacOptions += "-P:silencer:pathFilters=routes",
@@ -33,6 +34,7 @@ lazy val microservice = Project(appName, file("."))
      IntegrationTest / parallelExecution := false,
      IntegrationTest / unmanagedSourceDirectories += baseDirectory(_ / "it").value,
      IntegrationTest / unmanagedResourceDirectories += baseDirectory(_ / "it" / "resources").value,
+     IntegrationTest / unmanagedResourceDirectories += baseDirectory(_ / "test-common").value,
      (managedClasspath in IntegrationTest) += (packageBin in Assets).value
    )
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)

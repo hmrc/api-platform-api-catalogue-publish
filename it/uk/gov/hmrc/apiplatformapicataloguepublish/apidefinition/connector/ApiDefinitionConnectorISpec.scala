@@ -14,12 +14,14 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiVersion._
 import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 
 class ApiDefinitionConnectorISpec
     extends ServerBaseISpec
     with ApiDefinitionStub
     with ApiDefinitionBuilder
-    with ApiDefinitionJsonFormatters {
+    with ApiDefinitionJsonFormatters 
+    with ApiDefinitionData {
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -35,14 +37,7 @@ class ApiDefinitionConnectorISpec
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   trait Setup {
-    val objInTest: ApiDefinitionConnector =
-      app.injector.instanceOf[ApiDefinitionConnector]
-
-    val categories = List(ApiCategory("category1"), ApiCategory("category2"))
-    val serviceName = "my-service"
-    val versions = List(apiVersion(version = ApiVersion.random), apiVersion(version = (ApiVersion("2.0"))))
-
-    val apiDefinition1 = ApiDefinition(serviceName, s"$serviceName-name", s"$serviceName-description", ApiContext.random, false, false, versions.toList, categories)
+    val objInTest: ApiDefinitionConnector = app.injector.instanceOf[ApiDefinitionConnector]
   }
 
   "ApiDeifintionConnector" should {
