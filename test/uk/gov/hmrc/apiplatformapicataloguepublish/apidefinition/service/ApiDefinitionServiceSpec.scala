@@ -16,24 +16,55 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service
 
-import org.scalatest.matchers.should.Matchers
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import org.scalatest.wordspec.AnyWordSpec
+import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.MockitoSugar
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
+import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
+
+import scala.concurrent.Future
 
 
-class ApiDefinitionServiceSpec extends AnyWordSpec with MockitoSugar with Matchers {
+class ApiDefinitionServiceSpec extends AnyWordSpec with MockitoSugar  with Matchers
+  with HeaderCarrierConverter with ApiDefinitionData with ScalaFutures{
 
-  private val connector = mock[ApiDefinitionConnector]
-  private val service = new ApiDefinitionService(connector)
+  private val mockConnector = mock[ApiDefinitionConnector]
 
   trait Setup {
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+
+    val objInTest = new ApiDefinitionService(mockConnector)
   }
 
   "getDefinitionByServiceName" should {
-    "return an Api Definition" in {
-      val serviceName = "service1"
+    val serviceName = "service1"
+    "return an Api Definition from connector when connector returns api definition" in new Setup{
+
+      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        .thenReturn(Future.successful(Option(apiDefinition1)))
+      val result: Option[ApiDefinition] = await(objInTest.getDefinitionByServiceName(serviceName))
+      result shouldBe Some(apiDefinition1)
+
+      verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
 
     }
+
+    "return None when connector returns None" in new Setup{
+
+      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        .thenReturn(Future.successful(None))
+      val result: Option[ApiDefinition] = await(objInTest.getDefinitionByServiceName(serviceName))
+      result shouldBe None
+
+      verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+
+    }
+
   }
 }
