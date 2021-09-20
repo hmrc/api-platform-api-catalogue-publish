@@ -51,6 +51,7 @@ object ApiIdentifier {
 }
 
 case class ApiDefinition(
+  serviceBaseUrl: String,
     serviceName: String,
     name: String,
     description: String,

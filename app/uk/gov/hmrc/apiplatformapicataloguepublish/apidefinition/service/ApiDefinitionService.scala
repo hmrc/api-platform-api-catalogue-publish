@@ -21,11 +21,29 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefini
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 @Singleton()
 class ApiDefinitionService @Inject() (apiDefinitionConnector: ApiDefinitionConnector) {
 
-  def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ApiDefinition]] = {
-    apiDefinitionConnector.getDefinitionByServiceName(serviceName)
+  def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier, ex: ExecutionContext): Future[Option[String]] = {
+    apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(maybeApiDefinition =>
+      maybeApiDefinition
+      .map(x => s"${getBaseUrl(x)}/api/conf/${getLatestVersion(x)}/application.raml")
+    )
+    //get raml from api producer microservice (how do we determine the link for this?)
+    // convert raml to OAS and add our api catalogue specific items.
+    // publish api on api catalogue
+  }
+
+  
+  private def getBaseUrl(apiDefintion: ApiDefinition): String = {
+    //apiDefintion.serviceBaseUrl
+    s"http://localhost:9820" // customs-declarations running locally
+  }
+
+  private def getLatestVersion(apiDefintion: ApiDefinition): String = {
+    apiDefintion.versions.headOption.map(apiVersionDefinition => apiVersionDefinition.version.value).getOrElse("1.0")
+
   }
 }

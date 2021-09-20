@@ -21,7 +21,9 @@ class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport with
         "metrics.enabled" -> true,
         "auditing.enabled" -> false,
         "auditing.consumer.baseUri.host" -> wireMockHost,
-        "auditing.consumer.baseUri.port" -> wireMockPort
+        "auditing.consumer.baseUri.port" -> wireMockPort,
+        "microservice.services.api-definition.host" -> wireMockHost,
+        "microservice.services.api-definition.port" -> wireMockPort
       )
 
 

@@ -90,6 +90,7 @@ trait ApiDefinitionJsonFormatters extends EndpointJsonFormatters with BasicApiDe
   implicit val apiVersionWrites: Writes[ApiVersionDefinition] = Json.writes[ApiVersionDefinition]
 
   implicit val apiDefinitionReads: Reads[ApiDefinition] = (
+    (JsPath \ "serviceBaseUrl").read[String] and
     (JsPath \ "serviceName").read[String] and
       (JsPath \ "name").read[String] and
       (JsPath \ "description").read[String] and
