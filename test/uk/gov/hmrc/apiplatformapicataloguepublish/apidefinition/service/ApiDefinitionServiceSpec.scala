@@ -27,7 +27,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefini
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
@@ -48,8 +48,8 @@ class ApiDefinitionServiceSpec extends AnyWordSpec with MockitoSugar  with Match
 
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
         .thenReturn(Future.successful(Option(apiDefinition1)))
-      val result: Option[ApiDefinition] = await(objInTest.getDefinitionByServiceName(serviceName))
-      result shouldBe Some(apiDefinition1)
+      val result: Option[String] = await(objInTest.getDefinitionByServiceName(serviceName))
+      result shouldBe Some("http://localhost:9820/api/conf/1.0/application.raml")
 
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
 
@@ -59,7 +59,7 @@ class ApiDefinitionServiceSpec extends AnyWordSpec with MockitoSugar  with Match
 
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
         .thenReturn(Future.successful(None))
-      val result: Option[ApiDefinition] = await(objInTest.getDefinitionByServiceName(serviceName))
+      val result: Option[String] = await(objInTest.getDefinitionByServiceName(serviceName))
       result shouldBe None
 
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))

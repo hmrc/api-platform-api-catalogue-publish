@@ -24,9 +24,9 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class ApiDefinitionService @Inject() (apiDefinitionConnector: ApiDefinitionConnector) {
+class ApiDefinitionService @Inject() (apiDefinitionConnector: ApiDefinitionConnector)(implicit val ec: ExecutionContext) {
 
-  def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier, ex: ExecutionContext): Future[Option[String]] = {
+  def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[String]] = {
     apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(maybeApiDefinition =>
       maybeApiDefinition
       .map(x => s"${getBaseUrl(x)}/api/conf/${getLatestVersion(x)}/application.raml")
@@ -43,7 +43,8 @@ class ApiDefinitionService @Inject() (apiDefinitionConnector: ApiDefinitionConne
   }
 
   private def getLatestVersion(apiDefintion: ApiDefinition): String = {
-    apiDefintion.versions.headOption.map(apiVersionDefinition => apiVersionDefinition.version.value).getOrElse("1.0")
+    //apiDefintion.versions.headOption.map(apiVersionDefinition => apiVersionDefinition.version.value).getOrElse("1.0")
+    "1.0"
 
   }
 }

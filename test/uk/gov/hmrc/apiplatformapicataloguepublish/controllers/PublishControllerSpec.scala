@@ -28,22 +28,29 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service.ApiDefin
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
+import org.scalatest.BeforeAndAfterEach
 
 
-class PublishControllerSpec extends AnyWordSpec with MockitoSugar with  Matchers with ApiDefinitionData {
+class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAndAfterEach with  Matchers with ApiDefinitionData {
 
   private val fakeRequest = FakeRequest("POST", "/")
   private val mockApiDefinitionService = mock[ApiDefinitionService]
   private val controller = new PublishController(mockApiDefinitionService, Helpers.stubControllerComponents())
 
+    override def beforeEach(): Unit = {
+    super.beforeEach()
+    reset(mockApiDefinitionService)
+  }
+
 
   "POST /publish/[service-name]" should {
    val serviceName = "service1"
     "return 200 and an api defintion" in {
-      when(mockApiDefinitionService.getDefinitionByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Option(apiDefinition1)))
+      val resultString = "url"
+      when(mockApiDefinitionService.getDefinitionByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Option(resultString)))
       val result = controller.publish(serviceName)(fakeRequest)
       status(result) shouldBe Status.OK
-      contentAsString(result) shouldBe "Hello, defintion for service1 found with 2 versions"
+      contentAsString(result) shouldBe resultString
       verify(mockApiDefinitionService).getDefinitionByServiceName(eqTo(serviceName))(any[HeaderCarrier])
     }
 
@@ -51,7 +58,7 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with  Matchers
       when(mockApiDefinitionService.getDefinitionByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(None))
       val result = controller.publish(serviceName)(fakeRequest)
       status(result) shouldBe Status.OK
-      contentAsString(result) shouldBe "Hello, no definition found for service1"
+      contentAsString(result) shouldBe "None"
       verify(mockApiDefinitionService).getDefinitionByServiceName(eqTo(serviceName))(any[HeaderCarrier])
     }
   }

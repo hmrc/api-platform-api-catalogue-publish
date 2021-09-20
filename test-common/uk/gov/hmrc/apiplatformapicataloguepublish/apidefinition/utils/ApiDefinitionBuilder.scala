@@ -29,7 +29,7 @@ trait ApiDefinitionBuilder {
                      name: String,
                      versions: ApiVersionDefinition*
                    ) = {
-    ApiDefinition(name, name, name, ApiContext(name), false, false, versions.toList)
+    ApiDefinition(serviceBaseUrl = "service base url", name, name, name, ApiContext(name), false, false, versions.toList)
   }
 
   def apiAccess() = {
