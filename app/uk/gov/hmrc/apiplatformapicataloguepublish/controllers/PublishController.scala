@@ -19,18 +19,24 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service.ApiDefinitionService
 
 
 @Singleton()
-class PublishController @Inject()(cc: ControllerComponents)
+class PublishController @Inject()(apiDefinitionService: ApiDefinitionService, cc: ControllerComponents)(implicit val ec: ExecutionContext)
     extends BackendController(cc) {
 
   def publish(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
     //call api definition to get latest application version?(service name)
+    apiDefinitionService.getDefinitionByServiceName(serviceName).map(
+    maybeApiDefinition =>
+      maybeApiDefinition match {
+      case None => Ok(s"Hello, no definition found for $serviceName")
+      case Some(apiDefiintion) => Ok(s"Hello, defintion for $serviceName found with ${apiDefiintion.versions.size} versions")
+      })
     //get raml from api producer microservice (how do we determine the link for this?)
     // convert raml to OAS and add our api catalogue specific items.
     // publish api on api catalogue
-    Future.successful(Ok(s"Hello, $serviceName"))
   }
 }
