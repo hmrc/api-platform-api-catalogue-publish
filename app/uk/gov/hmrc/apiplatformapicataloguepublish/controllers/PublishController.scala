@@ -29,8 +29,8 @@ class PublishController @Inject() (apiDefinitionService: ApiDefinitionService, c
     //call api definition to get latest application version?(service name)
     apiDefinitionService.getDefinitionByServiceName(serviceName).map(maybeResult =>
       maybeResult match {
-        case None      => Ok("None")
-        case Some(url) => Ok(url)
+        case Right(ramlString: String)      => Ok(ramlString)
+        case Left(e: Throwable) => InternalServerError(s"something went Wrong ${e.getMessage()}")
       }
     )
   }
