@@ -53,7 +53,7 @@ class ApiDefinitionConnectorISpec
       )
       val result =
         await(objInTest.getDefinitionByServiceName(serviceName)) match {
-          case Some(x: ApiDefinition) => x shouldBe apiDefinition1
+          case Right(x: ApiDefinition) => x shouldBe apiDefinition1
           case _                      => fail
 
         }

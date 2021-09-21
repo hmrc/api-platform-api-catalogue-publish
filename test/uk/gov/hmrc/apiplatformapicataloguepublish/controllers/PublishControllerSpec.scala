@@ -60,7 +60,7 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAnd
 
       when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(notFoundException)))
       val result = controller.publish(serviceName)(fakeRequest)
-      status(result) shouldBe Status.NOT_FOUND
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
     }
   }

@@ -29,8 +29,6 @@ import scala.concurrent.ExecutionContext
 @Singleton()
 class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, apiRamlParser: ApiRamlParser)(implicit val ec: ExecutionContext) {
 
-    val PROXY_SAFE_CONTENT_TYPE = "Proxy-Safe-Content-Type"
-
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, String]] = {
 
     for {

@@ -50,7 +50,6 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar  with Matchers
 
   "publishByServiceName" should {
     val serviceName = "service1"
-    val url = "serviceBaseUrl/api/conf/2.0/application.raml"
     "return an Api Definition from connector when connector returns api definition" in new Setup{
 
 

@@ -19,7 +19,7 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
 import play.api.Logging
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext}
 import webapi.{Raml10, WebApiDocument}
 import scala.compat.java8._
 @Singleton
