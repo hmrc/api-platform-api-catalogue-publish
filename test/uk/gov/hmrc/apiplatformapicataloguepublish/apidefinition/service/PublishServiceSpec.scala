@@ -29,26 +29,30 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiRamlParser
+import uk.gov.hmrc.http.NotFoundException
 
 
-class ApiDefinitionServiceSpec extends AnyWordSpec with MockitoSugar  with Matchers
+class PublishServiceSpec extends AnyWordSpec with MockitoSugar  with Matchers
   with HeaderCarrierConverter with ApiDefinitionData with ScalaFutures{
 
   private val mockConnector = mock[ApiDefinitionConnector]
+  private val mockApiRamlParser = mock[ApiRamlParser]
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    val objInTest = new ApiDefinitionService(mockConnector)
+    val objInTest = new PublishService(mockConnector, mockApiRamlParser)
   }
 
-  "getDefinitionByServiceName" should {
+  "publishByServiceName" should {
     val serviceName = "service1"
     "return an Api Definition from connector when connector returns api definition" in new Setup{
 
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
-        .thenReturn(Future.successful(Option(apiDefinition1)))
-      val result: Option[String] = await(objInTest.getDefinitionByServiceName(serviceName))
+        .thenReturn(Future.successful(Right(apiDefinition1)))
+      
+      val result = await(objInTest.publishByServiceName(serviceName))
       result shouldBe Some("http://localhost:9820/api/conf/1.0/application.raml")
 
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
@@ -57,10 +61,12 @@ class ApiDefinitionServiceSpec extends AnyWordSpec with MockitoSugar  with Match
 
     "return None when connector returns None" in new Setup{
 
+      val notFoundException = new NotFoundException(" unable to fetch definition")
+
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
-        .thenReturn(Future.successful(None))
-      val result: Option[String] = await(objInTest.getDefinitionByServiceName(serviceName))
-      result shouldBe None
+        .thenReturn(Future.successful(Left(notFoundException)))
+      val result  = await(objInTest.publishByServiceName(serviceName))
+      result shouldBe Left(notFoundException)
 
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
 

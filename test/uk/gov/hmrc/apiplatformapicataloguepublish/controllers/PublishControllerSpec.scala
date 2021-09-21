@@ -24,22 +24,23 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import org.mockito.MockitoSugar
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service.ApiDefinitionService
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service.PublishService
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
 import org.scalatest.BeforeAndAfterEach
+import uk.gov.hmrc.http.NotFoundException
 
 
 class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAndAfterEach with  Matchers with ApiDefinitionData {
 
   private val fakeRequest = FakeRequest("POST", "/")
-  private val mockApiDefinitionService = mock[ApiDefinitionService]
-  private val controller = new PublishController(mockApiDefinitionService, Helpers.stubControllerComponents())
+  private val mockPublishService = mock[PublishService]
+  private val controller = new PublishController(mockPublishService, Helpers.stubControllerComponents())
 
     override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockApiDefinitionService)
+    reset(mockPublishService)
   }
 
 
@@ -47,19 +48,20 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAnd
    val serviceName = "service1"
     "return 200 and an api defintion" in {
       val resultString = "url"
-      when(mockApiDefinitionService.getDefinitionByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Option(resultString)))
+      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Right(resultString)))
       val result = controller.publish(serviceName)(fakeRequest)
       status(result) shouldBe Status.OK
       contentAsString(result) shouldBe resultString
-      verify(mockApiDefinitionService).getDefinitionByServiceName(eqTo(serviceName))(any[HeaderCarrier])
+      verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
     }
 
     "return 200 and NO api defintion" in {
-      when(mockApiDefinitionService.getDefinitionByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(None))
+      val notFoundException = new NotFoundException(" unable to fetch definition")
+
+      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(notFoundException)))
       val result = controller.publish(serviceName)(fakeRequest)
-      status(result) shouldBe Status.OK
-      contentAsString(result) shouldBe "None"
-      verify(mockApiDefinitionService).getDefinitionByServiceName(eqTo(serviceName))(any[HeaderCarrier])
+      status(result) shouldBe Status.NOT_FOUND
+      verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
     }
   }
 }

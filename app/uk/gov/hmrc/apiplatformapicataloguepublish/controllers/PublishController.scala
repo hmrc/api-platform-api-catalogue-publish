@@ -20,14 +20,14 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service.ApiDefinitionService
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service.PublishService
 
 @Singleton()
-class PublishController @Inject() (apiDefinitionService: ApiDefinitionService, cc: ControllerComponents)(implicit val ec: ExecutionContext) extends BackendController(cc) {
+class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)(implicit val ec: ExecutionContext) extends BackendController(cc) {
 
   def publish(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
     //call api definition to get latest application version?(service name)
-    apiDefinitionService.getDefinitionByServiceName(serviceName).map(maybeResult =>
+    publishService.publishByServiceName(serviceName).map(maybeResult =>
       maybeResult match {
         case Right(ramlString: String)      => Ok(ramlString)
         case Left(e: Throwable) => InternalServerError(s"something went Wrong ${e.getMessage()}")

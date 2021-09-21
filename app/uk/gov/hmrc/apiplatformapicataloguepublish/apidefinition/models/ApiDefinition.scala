@@ -18,7 +18,6 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models
 
 import cats.data.{NonEmptyList => NEL}
 import enumeratum._
-import scala.util.Random
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models.ApplicationId
 
@@ -30,7 +29,6 @@ object ApiContext {
   implicit val ordering: Ordering[ApiContext] = new Ordering[ApiContext] {
     override def compare(x: ApiContext, y: ApiContext): Int = x.value.compareTo(y.value)
   }
-   def random = ApiContext(Random.alphanumeric.take(10).mkString)
 }
 
 case class ApiVersion(value: String) extends AnyVal
@@ -41,7 +39,6 @@ object ApiVersion {
   implicit val ordering: Ordering[ApiVersion] = new Ordering[ApiVersion] {
     override def compare(x: ApiVersion, y: ApiVersion): Int = x.value.compareTo(y.value)
   }
-  def random = ApiVersion(Random.nextDouble().toString)
 }
 
 case class ApiIdentifier(context: ApiContext, version: ApiVersion)
@@ -64,6 +61,12 @@ case class ApiDefinition(
 case class ApiCategory(value: String) extends AnyVal
 
 case class ApiVersionDefinition(version: ApiVersion, status: ApiStatus, access: ApiAccess, endpoints: NEL[Endpoint], endpointsEnabled: Boolean = false)
+
+object ApiVersionDefinition {
+    implicit val ordering: Ordering[ApiVersionDefinition] = new Ordering[ApiVersionDefinition] {
+    override def compare(x: ApiVersionDefinition, y: ApiVersionDefinition): Int = y.version.value.compareTo(x.version.value)
+  }
+}
 
 sealed trait ApiStatus extends EnumEntry
 
