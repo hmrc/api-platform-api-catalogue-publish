@@ -49,22 +49,8 @@ class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, 
 
   private def getRamlString(apiDefinition: ApiDefinition) = {
     apiRamlParser
-      .getRaml(getBaseUrl(apiDefinition)+s"/api/conf/${getLatestVersion(apiDefinition)}/application.raml")
+      .getRaml(ApiDefinition.getRamlUri(apiDefinition))
       .map(x => Right(x.raw.get.toString))
 
-  }
-
-  private def getBaseUrl(apiDefinition: ApiDefinition): String = {
-    apiDefinition.serviceBaseUrl
-    //s"http://localhost:9820" // customs-declarations running locally
-    //https://customs-declarations.protected.mdtp
-  }
-
-  private def getLatestVersion(apiDefinition: ApiDefinition): String = {
-
-  // TODO: Do we need to filter out any RETIRED and/or DEPRECATED APIs?
-    apiDefinition.versions
-    .sorted
-    .headOption.map(apiVersionDefinition => apiVersionDefinition.version.value).getOrElse("1.0")
   }
 }
