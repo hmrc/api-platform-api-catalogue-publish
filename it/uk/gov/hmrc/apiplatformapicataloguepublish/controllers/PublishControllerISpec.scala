@@ -9,10 +9,19 @@ import play.api.test.Helpers.{BAD_REQUEST, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatformapicataloguepublish.support.{AwaitTestSupport, MetricsTestSupport, ServerBaseISpec}
 
 import scala.collection.immutable
+import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import webapi.{WebApiDocument, Raml10}
+import scala.io.Source
+import uk.gov.hmrc.apiplatformapicataloguepublish.support.{ApiDefinitionStub, ApiProducerTeamStub}
+import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
 
-class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport with BeforeAndAfterEach with MetricsTestSupport{
+import java.nio.file.Paths
+
+class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport with BeforeAndAfterEach with MetricsTestSupport
+with ApiDefinitionStub with ApiProducerTeamStub with ApiDefinitionData with ApiDefinitionJsonFormatters {
 
 
   protected override def appBuilder: GuiceApplicationBuilder =
@@ -52,28 +61,29 @@ class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport with
       def callPublishEndpoint(serviceName: String)={
         callPostEndpoint(s"$url/$serviceName", body= "", List.empty)
       }
+
+    def getWebApiDocument(filePath: String): WebApiDocument = {
+      val fileContents = Source.fromResource(filePath).mkString
+      Raml10.parse(fileContents)
+        .get(5, TimeUnit.SECONDS).asInstanceOf[WebApiDocument]
+    }
+
+    def absoluteRamlFilePath =  Paths.get(".").toAbsolutePath().toString().replace(".", "") + "it/resources/test-ramlFile.raml"
+
   }
 
   "PublishController" when {
 
     "POST /publish/[serviceName]" should {
       "respond with 200 " in new Setup {
-
-        val result: WSResponse = callPublishEndpoint("hello")
+        val serviceName = "my-service"
+        val apiDefinitionAsString = Json.toJson(apiDefinition1).toString
+         primeGetByServiceName(OK, apiDefinitionAsString,  serviceName )
+        primeGETWithFileContents(ApiDefinition.getRamlUri(apiDefinition1) , absoluteRamlFilePath, OK)
+        val result: WSResponse = callPublishEndpoint(serviceName)
         result.status shouldBe OK
         
       }
-
-  
-
-   
     }
-
-   
-    
-
-
   }
-
-
 }
