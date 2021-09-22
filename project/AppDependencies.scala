@@ -16,9 +16,6 @@ object AppDependencies {
     "com.typesafe.play"                 %% "play-json-joda"                 % "2.9.2",
     "com.beachape"                      %% "enumeratum-play-json"           % enumeratumVersion,
     "org.raml"                          % "webapi-parser"                   % "0.5.0",
-//    "com.fasterxml.jackson.core"        % "jackson-annotations"             % jacksonVersion,
-//    "com.fasterxml.jackson.core"        % "jackson-databind"                % jacksonVersion,
-//    "com.fasterxml.jackson.dataformat"  % "jackson-dataformat-yaml"         % jacksonVersion,
     "org.typelevel"                     %% "cats-core"                      % "2.4.2"
   )
 
