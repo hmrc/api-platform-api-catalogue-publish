@@ -4,14 +4,12 @@ import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.apiplatformapicataloguepublish.support.{ApiDefinitionStub, MetricsTestSupport, ServerBaseISpec}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, Upstream4xxResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinitionJsonFormatters
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiVersion._
-import uk.gov.hmrc.http.BadRequestException
-import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 
 class ApiDefinitionConnectorISpec
@@ -53,7 +51,7 @@ class ApiDefinitionConnectorISpec
       )
       val result =
         await(objInTest.getDefinitionByServiceName(serviceName)) match {
-          case Right(x: ApiDefinition) => x shouldBe apiDefinition1
+          case Right(x: ApiDefinition) => x mustBe apiDefinition1
           case _                      => fail
 
         }
@@ -64,9 +62,12 @@ class ApiDefinitionConnectorISpec
         Json.toJson(apiDefinition1).toString,
         serviceName
       )
-      intercept[UpstreamErrorResponse] {
-        await(objInTest.getDefinitionByServiceName(serviceName))
-      }.statusCode shouldBe BAD_REQUEST
+
+       val result =  await(objInTest.getDefinitionByServiceName(serviceName))
+      result match {
+        case Left(e: uk.gov.hmrc.http.Upstream4xxResponse) => succeed
+        case _ => fail()
+      }
 
     }
   }
