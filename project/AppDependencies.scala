@@ -16,7 +16,8 @@ object AppDependencies {
     "com.typesafe.play"                 %% "play-json-joda"                 % "2.9.2",
     "com.beachape"                      %% "enumeratum-play-json"           % enumeratumVersion,
     "org.raml"                          % "webapi-parser"                   % "0.5.0",
-    "org.typelevel"                     %% "cats-core"                      % "2.4.2"
+    "org.typelevel"                     %% "cats-core"                      % "2.4.2",
+    "io.swagger.parser.v3"              % "swagger-parser-v3"               % "2.0.24"
   )
 
   val test = Seq(
