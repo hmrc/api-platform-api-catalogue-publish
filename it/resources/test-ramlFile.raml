@@ -1,463 +1,399 @@
 #%RAML 1.0
----
-
-title: Customs Declarations
-description: Submit, cancel or amend customs declarations
-version: 3.0
+title: Agent Authorisation
+version: 1.0
 protocols: [ HTTPS ]
 baseUri: https://api.service.hmrc.gov.uk/
-mediaType: application/xml
+mediaType: [ application/json, application/hal+json ]
+description: An API allowing MTD-enabled Agents to request authorisation to a service for a client, instead of filling the 64-8 paper form.
+
+documentation:
+ - title: Overview
+   content: !include docs/overview.md
+ - title: Change Log
+   content: !include docs/change-log.md
+ - title: Why use this API?
+   content: !include docs/why-use-this-api.md
+ - title: Usage scenario
+   content: !include docs/usage-scenario.md
+ - title: Versioning
+   content: !include https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/versioning.md
+ - title: Errors
+   content: !include https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/errors.md
 
 uses:
   sec: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/securitySchemes.raml
+  headers: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/headers.raml
   annotations: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/annotations.raml
   types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
 
-documentation:
-  - title: Overview
-    content: !include docs/overview.md
-  - title: Versioning
-    content: !include https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/versioning.md
-  - title: Errors
-    content: !include https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/errors.md
-  - title: Testing
-    content: !include docs/testing.md
-  - title: XML Schemas
-    content: !include docs/schema.md
+traits:
 
-/customs/declarations:
-  /:
-    post:
-      displayName: Submit a Customs Declaration
-      description: Allows submission of a Customs Declaration.
-      headers:
-        Accept:
-          description: Specifies the version of the API that you want to call. See [versioning](/api-documentation/docs/reference-guide#versioning).
-          type: string
-          required: true
-          example: application/vnd.hmrc.3.0+xml
-        Content-Type:
-          description: Specifies the format of the request body, which must be XML. UTF-8 is the only valid character set.
-          type: string
-          required: true
-          example: application/xml; charset=UTF-8
-        X-Badge-Identifier:
-          description: |
-            Represents the end-user who is interacting with the subscribed application.
+  permissionOnAgencyRequired:
+    responses:
+      403:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              noPermissionOnAgency:
+                description: The user that is signed in cannot access this authorisation request. Their details do not match the agent business that created the authorisation request.
+                value:
+                  code: NO_PERMISSION_ON_AGENCY
+                  message: The user that is signed in cannot access this authorisation request. Their details do not match the agent business that created the authorisation request.
 
-            CSPs must have an X-Badge-Identifier or X-Submitter-Identifier.
+  mustBeAnAgent:
+    responses:
+      403:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              notAnAgent:
+                description: This user does not have a Government Gateway agent account. They need to create an Government Gateway agent account before they can use this service.
+                value:
+                  code: NOT_AN_AGENT
+                  message: This user does not have a Government Gateway agent account. They need to create an Government Gateway agent account before they can use this service.
 
-            Must be 6 to 12 characters, consisting of any combination of numeric digits and/or upper-case letters.
-          type: string
-          required: false
-          example: ABC123
-        X-Submitter-Identifier:
-          description: |
-            The EORI associated with the originating owner of the declaration.
+  agentSubscriptionRequired:
+    responses:
+      403:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              agentNotSubscribed:
+                description: This agent needs to create an agent services account before they can use this service.
+                value:
+                  code: AGENT_NOT_SUBSCRIBED
+                  message: This agent needs to create an agent services account before they can use this service.
 
-            CSPs must have an X-Badge-Identifier or X-Submitter-Identifier.
+  clientRegistrationRequired:
+    responses:
+      403:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              clientRegistrationNotFound:
+                description: The details provided for this client do not match HMRC's records.
+                value:
+                  code: CLIENT_REGISTRATION_NOT_FOUND
+                  message: The details provided for this client do not match HMRC's records.
 
-            Must have a maximum length of 17 characters, consisting of any combination of numeric digits and/or letters.
-          type: string
-          required: false
-          example: GB123456789000
-      (annotations.scope): "write:customs-declaration"
-      securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-declaration" ] } ]
-      body:
-        application/xml:
-          type: !include schemas/customs/wrapper_submit.xsd
-          example: !include examples/example_messages/Trade%20Test%2016.0%20Sample%20Messages/TT_EX01a/TT_EX01a_v1.8.xml
+  invitationMustHaveValidStatus:
+    responses:
+      403:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              invalidInvitationStatus:
+                description: This authorisation request cannot be cancelled as the client has already responded to the request, or the request has expired.
+                value:
+                  code: INVALID_INVITATION_STATUS
+                  message: This authorisation request cannot be cancelled as the client has already responded to the request, or the request has expired.
+
+  invitationMustHaveSupportedClientType:
+    responses:
+      400:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              invalidInvitationStatus:
+                description: The client type requested is not supported. Check the API documentation to find which client types are supported.
+                value:
+                  code: CLIENT_TYPE_NOT_SUPPORTED
+                  message: The client type requested is not supported. Check the API documentation to find which client types are supported.
+
+  invitationSpecified:
+    responses:
+      404:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              invitationNotFound:
+                description: The authorisation request cannot be found.
+                value:
+                  code: INVITATION_NOT_FOUND
+                  message: The authorisation request cannot be found.
+
+  serviceSpecified:
       responses:
-        202:
         400:
           body:
-            application/xml:
-              description: Invalid XML Payload
-              type: !include schemas/customs/error.xsd
-              example: |
-                  <?xml version="1.0" encoding="UTF-8"?>
-                  <errorResponse>
-                      <code>BAD_REQUEST</code>
-                      <message>Payload is not valid according to schema</message>
-                      <errors>
-                          <error>
-                              <code>xml_validation_error</code>
-                              <message>Error at line 13, column 13: no declaration found for element 'unknown'</message>
-                          </error>
-                      </errors>
-                  </errorResponse>
-        500:
-          body:
-            application/xml:
-              description: Internal server error
-              type: !include schemas/customs/error.xsd
-              example: |
-                  <?xml version="1.0" encoding="UTF-8"?>
-                  <errorResponse>
-                      <code>INTERNAL_SERVER_ERROR</code>
-                      <message>Internal server error</message>
-                  </errorResponse>
+            application/json:
+              type: types.errorResponse
+              examples:
+                invitationNotFound:
+                  description: The service requested is not supported. Check the API documentation to find which services are supported.
+                  value:
+                    code: SERVICE_NOT_SUPPORTED
+                    message: The service requested is not supported. Check the API documentation to find which services are supported.
 
-  /cancellation-requests:
-      post:
-        displayName: Submit a cancellation request
-        description: Allows submission of a cancellation request.
-        headers:
-          Accept:
-            description: Specifies the version of the API that you want to call. See [versioning](/api-documentation/docs/reference-guide#versioning).
-            type: string
-            required: true
-            example: application/vnd.hmrc.3.0+xml
-          Content-Type:
-            description: Specifies the format of the request body, which must be XML. UTF-8 is the only valid character set.
-            type: string
-            required: true
-            example: application/xml; charset=UTF-8
-          X-Badge-Identifier:
-            description: |
-              Represents the end-user who is interacting with the subscribed application.
-
-              CSPs must have an X-Badge-Identifier or X-Submitter-Identifier.
-
-              Must be 6 to 12 characters, consisting of any combination of numeric digits and/or upper-case letters.
-            type: string
-            required: false
-            example: ABC123
-          X-Submitter-Identifier:
-            description: |
-              The EORI associated with the originating owner of the declaration.
-
-              CSPs must have an X-Badge-Identifier or X-Submitter-Identifier.
-
-              Must have a maximum length of 17 characters, consisting of any combination of numeric digits and/or letters.
-            type: string
-            required: false
-            example: GB123456789000
-        (annotations.scope): "write:customs-declaration"
-        securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-declaration" ] } ]
-        body:
-          application/xml:
-            type: !include schemas/customs/wrapper_cancel.xsd
-            example: !include examples/example_messages/Trade%20Test%2016.0%20Sample%20Messages/TT_IM10b/TT_IM10b_Cancellation_V1.3.xml
+  validatePayload:
         responses:
-          202:
           400:
             body:
-              application/xml:
-                description: Invalid XML Payload
-                type: !include schemas/customs/error.xsd
-                example: |
-                    <?xml version="1.0" encoding="UTF-8"?>
-                    <errorResponse>
-                        <code>BAD_REQUEST</code>
-                        <message>Payload is not valid according to schema</message>
-                        <errors>
-                            <error>
-                                <code>xml_validation_error</code>
-                                <message>Error at line 13, column 13: no declaration found for element 'unknown'</message>
-                            </error>
-                        </errors>
-                    </errorResponse>
-          500:
-            body:
-              application/xml:
-                description: Internal server error
-                type: !include schemas/customs/error.xsd
-                example: |
-                    <?xml version="1.0" encoding="UTF-8"?>
-                    <errorResponse>
-                        <code>INTERNAL_SERVER_ERROR</code>
-                        <message>Internal server error</message>
-                    </errorResponse>
+              application/json:
+                type: types.errorResponse
+                examples:
+                  invitationNotFound:
+                    description: The payload is invalid.
+                    value:
+                      code: INVALID_PAYLOAD
+                      message: The payload is invalid.
 
-  /file-upload:
-      post:
-        displayName: Submit an upload initiate request
-        description: | 
-          Obtain a signed URL to upload files to.
-          
-          The SuccessRedirect and ErrorRedirect fields are optional.
-          
-          If you provide them when you POST your file, then the response will be an automatic redirect. 
-          
-          If you do not require these redirects for your application, then do not provide these redirect fields.
-          
-          ### File upload workflow
-          Once you receive a successful response from this endpoint, use the information in the response to POST your file to the URL provided.
-          
-          You must use multipart encoding (multipart/form-data) NOT application/x-www-form-urlencoded.
-          
-          The 'file' field must be the last field in the submitted form.
-          
-        headers:
-          Accept:
-            description: Specifies the version of the API that you want to call. See [versioning](/api-documentation/docs/reference-guide#versioning).
-            type: string
-            required: true
-            example: application/vnd.hmrc.3.0+xml
-          Content-Type:
-            description: Specifies the format of the request body, which must be XML. UTF-8 is the only valid character set.
-            type: string
-            required: true
-            example: application/xml; charset=UTF-8
-          X-Badge-Identifier:
-            description: |
-              Represents the end-user who is interacting with the subscribed application.
 
-              CSPs must have an X-Badge-Identifier or X-Submitter-Identifier.
+  clientIdSpecified:
+    responses:
+        400:
+          body:
+            application/json:
+              type: types.errorResponse
+              examples:
+                invalidClientId:
+                  description: Client identifier must be in the correct format. Check the API documentation to find the correct format.
+                  value:
+                    code: CLIENT_ID_FORMAT_INVALID
+                    message: Client identifier must be in the correct format. Check the API documentation to find the correct format.
+                clientIdMatchesService:
+                  description: The type of client Identifier provided cannot be used with the requested service. Check the API documentation for details of the correct client identifiers to use.
+                  value:
+                    code: CLIENT_ID_DOES_NOT_MATCH_SERVICE
+                    message: The type of client Identifier provided cannot be used with the requested service. Check the API documentation for details of the correct client identifiers to use.
+                invalidPostcode:
+                  description: Postcode must be in the correct format. Check the API documentation to find the correct format.
+                  value:
+                    code: POSTCODE_FORMAT_INVALID
+                    message: Postcode must be in the correct format. Check the API documentation to find the correct format.
+                invalidVatRegistrationDate:
+                  description: VAT registration date must be in the correct format. Check the API documentation to find the correct format.
+                  value:
+                    code: VAT_REG_DATE_FORMAT_INVALID
+                    message: VAT registration date must be in the correct format. Check the API documentation to find the correct format.
 
-              Must be 6 to 12 characters, consisting of any combination of numeric digits and/or upper-case letters.
-            type: string
-            required: false
-            example: ABC123
-          X-Eori-Identifier:
-            description: |
-              The EORI associated with the originating owner of the declaration.
+  knownFactMatches:
+    responses:
+        403:
+          body:
+            application/json:
+              type: types.errorResponse
+              examples:
+                postcodeDoesNotMatch:
+                  description: The postcode provided does not match HMRC's record for the client.
+                  value:
+                    code: POSTCODE_DOES_NOT_MATCH
+                    message: The postcode provided does not match HMRC's record for the client.
+                vatRegistrationDateDoesNotMatch:
+                  description: The VAT registration date provided does not match HMRC's record for the client.
+                  value:
+                    code: VAT_REG_DATE_DOES_NOT_MATCH
+                    message: The VAT registration date provided does not match HMRC's record for the client.
 
-              CSPs must have an X-Badge-Identifier or X-Eori-Identifier.
+  pendingAuthorisationExists:
+    responses:
+            403:
+              body:
+                application/json:
+                  type: types.errorResponse
+                  examples:
+                    duplicateAuthorisationRequest:
+                      description: A pending invitation already exists between the agent and client for this service.
+                      value:
+                        code: DUPLICATE_AUTHORISATION_REQUEST
+                        message: An authorisation request for this service has already been created and is awaiting the client’s response.
 
-              Must be numbers and letters with a maximum length of 17 characters.
+  activeAuthorisationExists:
+      responses:
+              403:
+                body:
+                  application/json:
+                    type: types.errorResponse
+                    examples:
+                      alreadyAuthorised:
+                        description: An active relationship already exists between the agent and client for this service.
+                        value:
+                          code: ALREADY_AUTHORISED
+                          message: The client has already authorised the agent for this service. The agent does not need ask the client for this authorisation again.
 
-            type: string
-            required: false
-            example: GB123456789000
-        (annotations.scope): "write:customs-declaration"
-        securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-declaration" ] } ]
+  relationshipNotFound:
+    responses:
+      404:
         body:
-          application/xml:
-            type: !include schemas/wco/fileupload/FileUploadRequest.xsd
-            example: !include examples/example_file_upload_202.xml
+          application/json:
+            type: types.errorResponse
+            examples:
+              notfoundrelationship:
+                description: Relationship is inactive. Agent is not authorised to act for this client.
+                value:
+                  code: RELATIONSHIP_NOT_FOUND
+                  message: Relationship is inactive. Agent is not authorised to act for this client.
+
+  headerErrors:
+    responses:
+      400:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              badRequestUnsupportedVersion:
+                  description: Missing or unsupported version found in 'Accept' header.
+                  value:
+                    code: BAD_REQUEST
+                    message: Missing or unsupported version number
+              badRequestUnsupportedContentType:
+                  description: Missing or unsupported found in 'Accept' header.
+                  value:
+                    code: BAD_REQUEST
+                    message: Missing or unsupported content-type.
+      406:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              acceptHeaderMissing:
+                description: Missing 'Accept' header.
+                value:
+                  code: ACCEPT_HEADER_INVALID
+                  message: Missing 'Accept' header.
+              acceptHeaderInvalid:
+                  description: Invalid 'Accept' header.
+                  value:
+                    code: ACCEPT_HEADER_INVALID
+                    message: Invalid 'Accept' header
+
+  standardErrors:
+    responses:
+      400:
+         body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              badRequest:
+                  description: Bad Request
+                  value:
+                    code: BAD_REQUEST
+                    message: Bad Request
+      401:
+         body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              unauthorizedRequest:
+                  description: Bearer token is missing or not authorized.
+                  value:
+                    code: UNAUTHORIZED
+                    message: Bearer token is missing or not authorized.
+      500:
+         body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              internalServerRequest:
+                  description: INTERNAL_SERVER_ERROR
+                  value:
+                    code: INTERNAL_SERVER_ERROR
+                    message: Internal server error.
+
+/agents/{arn}:
+  /invitations:
+    is: [headers.acceptHeader, mustBeAnAgent, agentSubscriptionRequired, permissionOnAgencyRequired, headerErrors, standardErrors]
+    uriParameters:
+      arn:
+        description: !include docs/arn_see_here.md
+        type: string
+        example: AARN9999999
+    post:
+      is: [serviceSpecified, invitationMustHaveSupportedClientType, clientIdSpecified, clientRegistrationRequired, knownFactMatches, pendingAuthorisationExists, activeAuthorisationExists, validatePayload]
+      displayName: Create a new authorisation
+      (annotations.scope): "write:sent-invitations"
+      securedBy: [ sec.oauth_2_0: { scopes: [ "write:sent-invitations" ] } ]
+      body:
+          application/json:
+            description: Create a new authorisation request. The request will expire after 21 days.
+            type: !include schemas/create-invitation.json
+            examples:
+              example-1:
+                value: !include examples/post-agency-invitations-example.json
+              example-2:
+                value: !include examples/post-agency-invitations-vat-example.json
+
+      responses:
+        204:
+          description: The authorisation request was created successfully.
+          headers:
+            Location:
+              example: /agents/AARN9999999/invitations/CS5AK7O8FPC43
+              description: Location of the authorisation request.
+
+    get:
+      displayName: Get all authorisation requests for the last 30 days
+      (annotations.scope): "read:sent-invitations"
+      securedBy: [ sec.oauth_2_0: { scopes: [ "read:sent-invitations" ] } ]
+
+      responses:
+        200:
+          body:
+            application/json:
+              description: Returns all authorisation requests for the last 30 days.
+              type: !include schemas/invitations.json
+              examples:
+                pending and responded: !include examples/get-agency-invitations-example.json
+
+        204:
+          description: The agent has no authorisation requests for the last 30 days.
+
+    /{invitationId}:
+      is: [headers.acceptHeader, mustBeAnAgent, agentSubscriptionRequired, permissionOnAgencyRequired, invitationSpecified, headerErrors, standardErrors]
+      uriParameters:
+        invitationId:
+          description: A unique authorisation request ID
+          type: string
+          example: CS5AK7O8FPC43
+      get:
+        displayName: Get an invitation by id
+        (annotations.scope): "read:sent-invitations"
+        securedBy: [ sec.oauth_2_0: { scopes: [ "read:sent-invitations" ] } ]
         responses:
           200:
             body:
-              application/xml:
-                description: Successful response payload
-                type: !include schemas/wco/fileupload/FileUploadResponse.xsd
-                example: !include examples/FileUploadResponseExample.xml
-          400:
-            body:
-              application/xml:
-                description: Invalid XML Payload
-                type: !include schemas/customs/error.xsd
-                example: |
-                    <?xml version="1.0" encoding="UTF-8"?>
-                    <errorResponse>
-                        <code>BAD_REQUEST</code>
-                        <message>Payload is not valid according to schema</message>
-                        <errors>
-                            <error>
-                                <code>xml_validation_error</code>
-                                <message>Error at line 13, column 13: no declaration found for element 'unknown'</message>
-                            </error>
-                        </errors>
-                    </errorResponse>
-          500:
-            body:
-              application/xml:
-                description: Internal server error
-                type: !include schemas/customs/error.xsd
-                example: |
-                    <?xml version="1.0" encoding="UTF-8"?>
-                    <errorResponse>
-                        <code>INTERNAL_SERVER_ERROR</code>
-                        <message>Internal server error</message>
-                    </errorResponse>
+              application/json:
+                description: Returns the authorisation request.
+                type: !include schemas/invitation.json
+                examples:
+                  pending: !include examples/get-agency-invitation-pending-example.json
+                  responded: !include examples/get-agency-invitation-responded-example.json
+      delete:
+        is: [invitationMustHaveValidStatus]
+        displayName: Cancel an invitation by id
+        (annotations.scope): "write:cancel-invitations"
+        securedBy: [ sec.oauth_2_0: { scopes: [ "write:cancel-invitations" ] } ]
+        responses:
+          204:
+            description: The authorisation request has been cancelled successfully.
 
-  /amend:
+  /relationships:
+    is: [headers.acceptHeader, clientRegistrationRequired, knownFactMatches, mustBeAnAgent, agentSubscriptionRequired, permissionOnAgencyRequired, relationshipNotFound, serviceSpecified, clientIdSpecified, headerErrors, standardErrors]
+    uriParameters:
+      arn:
+        description: !include docs/arn_see_here.md
+        type: string
+        example: AARN9999999
     post:
-      displayName: Submit a Customs Amend Declaration
-      description: Allows submission of a Customs Amend Declaration.
-      headers:
-        Accept:
-          description: Specifies the version of the API that you want to call. See [versioning](/api-documentation/docs/reference-guide#versioning).
-          type: string
-          required: true
-          example: application/vnd.hmrc.3.0+xml
-        Content-Type:
-          description: Specifies the format of the request body, which must be XML. UTF-8 is the only valid character set.
-          type: string
-          required: true
-          example: application/xml; charset=UTF-8
-        X-Badge-Identifier:
-          description: |
-            Represents the end-user who is interacting with the subscribed application.
-
-            CSPs must have an X-Badge-Identifier or X-Submitter-Identifier.
-
-            Must be 6 to 12 characters, consisting of any combination of numeric digits and/or upper-case letters.
-          type: string
-          required: false
-          example: ABC123
-        X-Submitter-Identifier:
-          description: |
-            The EORI associated with the originating owner of the declaration.
-
-            CSPs must have an X-Badge-Identifier or X-Submitter-Identifier.
-
-            Must have a maximum length of 17 characters, consisting of any combination of numeric digits and/or letters.
-          type: string
-          required: false
-          example: GB123456789000
-      (annotations.scope): "write:customs-declaration"
-      securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-declaration" ] } ]
+      displayName: Get Status of a Relationship
+      (annotations.scope): "read:check-relationship"
+      securedBy: [ sec.oauth_2_0: { scopes: [ "read:check-relationship" ] } ]
       body:
-        application/xml:
-          type: !include schemas/customs/wrapper_submit.xsd
-          example: !include examples/example_messages/Trade%20Test%2016.0%20Sample%20Messages/TT_IM02b/TT_IM02b_Amendment_V1.2.xml
+        application/json:
+          description: Check Relationship based on the details received.
+          type: !include schemas/check-relationship.json
+          examples:
+            example-1:
+              value: !include examples/post-agency-check-relationship-itsa-example.json
+            example-2:
+              value: !include examples/post-agency-check-relationship-vat-example.json
       responses:
-        202:
-        400:
-          body:
-            application/xml:
-              description: Invalid XML Payload
-              type: !include schemas/customs/error.xsd
-              example: |
-                  <?xml version="1.0" encoding="UTF-8"?>
-                  <errorResponse>
-                      <code>BAD_REQUEST</code>
-                      <message>Payload is not valid according to schema</message>
-                      <errors>
-                          <error>
-                              <code>xml_validation_error</code>
-                              <message>Error at line 13, column 13: no declaration found for element 'unknown'</message>
-                          </error>
-                      </errors>
-                  </errorResponse>
-        500:
-          body:
-            application/xml:
-              description: Internal server error
-              type: !include schemas/customs/error.xsd
-              example: |
-                  <?xml version="1.0" encoding="UTF-8"?>
-                  <errorResponse>
-                      <code>INTERNAL_SERVER_ERROR</code>
-                      <message>Internal server error</message>
-                  </errorResponse>
-
-  /arrival-notification:
-    post:
-      displayName: Submit an Arrival Notification Declaration
-      description: Allows submission of a Customs Arrival Notification Declaration.
-      headers:
-        Accept:
-          description: Specifies the version of the API that you want to call. See [versioning](/api-documentation/docs/reference-guide#versioning).
-          type: string
-          required: true
-          example: application/vnd.hmrc.3.0+xml
-        Content-Type:
-          description: Specifies the format of the request body, which must be XML. UTF-8 is the only valid character set.
-          type: string
-          required: true
-          example: application/xml; charset=UTF-8
-        X-Badge-Identifier:
-          description: |
-            Represents the end-user who is interacting with the subscribed application.
-
-            CSPs must have an X-Badge-Identifier or X-Submitter-Identifier.
-
-            Must be 6 to 12 characters, consisting of any combination of numeric digits and/or upper-case letters.
-          type: string
-          required: false
-          example: ABC123
-        X-Submitter-Identifier:
-          description: |
-            The EORI associated with the originating owner of the declaration.
-
-            CSPs must have an X-Badge-Identifier or X-Submitter-Identifier.
-
-            Must have a maximum length of 17 characters, consisting of any combination of numeric digits and/or letters.
-          type: string
-          required: false
-          example: GB123456789000
-      (annotations.scope): "write:customs-declaration"
-      securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-declaration" ] } ]
-      body:
-        application/xml:
-          type: !include schemas/customs/wrapper_submit.xsd
-          example: !include examples/example_messages/Trade%20Test%2016.0%20Sample%20Messages/TT_IM10a/Example%20Movement%20Messages/GPN.xml
-      responses:
-        202:
-        400:
-          body:
-            application/xml:
-              description: Invalid XML Payload
-              type: !include schemas/customs/error.xsd
-              example: |
-                  <?xml version="1.0" encoding="UTF-8"?>
-                  <errorResponse>
-                      <code>BAD_REQUEST</code>
-                      <message>Payload is not valid according to schema</message>
-                      <errors>
-                          <error>
-                              <code>xml_validation_error</code>
-                              <message>Error at line 13, column 13: no declaration found for element 'unknown'</message>
-                          </error>
-                      </errors>
-                  </errorResponse>
-        500:
-          body:
-            application/xml:
-              description: Internal server error
-              type: !include schemas/customs/error.xsd
-              example: |
-                  <?xml version="1.0" encoding="UTF-8"?>
-                  <errorResponse>
-                      <code>INTERNAL_SERVER_ERROR</code>
-                      <message>Internal server error</message>
-                  </errorResponse>
-
-  /status-request:
-    /mrn:
-      /{mrn}:
-        uriParameters:
-          mrn:
-            description: Movement Reference Number
-            type: string
-            example: "19GBL4592NCOI21NR9"
-        get:
-          displayName: Get the status of a declaration (deprecated)
-          description: |
-            *This endpoint has been deprecated. It is still functional but it will be removed in a future release.*
-
-
-            *Use the [Customs Declarations Information API](/api-documentation/docs/api/service/customs-declarations-information) instead.*
-
-
-            Get the status of a declaration with the given MRN. This endpoint is only available to CSP users.
-          headers:
-            Accept:
-              description: Specifies the version of the API that you want to call. See [versioning](/api-documentation/docs/reference-guide#versioning).
-              type: string
-              required: true
-              example: application/vnd.hmrc.3.0+xml
-            X-Badge-Identifier:
-              description: |
-                Represents the end-user who is interacting with the subscribed application.
-
-                CSPs must have an X-Badge-Identifier or X-Submitter-Identifier.
-
-                Must be 6 to 12 characters, consisting of any combination of numeric digits and/or upper-case letters.
-              type: string
-              required: true
-              example: ABC123
-          (annotations.scope): "write:customs-declaration"
-          securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-declaration" ] } ]
-          responses:
-            200:
-              body:
-                application/xml:
-                  description: Successful response payload
-                  type: !include schemas/wco/declaration/declarationInformationRetrievalStatusResponse.xsd
-                  example: !include examples/DeclarationStatusResponseExample.xml
-            500:
-              body:
-                application/xml:
-                  description: Internal server error
-                  type: !include schemas/customs/error.xsd
-                  example: |
-                      <?xml version="1.0" encoding="UTF-8"?>
-                      <errorResponse>
-                          <code>INTERNAL_SERVER_ERROR</code>
-                          <message>Internal server error</message>
-                      </errorResponse>
+        204:
+          description: Relationship is active. Agent is authorised to act for the client.

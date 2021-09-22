@@ -14,7 +14,7 @@ trait ApiProducerTeamStub {
       .willReturn(
         aResponse()
           .withStatus(status)
-          .withHeader("Content-Type", "application/raml")
+          .withHeader("Content-Type", "application/octet-stream")
           withBody(bArray)
       )
     )

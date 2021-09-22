@@ -11,13 +11,16 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefini
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiVersion._
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
+import uk.gov.hmrc.http.NotFoundException
 
 class ApiDefinitionConnectorISpec
     extends ServerBaseISpec
     with ApiDefinitionStub
     with ApiDefinitionBuilder
     with ApiDefinitionJsonFormatters
-    with ApiDefinitionData  with BeforeAndAfterEach with MetricsTestSupport{
+    with ApiDefinitionData
+    with BeforeAndAfterEach
+    with MetricsTestSupport {
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -49,24 +52,37 @@ class ApiDefinitionConnectorISpec
         jsonBody,
         serviceName
       )
-      val result =
-        await(objInTest.getDefinitionByServiceName(serviceName)) match {
-          case Right(x: ApiDefinition) => x mustBe apiDefinition1
-          case _                      => fail
+      await(objInTest.getDefinitionByServiceName(serviceName)) match {
+        case Right(x: ApiDefinition) => x mustBe apiDefinition1
+        case _                       => fail
 
-        }
+      }
     }
+
+    "returns a Left NotFoundException" in new Setup {
+      primeGetByServiceName(
+        NOT_FOUND,
+        "{}",
+        serviceName
+      )
+      await(objInTest.getDefinitionByServiceName(serviceName)) match {
+        case Left(e: NotFoundException) => succeed
+        case _                       => fail
+
+      }
+    }
+
     "return an exception" in new Setup {
       primeGetByServiceName(
         BAD_REQUEST,
-        Json.toJson(apiDefinition1).toString,
+        "{}",
         serviceName
       )
 
-       val result =  await(objInTest.getDefinitionByServiceName(serviceName))
+      val result = await(objInTest.getDefinitionByServiceName(serviceName))
       result match {
         case Left(e: uk.gov.hmrc.http.Upstream4xxResponse) => succeed
-        case _ => fail()
+        case _                                             => fail()
       }
 
     }
