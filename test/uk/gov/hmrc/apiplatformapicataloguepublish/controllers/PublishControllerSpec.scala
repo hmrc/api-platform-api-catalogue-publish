@@ -24,7 +24,7 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import org.mockito.MockitoSugar
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service.PublishService
+import uk.gov.hmrc.apiplatformapicataloguepublish.service.PublishService
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier

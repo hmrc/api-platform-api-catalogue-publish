@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service
+package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
 import org.mockito.ArgumentMatchersSugar.{eqTo, any}
 import org.mockito.MockitoSugar
@@ -28,7 +28,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiRamlParser
+import uk.gov.hmrc.apiplatformapicataloguepublish.parser.ApiRamlParser
 import uk.gov.hmrc.http.NotFoundException
 import webapi.WebApiDocument
 import java.util.Optional

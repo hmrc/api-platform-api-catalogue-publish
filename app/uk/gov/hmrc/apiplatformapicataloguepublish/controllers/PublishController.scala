@@ -20,7 +20,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service.PublishService
+import uk.gov.hmrc.apiplatformapicataloguepublish.service.PublishService
 
 @Singleton()
 class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)(implicit val ec: ExecutionContext) extends BackendController(cc) {

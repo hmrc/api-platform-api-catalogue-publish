@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.service
+package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.{ApiDefinitionConnector, ApiRamlParser}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
+import uk.gov.hmrc.apiplatformapicataloguepublish.parser.ApiRamlParser
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
 
 import javax.inject.{Inject, Singleton}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
+package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 import play.api.Logging
 
