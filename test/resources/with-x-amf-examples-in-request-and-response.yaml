@@ -1,0 +1,85 @@
+openapi: 3.0.0
+info:
+  title: Address Verification
+  description: A description.
+  version: "1.0"
+servers:
+- url: https://api.service.hmrc.gov.uk/
+paths:
+  /misc/address-verification/lookup:
+    put:
+      description: |
+        Lookup of postal and BFPO (British Forces Post Office) address details within the UK
+      operationId: Lookup address
+      parameters:
+      - name: postcode
+        in: query
+        description: Full postcode to search for (must be url escaped)
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          description: Full postcode to search for (must be url escaped)
+          example: BB00+0BB
+      - name: filter
+        in: query
+        description: Refine the search results futher based on house number or street
+          name
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          description: Refine the search results futher based on house number or street
+            name
+          example: 36+Test+Street
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: Check case submission request
+              required:
+              - declaration
+              - propertyLinkSubmissionId
+              - reasonCode
+              - smallerProposer
+              - valuationId
+              type: object
+              x-amf-examples:
+                example-1:
+                  service:
+                  - MTD-IT
+                  clientType: personal
+                  clientIdType: ni
+                  clientId: AA999999A
+                  knownFact: AA11 1AA
+                example-2:
+                  service:
+                  - MTD-VAT
+                  clientType: business
+                  clientIdType: vrn
+                  clientId: "101747696"
+                  knownFact: 2007-05-18
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                x-amf-examples:
+                  example-1:
+                    service:
+                    - MTD-IT
+                    clientType: personal
+                    clientIdType: ni
+                    clientId: AA999999A
+                    knownFact: AA11 1AA
+                  example-2:
+                    service:
+                    - MTD-VAT
+                    clientType: business
+                    clientIdType: vrn
+                    clientId: "101747696"
+                    knownFact: 2007-05-18
+                    

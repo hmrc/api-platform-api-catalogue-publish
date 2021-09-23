@@ -21,12 +21,9 @@ import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 import play.api.Logging
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
 
 import java.util
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.OpenApiProcessingError
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.GeneralOpenApiProcessingError
 import io.swagger.v3.oas.models.ExternalDocumentation
 import org.joda.time.DateTime
 
