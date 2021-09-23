@@ -71,7 +71,7 @@ case class ApiDefinition(
     //https://customs-declarations.protected.mdtp
   }
 
-  private def getLatestVersion(apiDefinition: ApiDefinition): String = {
+  def getLatestVersion(apiDefinition: ApiDefinition): String = {
 
   // TODO: Do we need to filter out any RETIRED and/or DEPRECATED APIs?
     apiDefinition.versions
@@ -79,6 +79,13 @@ case class ApiDefinition(
     .headOption.map(apiVersionDefinition => apiVersionDefinition.version.value).getOrElse("1.0")
   }
 
+  def getAccessTypeOfLatestVersion(apiDefinition: ApiDefinition): Option[ApiAccess] = {
+
+  // TODO: Do we need to filter out any RETIRED and/or DEPRECATED APIs?
+    apiDefinition.versions
+    .sorted
+    .headOption.map(apiVersionDefinition => apiVersionDefinition.access)
+  }
  }   
 
 case class ApiCategory(value: String) extends AnyVal

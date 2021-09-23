@@ -18,6 +18,7 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.ApiRamlParser
+import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
 
 import javax.inject.{Inject, Singleton}
@@ -25,31 +26,34 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
+import webapi.WebApiDocument
+
+
 
 
 @Singleton()
-class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, apiRamlParser: ApiRamlParser)(implicit val ec: ExecutionContext) {
+class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, apiRamlParser: ApiRamlParser, oasParser: OasParser)(implicit val ec: ExecutionContext) {
 
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, String]] = {
 
-    for {
+    val result = for {
       apiDefinitionResult <- apiDefinitionConnector.getDefinitionByServiceName(serviceName)
-      ramlString <- handleApiDefinitionResult(apiDefinitionResult)
-    } yield ramlString
+      webApiDocument <- handleApiDefinitionResult(apiDefinitionResult)
+    } yield (webApiDocument, apiDefinitionResult)
 
+    result.flatMap {
+      case (Right(webApiDocument), Right(apiDefinition: ApiDefinition)) => {
+       oasParser.parseWebApiDocument(serviceName, ApiDefinition.getAccessTypeOfLatestVersion(apiDefinition), webApiDocument)
+      }
+      case _ => Future.successful(Left(new RuntimeException(""))) 
+    }
   }
 
-  private def handleApiDefinitionResult(apiDefinitionResult: Either[Throwable, ApiDefinition]): Future[Either[Throwable, String]] = {
+  private def handleApiDefinitionResult(apiDefinitionResult: Either[Throwable, ApiDefinition]): Future[Either[Throwable, WebApiDocument]] = {
     apiDefinitionResult match {
-      case Right(apiDefinition) => getRamlString(apiDefinition)
+      case Right(apiDefinition) => apiRamlParser.getRaml(ApiDefinition.getRamlUri(apiDefinition)).map(Right(_))
       case Left(e)              => Future.successful(Left(e))
     }
   }
 
-  private def getRamlString(apiDefinition: ApiDefinition) = {
-    apiRamlParser
-      .getRaml(ApiDefinition.getRamlUri(apiDefinition))
-      .map(x => Right(x.raw.get.toString))
-
-  }
 }

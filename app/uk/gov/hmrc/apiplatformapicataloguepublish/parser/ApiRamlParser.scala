@@ -31,5 +31,4 @@ class ApiRamlParser @Inject() ()(implicit ec: ExecutionContext) extends Logging 
     }).map(x => x.asInstanceOf[WebApiDocument])
   }
 
-
 }

@@ -33,6 +33,7 @@ import uk.gov.hmrc.http.NotFoundException
 import webapi.WebApiDocument
 import java.util.Optional
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
+import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
 
 
 class PublishServiceSpec extends AnyWordSpec with MockitoSugar  with Matchers
@@ -40,11 +41,12 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar  with Matchers
 
   private val mockConnector = mock[ApiDefinitionConnector]
   private val mockApiRamlParser = mock[ApiRamlParser]
+  private val mockOasParser = mock[OasParser]
   private val mockWebApiDocument = mock[WebApiDocument]
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    val objInTest = new PublishService(mockConnector, mockApiRamlParser)
+    val objInTest = new PublishService(mockConnector, mockApiRamlParser, mockOasParser)
   }
 
 
