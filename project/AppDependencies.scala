@@ -8,7 +8,7 @@ object AppDependencies {
 
   lazy val scalaCheckVersion = "1.14.0"
   lazy val enumeratumVersion = "1.6.2"
-  lazy val jacksonVersion = "2.10.5"
+  lazy val jacksonVersion = "2.11.1"
 
   val compile = Seq(
     "uk.gov.hmrc"                       %% "bootstrap-backend-play-28"      % "5.14.0",
@@ -18,6 +18,7 @@ object AppDependencies {
     "org.raml"                          % "webapi-parser"                   % "0.5.0",
     "org.typelevel"                     %% "cats-core"                      % "2.4.2",
     "io.swagger.parser.v3"              % "swagger-parser-v3"               % "2.0.24",
+    "com.fasterxml.jackson.module"        %% "jackson-module-scala"            % jacksonVersion,
     "com.fasterxml.jackson.core"        % "jackson-annotations"             % jacksonVersion,
     "com.fasterxml.jackson.core"        % "jackson-databind"                % jacksonVersion,
     "com.fasterxml.jackson.core"        %  "jackson-core"                   % jacksonVersion,
