@@ -57,36 +57,7 @@ case class ApiDefinition(
     isTestSupport: Boolean = false,
     versions: List[ApiVersionDefinition],
     categories: List[ApiCategory] = List.empty)
-
- object ApiDefinition {
-
-  def getRamlUri(apiDefinition: ApiDefinition)= {
-    getBaseUrl(apiDefinition)+s"/api/conf/${getLatestVersion(apiDefinition)}/application.raml"
-    
-  }
-
-    private def getBaseUrl(apiDefinition: ApiDefinition): String = {
-    apiDefinition.serviceBaseUrl
-    //s"http://localhost:9820" // customs-declarations running locally
-    //https://customs-declarations.protected.mdtp
-  }
-
-  def getLatestVersion(apiDefinition: ApiDefinition): String = {
-
-  // TODO: Do we need to filter out any RETIRED and/or DEPRECATED APIs?
-    apiDefinition.versions
-    .sorted
-    .headOption.map(apiVersionDefinition => apiVersionDefinition.version.value).getOrElse("1.0")
-  }
-
-  def getAccessTypeOfLatestVersion(apiDefinition: ApiDefinition): Option[ApiAccess] = {
-
-  // TODO: Do we need to filter out any RETIRED and/or DEPRECATED APIs?
-    apiDefinition.versions
-    .sorted
-    .headOption.map(apiVersionDefinition => apiVersionDefinition.access)
-  }
- }   
+ 
 
 case class ApiCategory(value: String) extends AnyVal
 

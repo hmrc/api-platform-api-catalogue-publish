@@ -30,6 +30,8 @@ import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.http.NotFoundException
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
+import uk.gov.hmrc.apiplatformapicataloguepublish.service.PublishFailedResult
 
 
 class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAndAfterEach with  Matchers with ApiDefinitionData {
@@ -48,7 +50,8 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAnd
    val serviceName = "service1"
     "return 200 and an api defintion" in {
       val resultString = "url"
-      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Right(resultString)))
+      val convertedWebApiToOasResult = ConvertedWebApiToOasResult(resultString, "apiName", "PUBLIC")
+      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Right(convertedWebApiToOasResult)))
       val result = controller.publish(serviceName)(fakeRequest)
       status(result) shouldBe Status.OK
       contentAsString(result) shouldBe resultString
@@ -58,7 +61,7 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAnd
     "return 200 and NO api defintion" in {
       val notFoundException = new NotFoundException(" unable to fetch definition")
 
-      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(notFoundException)))
+      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(PublishFailedResult(""))))
       val result = controller.publish(serviceName)(fakeRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])

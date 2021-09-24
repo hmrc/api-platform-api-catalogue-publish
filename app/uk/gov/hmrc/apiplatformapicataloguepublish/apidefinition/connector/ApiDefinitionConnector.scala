@@ -20,6 +20,7 @@
 
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionResult, Config}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
@@ -33,7 +34,7 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
  @Singleton
  class ApiDefinitionConnector @Inject()(
    val http: HttpClient with WSGet,
-   val config: Config)(implicit val ec: ExecutionContext) extends Logging with ApiDefinitionJsonFormatters {
+   val config: Config)(implicit val ec: ExecutionContext) extends Logging with ApiDefinitionJsonFormatters with ApiDefinitionUtils {
 
     private def definitionUrl(serviceBaseUrl: String, serviceName: String) =
       s"$serviceBaseUrl/api-definition/$serviceName"
@@ -41,7 +42,7 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
     def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, ApiDefinitionResult]] = {
       logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition")
       val r = http.GET[Option[ApiDefinition]](definitionUrl(config.baseUrl, serviceName)).map{
-        case Some(x) => Right(ApiDefinitionResult(ApiDefinition.getRamlUri(x), ApiDefinition.getAccessTypeOfLatestVersion(x)))
+        case Some(x) => Right(ApiDefinitionResult(getRamlUri(x), getAccessTypeOfLatestVersion(x), serviceName))
         case _ => Left(new NotFoundException(" unable to fetch definition"))
       }
 
@@ -56,5 +57,5 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 
 object ApiDefinitionConnector {
   case class Config(baseUrl: String)
-  case class ApiDefinitionResult(url:String, lastestVersion: Option[ApiAccess])
+  case class ApiDefinitionResult(url: String, access: ApiAccess, serviceName: String)
 }

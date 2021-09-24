@@ -59,10 +59,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
       val expectedYaml = getFileContents(expectedFile)
       addOasSpecAttributes(ConvertedWebApiToOasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
-        case Right(oasString) => {
-          println(s"****** parsedString is: $oasString")
-          oasString shouldBe expectedYaml
-        }
+        case Right(oasString) => oasString shouldBe expectedYaml
       }
     }
 

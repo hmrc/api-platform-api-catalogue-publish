@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
-import org.mockito.ArgumentMatchersSugar.{eqTo, any}
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -32,55 +32,64 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.parser.ApiRamlParser
 import uk.gov.hmrc.http.NotFoundException
 import webapi.WebApiDocument
 import java.util.Optional
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
 
-
-class PublishServiceSpec extends AnyWordSpec with MockitoSugar  with Matchers
-  with HeaderCarrierConverter with ApiDefinitionData with ScalaFutures{
+class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers with HeaderCarrierConverter with ApiDefinitionData with ScalaFutures with ApiDefinitionUtils {
 
   private val mockConnector = mock[ApiDefinitionConnector]
   private val mockApiRamlParser = mock[ApiRamlParser]
   private val mockOasParser = mock[OasParser]
   private val mockWebApiDocument = mock[WebApiDocument]
+
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     val objInTest = new PublishService(mockConnector, mockApiRamlParser, mockOasParser)
   }
 
-
   "publishByServiceName" should {
     val serviceName = "service1"
-    "return an Api Definition from connector when connector returns api definition" in new Setup{
+    "return an Api Definition from connector when connector returns api definition" in new Setup {
 
+      val apiDeinitionResult = ApiDefinitionConnector.ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName)
 
       val expectedDescription = "A description."
+      val convertedWebApiToOasResult = ConvertedWebApiToOasResult("", serviceName, expectedDescription)
+
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
-        .thenReturn(Future.successful(Right(apiDefinition1)))
+        .thenReturn(Future.successful(Right(apiDeinitionResult)))
       when(mockApiRamlParser.getRaml(any[String])).thenReturn(Future.successful(mockWebApiDocument))
       when(mockWebApiDocument.raw).thenReturn(Optional.of(expectedDescription))
-      
+      when(mockOasParser.parseWebApiDocument(any[WebApiDocument], any[String], any[ApiAccess]))
+        .thenReturn(Future.successful(convertedWebApiToOasResult))
       val result = await(objInTest.publishByServiceName(serviceName))
       result match {
-       case Right(value) => value shouldBe expectedDescription
-       case _ => fail()
+        case Right(value) => {
+          value.accessTypeDescription shouldBe expectedDescription
+          value.apiName shouldBe serviceName
+        }
+        case _            => fail()
       }
 
-
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
-      verify(mockApiRamlParser).getRaml(eqTo(ApiDefinition.getRamlUri(apiDefinition1)))
+      verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
 
     }
 
-    "return None when connector returns None" in new Setup{
+
+     "return Left when connector returns Left" in new Setup {
 
       val notFoundException = new NotFoundException(" unable to fetch definition")
 
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
         .thenReturn(Future.successful(Left(notFoundException)))
-      val result  = await(objInTest.publishByServiceName(serviceName))
-      result shouldBe Left(notFoundException)
+
+      val result = await(objInTest.publishByServiceName(serviceName))
+      result shouldBe Left(PublishFailedResult("Unknown error occured"))
 
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
 

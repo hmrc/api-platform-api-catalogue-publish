@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
-import play.api.Logging
-
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext}
-import webapi.{Raml10, WebApiDocument}
-import scala.compat.java8._
+import scala.compat.java8.FutureConverters
+import java.util.concurrent.TimeUnit
+import webapi.Oas30
+import webapi.WebApiDocument
 import scala.concurrent.Future
+
 @Singleton
-class ApiRamlParser @Inject() ()(implicit ec: ExecutionContext) extends Logging {
+class Oas30Wrapper@Inject() (){
 
-  def getRaml(url: String): Future[WebApiDocument] = {
-     FutureConverters.toScala({
-      Raml10.parse(url)
-    }).map(x => x.asInstanceOf[WebApiDocument])
+  def ramlToOas(model: WebApiDocument): Future[String]={
+    FutureConverters.toScala({
+      TimeUnit.MILLISECONDS.sleep(250)
+      Oas30.generateYamlString(model)
+    })
   }
-
 }

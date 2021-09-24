@@ -14,9 +14,10 @@ import webapi.{Raml10, WebApiDocument}
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.io.Source
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport with BeforeAndAfterEach with MetricsTestSupport
-with ApiDefinitionStub with ApiProducerTeamStub with ApiDefinitionData with ApiDefinitionJsonFormatters {
+with ApiDefinitionStub with ApiProducerTeamStub with ApiDefinitionData with ApiDefinitionJsonFormatters with ApiDefinitionUtils{
 
 
   protected override def appBuilder: GuiceApplicationBuilder =
@@ -75,7 +76,7 @@ with ApiDefinitionStub with ApiProducerTeamStub with ApiDefinitionData with ApiD
         val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString = Json.toJson(apiDefinition1withwiremock).toString
          primeGetByServiceName(OK, apiDefinitionAsString,  serviceName )
-        primeGETWithFileContents("/" + ApiDefinition.getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
+        primeGETWithFileContents("/" + getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
         val result: WSResponse = callPublishEndpoint(serviceName)
         result.status mustBe OK
         println(result.body)

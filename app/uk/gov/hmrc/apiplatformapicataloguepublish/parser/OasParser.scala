@@ -23,27 +23,16 @@ import scala.concurrent.{ExecutionContext}
 import webapi.WebApiDocument
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
 import scala.concurrent.Future
-import scala.compat.java8.FutureConverters
-import java.util.concurrent.TimeUnit
-import webapi.Oas30
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PrivateApiAccess
 
 @Singleton
-class OasParser @Inject() ()(implicit ec: ExecutionContext) extends Logging {
+class OasParser @Inject() (oas30Wrapper: Oas30Wrapper)(implicit ec: ExecutionContext) extends Logging {
 
-def parseWebApiDocument(serviceName: String, maybeAccess: Option[ApiAccess], model: WebApiDocument) ={
-    maybeAccess match {
-          case Some(access) => parseOasFromWebApiModel(model, serviceName, access).map(x=> Right(x.oasAsString))
-          case _ => Future.successful( Left(new RuntimeException("")))
-       }
-}
-private def parseOasFromWebApiModel(model: WebApiDocument, apiName: String, accessType: ApiAccess): Future[ConvertedWebApiToOasResult] = {
-    FutureConverters.toScala({
-      TimeUnit.MILLISECONDS.sleep(250)
-      Oas30.generateYamlString(model)
-    }).map(oasAsString => ConvertedWebApiToOasResult(oasAsString, apiName, accessTypeDescription(accessType)))
+ def parseWebApiDocument(model: WebApiDocument, apiName: String, accessType: ApiAccess): Future[ConvertedWebApiToOasResult] = {
+   oas30Wrapper.ramlToOas(model)
+   .map(oasAsString => ConvertedWebApiToOasResult(oasAsString, apiName, accessTypeDescription(accessType)))
   }
 
   private def accessTypeDescription(accessType : ApiAccess) : String = {
@@ -53,3 +42,4 @@ private def parseOasFromWebApiModel(model: WebApiDocument, apiName: String, acce
     }
   }
 }
+

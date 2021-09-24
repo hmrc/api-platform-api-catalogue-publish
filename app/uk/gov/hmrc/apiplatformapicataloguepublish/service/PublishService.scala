@@ -20,7 +20,6 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDef
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.ApiDefinitionResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.ApiRamlParser
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition}
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,40 +27,48 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import webapi.WebApiDocument
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
+import uk.gov.hmrc.http.Upstream4xxResponse
 
-
-
+import cats.data.EitherT
+import cats.implicits._
 
 @Singleton()
-class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector,
-                                apiRamlParser: ApiRamlParser,
-                                oasParser: OasParser)(implicit val ec: ExecutionContext) {
+class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, apiRamlParser: ApiRamlParser, oasParser: OasParser)(implicit val ec: ExecutionContext) {
 
-  def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, String]] = {
-    for {
-      apiDefinitionResult <- apiDefinitionConnector.getDefinitionByServiceName(serviceName)
-      webApiDocument <- getRamlForApiDefinition(apiDefinitionResult)
-      result <- handleRamlToOas(serviceName, apiDefinitionResult, webApiDocument)
+  def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ParsedResult, ConvertedWebApiToOasResult]] = {
+    val result = for {
+      apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult))
+      ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
+      result <- EitherT(handleRamlToOas(ramlAndDefinition))
     } yield result
+    result.value
   }
 
-    def handleRamlToOas(serviceName: String,
-                        apiDefinitionResult: Either[Throwable, ApiDefinitionResult],
-                        webApiDocumentResult: Either[Throwable, WebApiDocument]): Future[Either[RuntimeException, String]] ={
-      (apiDefinitionResult, webApiDocumentResult) match {
-      case (Right(definitionResult), Right(webApiDocument)) =>
-        oasParser.parseWebApiDocument(serviceName, definitionResult.lastestVersion, webApiDocument)
-        // TODO Better error handling... maybe have own error models?
-      case _ => Future.successful(Left(new RuntimeException("")))
+  def mapApiDefinitionResult(result: Either[Throwable, ApiDefinitionResult]): Either[ParsedResult, ApiDefinitionResult] = {
+    result match {
+      case Left(e: Upstream4xxResponse) => Left(ApiDefinitionNotFoundResult(e.getMessage))
+      case Right(x)                     => Right(x)
+      case _                            => Left(PublishFailedResult("Unknown error occured"))
     }
 
   }
 
-  private def getRamlForApiDefinition(apiDefinitionResult: Either[Throwable, ApiDefinitionResult]): Future[Either[Throwable, WebApiDocument]] = {
-    apiDefinitionResult match {
-      case Right(definitionResult: ApiDefinitionResult) => apiRamlParser.getRaml(definitionResult.url).map(Right(_))
-      case Left(e)              => Future.successful(Left(e))
-    }
+  private def getRamlForApiDefinition(apiDefinitionResult:ApiDefinitionResult): Future[Either[ParsedResult, ResultHolder]] = {
+    println("*********** getRamlForApiDefinition")
+    apiRamlParser.getRaml(apiDefinitionResult.url).map(x => Right(ResultHolder(apiDefinitionResult, x)))
+  }
+
+  def handleRamlToOas(ResultHolder: ResultHolder): Future[Either[ParsedResult, ConvertedWebApiToOasResult]] = {
+    println("*********** handleRamlToOas")
+    oasParser.parseWebApiDocument(ResultHolder.document, ResultHolder.apiDefinitionResult.serviceName, ResultHolder.apiDefinitionResult.access).map(Right(_))
   }
 
 }
+
+case class ResultHolder(apiDefinitionResult: ApiDefinitionResult, document: WebApiDocument)
+
+sealed trait ParsedResult
+
+case class ApiDefinitionNotFoundResult(message: String) extends ParsedResult
+case class PublishFailedResult(message: String) extends ParsedResult

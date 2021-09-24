@@ -22,28 +22,23 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import webapi.{WebApiDocument, Raml10}
+import webapi.{Raml10, WebApiDocument}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
-import amf.core.model.document.Document
-import amf.core.parser.{Annotations, Fields}
-import amf.core.model.domain.Annotation
 
 import java.util.concurrent.TimeUnit
 import scala.io.Source
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PrivateApiAccess
+import scala.concurrent.Future
 
-class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with HeaderCarrierConverter with OasStringUtils with ScalaFutures {
+class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with OasStringUtils with ScalaFutures {
 
   // private val mockWebApiDocument = mock[WebApiDocument]
   trait Setup {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    val objInTest = new OasParser
+    val mockOas30Wrapper = mock[Oas30Wrapper]
+    val objInTest = new OasParser(mockOas30Wrapper)
 
     def getWebApiDocument(filePath: String): WebApiDocument = {
       val fileContents = Source.fromResource(filePath).mkString
@@ -55,15 +50,33 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Hea
   }
 
   "parseWebApiDocument" should {
-    val serviceName = "service1"
-    val convertedWebApiToOasResult = ConvertedWebApiToOasResult("", "customs-declarations", "This is a public API.")
-    "return a ConvertedWebApiToOasResult" in new Setup {
-      val result = await(objInTest.parseWebApiDocument(serviceName, Some(PublicApiAccess()), webApiDocumentWithDescription))
-      result match {
-        case Right(value) => value shouldBe oasWithDescription
-        case _            => fail()
-      }
 
+    val serviceName = "service1"
+    val publicAccessTypeDescription = "This is a Public API."
+    val privateAccessTypeDescription = "This is a Private API."
+
+    "return a ConvertedWebApiToOasResult when API is Public" in new Setup {
+
+      when(mockOas30Wrapper.ramlToOas(webApiDocumentWithDescription)).thenReturn(Future.successful(oasStringWithDescription))
+      val result = await(objInTest.parseWebApiDocument(webApiDocumentWithDescription, serviceName, PublicApiAccess()))
+
+      result.oasAsString shouldBe oasStringWithDescription
+      result.apiName shouldBe serviceName
+      result.accessTypeDescription shouldBe publicAccessTypeDescription
+
+      verify(mockOas30Wrapper).ramlToOas(eqTo(webApiDocumentWithDescription))
+    }
+
+    "return a Right(ConvertedWebApiToOasResult) when API is Private" in new Setup {
+
+      when(mockOas30Wrapper.ramlToOas(webApiDocumentWithDescription)).thenReturn(Future.successful(oasStringWithDescription))
+      val result = await(objInTest.parseWebApiDocument(webApiDocumentWithDescription, serviceName, PrivateApiAccess()))
+
+      result.oasAsString shouldBe oasStringWithDescription
+      result.apiName shouldBe serviceName
+      result.accessTypeDescription shouldBe privateAccessTypeDescription
+
+      verify(mockOas30Wrapper).ramlToOas(eqTo(webApiDocumentWithDescription))
     }
 
   }

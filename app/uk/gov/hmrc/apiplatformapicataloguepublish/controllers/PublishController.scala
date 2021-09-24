@@ -21,6 +21,8 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.apiplatformapicataloguepublish.service.PublishService
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
+import uk.gov.hmrc.apiplatformapicataloguepublish.service.{PublishFailedResult, ApiDefinitionNotFoundResult}
 
 @Singleton()
 class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)(implicit val ec: ExecutionContext) extends BackendController(cc) {
@@ -29,8 +31,9 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
     //call api definition to get latest application version?(service name)
     publishService.publishByServiceName(serviceName).map(maybeResult =>
       maybeResult match {
-        case Right(ramlString: String)      => Ok(ramlString)
-        case Left(e: Throwable) => InternalServerError(s"something went Wrong ${e.getMessage()}")
+        case Right(ramlString: ConvertedWebApiToOasResult)      => Ok(ramlString.oasAsString)
+        case Left(e: ApiDefinitionNotFoundResult) => NotFound(s"api definition not found ${e.message}")
+        case Left(e: PublishFailedResult) => InternalServerError(s"something went wrong ${e.message}")
       }
     )
   }
