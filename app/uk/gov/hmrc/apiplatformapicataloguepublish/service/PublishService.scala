@@ -32,9 +32,11 @@ import uk.gov.hmrc.http.Upstream4xxResponse
 
 import cats.data.EitherT
 import cats.implicits._
+import scala.util.control.NonFatal
+import play.api.Logging
 
 @Singleton()
-class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, apiRamlParser: ApiRamlParser, oasParser: OasParser)(implicit val ec: ExecutionContext) {
+class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, apiRamlParser: ApiRamlParser, oasParser: OasParser)(implicit val ec: ExecutionContext) extends Logging {
 
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ParsedResult, ConvertedWebApiToOasResult]] = {
     val result = for {
@@ -47,21 +49,29 @@ class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, 
 
   def mapApiDefinitionResult(result: Either[Throwable, ApiDefinitionResult]): Either[ParsedResult, ApiDefinitionResult] = {
     result match {
-      case Left(e: Upstream4xxResponse) => Left(ApiDefinitionNotFoundResult(e.getMessage))
       case Right(x)                     => Right(x)
+      case Left(e: Upstream4xxResponse) => Left(ApiDefinitionNotFoundResult(e.getMessage))
       case _                            => Left(PublishFailedResult("Unknown error occured"))
     }
 
   }
 
   private def getRamlForApiDefinition(apiDefinitionResult:ApiDefinitionResult): Future[Either[ParsedResult, ResultHolder]] = {
-    println("*********** getRamlForApiDefinition")
-    apiRamlParser.getRaml(apiDefinitionResult.url).map(x => Right(ResultHolder(apiDefinitionResult, x)))
+    apiRamlParser.getRaml(apiDefinitionResult.url)
+    .map(x => Right(ResultHolder(apiDefinitionResult, x)))
+    .recover {
+      case NonFatal(e) => logger.error("getRamlForApiDefinition failed: ", e)
+      Left(PublishFailedResult(s"getRamlForApiDefinition failed: ${e.getMessage}"))
+    }
   }
 
   def handleRamlToOas(ResultHolder: ResultHolder): Future[Either[ParsedResult, ConvertedWebApiToOasResult]] = {
-    println("*********** handleRamlToOas")
-    oasParser.parseWebApiDocument(ResultHolder.document, ResultHolder.apiDefinitionResult.serviceName, ResultHolder.apiDefinitionResult.access).map(Right(_))
+    oasParser.parseWebApiDocument(ResultHolder.document, ResultHolder.apiDefinitionResult.serviceName, ResultHolder.apiDefinitionResult.access)
+    .map(Right(_))
+    .recover {
+      case NonFatal(e) => logger.error("handleRamlToOas failed: ", e)
+      Left(PublishFailedResult(s"handleRamlToOas failed: ${e.getMessage}"))
+    }
   }
 
 }

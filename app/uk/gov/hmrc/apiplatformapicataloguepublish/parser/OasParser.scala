@@ -31,6 +31,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PrivateAp
 class OasParser @Inject() (oas30Wrapper: Oas30Wrapper)(implicit ec: ExecutionContext) extends Logging {
 
  def parseWebApiDocument(model: WebApiDocument, apiName: String, accessType: ApiAccess): Future[ConvertedWebApiToOasResult] = {
+   
    oas30Wrapper.ramlToOas(model)
    .map(oasAsString => ConvertedWebApiToOasResult(oasAsString, apiName, accessTypeDescription(accessType)))
   }

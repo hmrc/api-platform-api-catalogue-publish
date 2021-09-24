@@ -37,13 +37,21 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
+import org.scalatest.BeforeAndAfterEach
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
 
-class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers with HeaderCarrierConverter with ApiDefinitionData with ScalaFutures with ApiDefinitionUtils {
+class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers with HeaderCarrierConverter
+ with ApiDefinitionData with ScalaFutures with ApiDefinitionUtils with BeforeAndAfterEach {
 
   private val mockConnector = mock[ApiDefinitionConnector]
   private val mockApiRamlParser = mock[ApiRamlParser]
   private val mockOasParser = mock[OasParser]
   private val mockWebApiDocument = mock[WebApiDocument]
+
+  override protected def beforeEach(): Unit = {
+    super.beforeEach()
+    reset(mockConnector, mockApiRamlParser, mockOasParser, mockWebApiDocument)
+  }
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -77,7 +85,52 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers wit
 
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
       verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
+      verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(serviceName), eqTo(PublicApiAccess()))
 
+    }
+
+    "return a Left when ApiRamlParser returns an error" in new Setup {
+
+      val apiDeinitionResult = ApiDefinitionConnector.ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName)
+
+      val errorMessage = "Parse failed"
+
+      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        .thenReturn(Future.successful(Right(apiDeinitionResult)))
+      when(mockApiRamlParser.getRaml(any[String])).thenReturn(Future.failed(new RuntimeException(errorMessage)))
+
+      val result = await(objInTest.publishByServiceName(serviceName))
+      result match {
+        case Left(e: PublishFailedResult) => {e.message shouldBe s"getRamlForApiDefinition failed: $errorMessage"}
+        case _            => fail()
+      }
+
+      verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+      verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
+      verifyZeroInteractions(mockOasParser)
+    }
+
+    "return a Left when OasParser returns an error" in new Setup {
+
+      val apiDeinitionResult = ApiDefinitionConnector.ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName)
+
+      val errorMessage = "Parse failed"
+
+      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        .thenReturn(Future.successful(Right(apiDeinitionResult)))
+      when(mockApiRamlParser.getRaml(any[String])).thenReturn(Future.successful(mockWebApiDocument))
+      when(mockOasParser.parseWebApiDocument(any[WebApiDocument], any[String], any[ApiAccess]))
+        .thenReturn(Future.failed(new RuntimeException(errorMessage)))
+
+      val result = await(objInTest.publishByServiceName(serviceName))
+      result match {
+        case Left(e: PublishFailedResult) => {e.message shouldBe s"handleRamlToOas failed: $errorMessage"}
+        case _            => fail()
+      }
+
+      verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+      verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
+      verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(serviceName), eqTo(PublicApiAccess()))
     }
 
 
@@ -92,6 +145,8 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers wit
       result shouldBe Left(PublishFailedResult("Unknown error occured"))
 
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+      verifyZeroInteractions(mockApiRamlParser)
+      verifyZeroInteractions(mockOasParser)
 
     }
 

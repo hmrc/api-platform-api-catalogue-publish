@@ -12,6 +12,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiVersion._
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.http.NotFoundException
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 class ApiDefinitionConnectorISpec
     extends ServerBaseISpec
@@ -20,7 +21,8 @@ class ApiDefinitionConnectorISpec
     with ApiDefinitionJsonFormatters
     with ApiDefinitionData
     with BeforeAndAfterEach
-    with MetricsTestSupport {
+    with MetricsTestSupport 
+    with ApiDefinitionUtils {
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -46,6 +48,7 @@ class ApiDefinitionConnectorISpec
 
   "ApiDeifintionConnector" should {
     "returns an api definition" in new Setup {
+      val expectedResult = ApiDefinitionConnector.ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), apiDefinition1.serviceName)
       val jsonBody = Json.toJson(apiDefinition1).toString
       primeGetByServiceName(
         OK,
@@ -53,7 +56,7 @@ class ApiDefinitionConnectorISpec
         serviceName
       )
       await(objInTest.getDefinitionByServiceName(serviceName)) match {
-        case Right(x: ApiDefinition) => x mustBe apiDefinition1
+        case Right(x: ApiDefinitionConnector.ApiDefinitionResult) => x mustBe expectedResult
         case _                       => fail
 
       }

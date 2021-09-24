@@ -24,7 +24,7 @@ import webapi.WebApiDocument
 import scala.concurrent.Future
 
 @Singleton
-class Oas30Wrapper@Inject() (){
+class Oas30Wrapper @Inject()(){
 
   def ramlToOas(model: WebApiDocument): Future[String]={
     FutureConverters.toScala({
