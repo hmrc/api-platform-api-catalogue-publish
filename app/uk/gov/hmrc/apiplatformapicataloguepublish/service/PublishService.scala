@@ -17,9 +17,10 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.ApiDefinitionResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.ApiRamlParser
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition}
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -32,26 +33,33 @@ import webapi.WebApiDocument
 
 
 @Singleton()
-class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, apiRamlParser: ApiRamlParser, oasParser: OasParser)(implicit val ec: ExecutionContext) {
+class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector,
+                                apiRamlParser: ApiRamlParser,
+                                oasParser: OasParser)(implicit val ec: ExecutionContext) {
 
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, String]] = {
-
-    val result = for {
+    for {
       apiDefinitionResult <- apiDefinitionConnector.getDefinitionByServiceName(serviceName)
-      webApiDocument <- handleApiDefinitionResult(apiDefinitionResult)
-    } yield (webApiDocument, apiDefinitionResult)
-
-    result.flatMap {
-      case (Right(webApiDocument), Right(apiDefinition: ApiDefinition)) => {
-       oasParser.parseWebApiDocument(serviceName, ApiDefinition.getAccessTypeOfLatestVersion(apiDefinition), webApiDocument)
-      }
-      case _ => Future.successful(Left(new RuntimeException(""))) 
-    }
+      webApiDocument <- getRamlForApiDefinition(apiDefinitionResult)
+      result <- handleRamlToOas(serviceName, apiDefinitionResult, webApiDocument)
+    } yield result
   }
 
-  private def handleApiDefinitionResult(apiDefinitionResult: Either[Throwable, ApiDefinition]): Future[Either[Throwable, WebApiDocument]] = {
+    def handleRamlToOas(serviceName: String,
+                        apiDefinitionResult: Either[Throwable, ApiDefinitionResult],
+                        webApiDocumentResult: Either[Throwable, WebApiDocument]): Future[Either[RuntimeException, String]] ={
+      (apiDefinitionResult, webApiDocumentResult) match {
+      case (Right(definitionResult), Right(webApiDocument)) =>
+        oasParser.parseWebApiDocument(serviceName, definitionResult.lastestVersion, webApiDocument)
+        // TODO Better error handling... maybe have own error models?
+      case _ => Future.successful(Left(new RuntimeException("")))
+    }
+
+  }
+
+  private def getRamlForApiDefinition(apiDefinitionResult: Either[Throwable, ApiDefinitionResult]): Future[Either[Throwable, WebApiDocument]] = {
     apiDefinitionResult match {
-      case Right(apiDefinition) => apiRamlParser.getRaml(ApiDefinition.getRamlUri(apiDefinition)).map(Right(_))
+      case Right(definitionResult: ApiDefinitionResult) => apiRamlParser.getRaml(definitionResult.url).map(Right(_))
       case Left(e)              => Future.successful(Left(e))
     }
   }

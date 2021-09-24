@@ -18,8 +18,8 @@
 
 
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiDefinition, ApiDefinitionJsonFormatters}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.Config
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionResult, Config}
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
@@ -38,10 +38,10 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
     private def definitionUrl(serviceBaseUrl: String, serviceName: String) =
       s"$serviceBaseUrl/api-definition/$serviceName"
 
-    def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, ApiDefinition]] = {
+    def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, ApiDefinitionResult]] = {
       logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition")
       val r = http.GET[Option[ApiDefinition]](definitionUrl(config.baseUrl, serviceName)).map{
-        case Some(x) => Right(x)
+        case Some(x) => Right(ApiDefinitionResult(ApiDefinition.getRamlUri(x), ApiDefinition.getAccessTypeOfLatestVersion(x)))
         case _ => Left(new NotFoundException(" unable to fetch definition"))
       }
 
@@ -56,4 +56,5 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 
 object ApiDefinitionConnector {
   case class Config(baseUrl: String)
+  case class ApiDefinitionResult(url:String, lastestVersion: Option[ApiAccess])
 }
