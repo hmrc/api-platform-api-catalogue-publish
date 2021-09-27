@@ -7,7 +7,7 @@ import sbt._
 object AppDependencies {
 
   lazy val scalaCheckVersion = "1.14.0"
-  lazy val enumeratumVersion = "1.6.2"
+  lazy val enumeratumVersion = "1.6.3"
   lazy val jacksonVersion = "2.11.1"
 
   val compile = Seq(
@@ -22,7 +22,9 @@ object AppDependencies {
     "com.fasterxml.jackson.core"        % "jackson-annotations"             % jacksonVersion,
     "com.fasterxml.jackson.core"        % "jackson-databind"                % jacksonVersion,
     "com.fasterxml.jackson.core"        % "jackson-core"                    % jacksonVersion,
-    "com.fasterxml.jackson.dataformat"  % "jackson-dataformat-yaml"         % jacksonVersion
+    "com.fasterxml.jackson.dataformat"  % "jackson-dataformat-yaml"         % jacksonVersion,
+    "org.apache.httpcomponents"         % "httpclient"                      % "4.3.1",
+    "org.apache.httpcomponents"         % "httpmime"                        % "4.3.1"
   )
 
   val test = Seq(

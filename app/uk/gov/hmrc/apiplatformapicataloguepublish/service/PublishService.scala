@@ -35,19 +35,32 @@ import cats.implicits._
 import scala.util.control.NonFatal
 import play.api.Logging
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.GeneralOpenApiProcessingError
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishResult
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishError
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishDetails
 
 @Singleton()
 class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector,
-                                apiRamlParser: ApiRamlParser, oasParser: OasParser)(implicit val ec: ExecutionContext) extends Logging {
+                                apiRamlParser: ApiRamlParser,
+                                 oasParser: OasParser,
+                                 catalogueConnector: ApiCatalogueAdminConnector)(implicit val ec: ExecutionContext) extends Logging {
 
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ParsedResult, String]] = {
     val result = for {
       apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult))
-      ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
-      convertedOas <- EitherT(handleRamlToOas(ramlAndDefinition))
-      result <- EitherT(handleEnhancingOasForCatalogue(convertedOas))
+      ramlAndDefinition   <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
+      convertedOas        <- EitherT(handleRamlToOas(ramlAndDefinition))
+      oasDataWithExtensions              <- EitherT(handleEnhancingOasForCatalogue(convertedOas))
+      result <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(handlePublishResult))
     } yield result
     result.value
+  }
+
+  def handlePublishResult(result: JsValue): Either[ParsedResult, String] = {
+     Right(result.toString())
   }
 
   def mapApiDefinitionResult(result: Either[Throwable, ApiDefinitionResult]): Either[ParsedResult, ApiDefinitionResult] = {
@@ -93,3 +106,4 @@ sealed trait ParsedResult
 case class ApiDefinitionNotFoundResult(message: String) extends ParsedResult
 case class PublishFailedResult(message: String) extends ParsedResult
 case class OpenApiEnhancementFailedResult(message: String) extends ParsedResult
+case class ApiCataloguePublishFailedResult(message: String) extends ParsedResult
