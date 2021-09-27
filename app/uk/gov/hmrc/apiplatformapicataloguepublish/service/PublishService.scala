@@ -34,22 +34,25 @@ import cats.data.EitherT
 import cats.implicits._
 import scala.util.control.NonFatal
 import play.api.Logging
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.GeneralOpenApiProcessingError
 
 @Singleton()
-class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, apiRamlParser: ApiRamlParser, oasParser: OasParser)(implicit val ec: ExecutionContext) extends Logging {
+class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector,
+                                apiRamlParser: ApiRamlParser, oasParser: OasParser)(implicit val ec: ExecutionContext) extends Logging {
 
-  def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ParsedResult, ConvertedWebApiToOasResult]] = {
+  def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ParsedResult, String]] = {
     val result = for {
       apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult))
       ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
-      result <- EitherT(handleRamlToOas(ramlAndDefinition))
+      convertedOas <- EitherT(handleRamlToOas(ramlAndDefinition))
+      result <- EitherT(handleEnhancingOasForCatalogue(convertedOas))
     } yield result
     result.value
   }
 
   def mapApiDefinitionResult(result: Either[Throwable, ApiDefinitionResult]): Either[ParsedResult, ApiDefinitionResult] = {
     result match {
-      case Right(x)                     => Right(x)
+      case Right(x: ApiDefinitionResult)                     => Right(x)
       case Left(e: Upstream4xxResponse) => Left(ApiDefinitionNotFoundResult(e.getMessage))
       case _                            => Left(PublishFailedResult("Unknown error occured"))
     }
@@ -60,7 +63,7 @@ class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, 
     apiRamlParser.getRaml(apiDefinitionResult.url)
     .map(x => Right(ResultHolder(apiDefinitionResult, x)))
     .recover {
-      case NonFatal(e) => logger.error("getRamlForApiDefinition failed: ", e)
+      case NonFatal(e: Throwable) => logger.error("getRamlForApiDefinition failed: ", e)
       Left(PublishFailedResult(s"getRamlForApiDefinition failed: ${e.getMessage}"))
     }
   }
@@ -69,9 +72,16 @@ class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector, 
     oasParser.parseWebApiDocument(ResultHolder.document, ResultHolder.apiDefinitionResult.serviceName, ResultHolder.apiDefinitionResult.access)
     .map(Right(_))
     .recover {
-      case NonFatal(e) => logger.error("handleRamlToOas failed: ", e)
+      case NonFatal(e: Throwable) => logger.error("handleRamlToOas failed: ", e)
       Left(PublishFailedResult(s"handleRamlToOas failed: ${e.getMessage}"))
     }
+  }
+
+  def handleEnhancingOasForCatalogue(oasResult: ConvertedWebApiToOasResult): Future[Either[ParsedResult, String]] ={
+      oasParser.enhanceOas(oasResult) match {
+        case Right(value: String) => Future.successful(Right(value))
+        case Left(e: GeneralOpenApiProcessingError) => Future.successful(Left(OpenApiEnhancementFailedResult(s"handleEnhancingOasForCatalogue failed: ${e.message}")))
+      }
   }
 
 }
@@ -82,3 +92,4 @@ sealed trait ParsedResult
 
 case class ApiDefinitionNotFoundResult(message: String) extends ParsedResult
 case class PublishFailedResult(message: String) extends ParsedResult
+case class OpenApiEnhancementFailedResult(message: String) extends ParsedResult

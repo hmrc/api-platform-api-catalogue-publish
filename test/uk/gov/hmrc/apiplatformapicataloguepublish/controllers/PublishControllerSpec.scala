@@ -17,21 +17,21 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
 
 import org.scalatest.matchers.should.Matchers
-import org.mockito.ArgumentMatchersSugar.{eqTo, any}
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import org.mockito.MockitoSugar
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.apiplatformapicataloguepublish.service.PublishService
+import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
+
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
 import org.scalatest.BeforeAndAfterEach
-import uk.gov.hmrc.http.NotFoundException
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
-import uk.gov.hmrc.apiplatformapicataloguepublish.service.PublishFailedResult
+import play.api.mvc.Result
 
 
 class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAndAfterEach with  Matchers with ApiDefinitionData {
@@ -49,21 +49,29 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAnd
   "POST /publish/[service-name]" should {
    val serviceName = "service1"
     "return 200 and an api defintion" in {
-      val resultString = "url"
-      val convertedWebApiToOasResult = ConvertedWebApiToOasResult(resultString, "apiName", "PUBLIC")
-      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Right(convertedWebApiToOasResult)))
-      val result = controller.publish(serviceName)(fakeRequest)
+      val resultString = "oas string"
+      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Right(resultString)))
+      val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
       status(result) shouldBe Status.OK
       contentAsString(result) shouldBe resultString
       verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
     }
 
     "return 200 and NO api defintion" in {
-      val notFoundException = new NotFoundException(" unable to fetch definition")
-
       when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(PublishFailedResult(""))))
-      val result = controller.publish(serviceName)(fakeRequest)
+      
+      val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
+     
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
+    }
+
+    "return 404 and NO api defintion" in {
+      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(ApiDefinitionNotFoundResult(""))))
+      
+      val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
+      
+      status(result) shouldBe Status.NOT_FOUND
       verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
     }
   }

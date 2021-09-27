@@ -31,7 +31,7 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
     //call api definition to get latest application version?(service name)
     publishService.publishByServiceName(serviceName).map(maybeResult =>
       maybeResult match {
-        case Right(ramlString: ConvertedWebApiToOasResult)      => Ok(ramlString.oasAsString)
+        case Right(oasString: String)      => Ok(oasString)
         case Left(e: ApiDefinitionNotFoundResult) => NotFound(s"api definition not found ${e.message}")
         case Left(e: PublishFailedResult) => InternalServerError(s"something went wrong ${e.message}")
       }

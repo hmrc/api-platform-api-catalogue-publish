@@ -24,21 +24,22 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, Upstream4xxResponse}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.ApiRamlParser
-import uk.gov.hmrc.http.NotFoundException
 import webapi.WebApiDocument
-import java.util.Optional
 
+import java.util.Optional
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.GeneralOpenApiProcessingError
 
 class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers with HeaderCarrierConverter
  with ApiDefinitionData with ScalaFutures with ApiDefinitionUtils with BeforeAndAfterEach {
@@ -74,18 +75,17 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers wit
       when(mockWebApiDocument.raw).thenReturn(Optional.of(expectedDescription))
       when(mockOasParser.parseWebApiDocument(any[WebApiDocument], any[String], any[ApiAccess]))
         .thenReturn(Future.successful(convertedWebApiToOasResult))
-      val result = await(objInTest.publishByServiceName(serviceName))
+      when(mockOasParser.enhanceOas(any[ConvertedWebApiToOasResult])).thenReturn(Right("oas string"))  
+      val result: Either[ParsedResult,String] = await(objInTest.publishByServiceName(serviceName))
       result match {
-        case Right(value) => {
-          value.accessTypeDescription shouldBe expectedDescription
-          value.apiName shouldBe serviceName
-        }
+        case Right(value: String) => value shouldBe "oas string" 
         case _            => fail()
       }
 
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
       verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
       verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(serviceName), eqTo(PublicApiAccess()))
+      verify(mockOasParser).enhanceOas(eqTo(convertedWebApiToOasResult))
 
     }
 
@@ -99,7 +99,7 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers wit
         .thenReturn(Future.successful(Right(apiDeinitionResult)))
       when(mockApiRamlParser.getRaml(any[String])).thenReturn(Future.failed(new RuntimeException(errorMessage)))
 
-      val result = await(objInTest.publishByServiceName(serviceName))
+      val result: Either[ParsedResult,String] = await(objInTest.publishByServiceName(serviceName))
       result match {
         case Left(e: PublishFailedResult) => {e.message shouldBe s"getRamlForApiDefinition failed: $errorMessage"}
         case _            => fail()
@@ -112,9 +112,9 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers wit
 
     "return a Left when OasParser returns an error" in new Setup {
 
-      val apiDeinitionResult = ApiDefinitionConnector.ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName)
+      val apiDeinitionResult: ApiDefinitionConnector.ApiDefinitionResult = ApiDefinitionConnector.ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName)
 
-      val errorMessage = "Parse failed"
+      val errorMessage: String = "Parse failed"
 
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
         .thenReturn(Future.successful(Right(apiDeinitionResult)))
@@ -122,7 +122,7 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers wit
       when(mockOasParser.parseWebApiDocument(any[WebApiDocument], any[String], any[ApiAccess]))
         .thenReturn(Future.failed(new RuntimeException(errorMessage)))
 
-      val result = await(objInTest.publishByServiceName(serviceName))
+      val result: Either[ParsedResult,String] = await(objInTest.publishByServiceName(serviceName))
       result match {
         case Left(e: PublishFailedResult) => {e.message shouldBe s"handleRamlToOas failed: $errorMessage"}
         case _            => fail()
@@ -134,15 +134,55 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers wit
     }
 
 
-     "return Left when connector returns Left" in new Setup {
+     "return Left with PublishFailedResult when connector returns Left with exception" in new Setup {
 
-      val notFoundException = new NotFoundException(" unable to fetch definition")
+      val exception = new RuntimeException(" unable to fetch definition")
+
+      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        .thenReturn(Future.successful(Left(exception)))
+
+      val result: Either[ParsedResult,String] = await(objInTest.publishByServiceName(serviceName))
+      result shouldBe Left(PublishFailedResult("Unknown error occured"))
+
+      verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+      verifyZeroInteractions(mockApiRamlParser)
+      verifyZeroInteractions(mockOasParser)
+
+    }
+
+    "return Left with OpenApiEnhancementFailedResult when oas parser returns Left with GeneralOpenApiProcessingError" in new Setup {
+
+      val apiDeinitionResult = ApiDefinitionConnector.ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName)
+      val expectedDescription = "A description."
+      val convertedWebApiToOasResult = ConvertedWebApiToOasResult("", serviceName, expectedDescription)
+      val errorMessage = "Swagger Parse failure"
+
+      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))).thenReturn(Future.successful(Right(apiDeinitionResult)))
+      when(mockApiRamlParser.getRaml(any[String])).thenReturn(Future.successful(mockWebApiDocument))
+      when(mockWebApiDocument.raw).thenReturn(Optional.of(expectedDescription))
+      when(mockOasParser.parseWebApiDocument(any[WebApiDocument], any[String], any[ApiAccess])).thenReturn(Future.successful(convertedWebApiToOasResult))
+      when(mockOasParser.enhanceOas(any[ConvertedWebApiToOasResult])).thenReturn(Left(GeneralOpenApiProcessingError("apiName", errorMessage)))
+
+
+      val result: Either[ParsedResult,String] = await(objInTest.publishByServiceName(serviceName))
+      result shouldBe Left(OpenApiEnhancementFailedResult(s"handleEnhancingOasForCatalogue failed: $errorMessage"))
+
+      verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+      verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
+      verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(serviceName), eqTo(PublicApiAccess()))
+      verify(mockOasParser).enhanceOas(eqTo(convertedWebApiToOasResult))
+
+    }
+
+    "return Left ApiDefinitionNotFoundResult when connector returns Left UpStream4xxResponse" in new Setup {
+
+      val notFoundException = new Upstream4xxResponse("unable to fetch definition", 404, 404)
 
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
         .thenReturn(Future.successful(Left(notFoundException)))
 
       val result = await(objInTest.publishByServiceName(serviceName))
-      result shouldBe Left(PublishFailedResult("Unknown error occured"))
+      result shouldBe Left(ApiDefinitionNotFoundResult("unable to fetch definition"))
 
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
       verifyZeroInteractions(mockApiRamlParser)
