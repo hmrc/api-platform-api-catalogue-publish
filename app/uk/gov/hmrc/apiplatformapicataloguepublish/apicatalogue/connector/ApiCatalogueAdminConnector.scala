@@ -43,65 +43,61 @@ import play.api.libs.Files.TemporaryFile
 import play.api.mvc.MultipartFormData
 import play.libs.Files.{TemporaryFile, TemporaryFileCreator}
 
-
+import scala.util.Try
+import java.nio.charset.StandardCharsets
+import java.util.Base64
 @Singleton
 class ApiCatalogueAdminConnector @Inject() (
     val ws: WSClient,
+    val config: Config,
     val fileCreator: Files.TemporaryFileCreator
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
-  private def publishApiUrl(serviceBaseUrl: String) = s"$serviceBaseUrl/integration-catalogue-admin-api/services/apis/publish"
-  def createTempFile(fileName:String, content: String)={
-      val file = fileCreator.create()
-
+  def createTempFile(fileName: String, content: String) = {
+    val file = fileCreator.create()
 
   }
-  def publishApi(body: String)(implicit hc: HeaderCarrier): Future[JsValue] = {
-       implicit val publishErrorReads = Json.format[PublishError]
-       implicit val publishdetailsReads = Json.format[PublishDetails]
-       implicit val publishResultReads = Json.format[PublishResult]
 
-      val headers = Map.empty
+  def publishApi(body: String): Future[JsValue] = {
+    implicit val publishErrorReads = Json.format[PublishError]
+    implicit val publishdetailsReads = Json.format[PublishDetails]
+    implicit val publishResultReads = Json.format[PublishResult]
 
-      ws.url(publishApiUrl("http://localhost:11114"))
-        .withHttpHeaders(("x-platform-type"-> "API_PLATFORM"),
-          ("AUTHORIZATION" -> "dGVzdC1hdXRoLWtleQ=="),
-          ("x-specification-type" -> "OAS_V3"),
-          ("ContentType" -> "multipart/form-data"))
+    val headers = Seq(
+      ("x-platform-type" -> "API_PLATFORM"),
+      ("AUTHORIZATION" -> s"${config.authorizationKey}"),
+      ("x-specification-type" -> "OAS_V3"),
+      ("ContentType" -> "multipart/form-data")
+    )
+
+    ws.url(s"${config.baseUrl}/integration-catalogue-admin-api/services/apis/publish")
+      .withHttpHeaders(headers: _*)
       .put(Source.single(MultipartFormData.DataPart("selectedFile", body)))
+      .map(response => {
+        logger.debug(response.body)
+        Json.parse(response.body)
+      })
 
-                   .map(response => {
-                    logger.debug(response.body)
-                Json.parse(response.body)}
-                )
-
-    // ws.url(publishApiUrl("http://localhost:11114"))
-    //             .withHttpHeaders(("AUTHORISATION" -> "dGVzdC1hdXRoLWtleQ=="),
-    //             ("x-platform-type" -> "API_PLATFORM"),
-    //             ("x-specification-type" -> "OAS_V3"),
-    //             ("Content-Type" -> "multipart/form-data; boundary=---------------------------293582696224464"))
-                
-    //             .withBody(body.getBytes())
-    //             .execute("PUT")
-    //             .map(response => {
-    //                 logger.debug(response.body)
-    //             Json.parse(response.body)}
-    //             )
-    
   }
 
-
-  def getRequestBuilder(url: String, fileMetadata: Map[String, String], headers: Map[String, String],name:String, fileName:String, fileContent: Array[Byte],mimeType:String) = {
-
+  def getRequestBuilder(
+      url: String,
+      fileMetadata: Map[String, String],
+      headers: Map[String, String],
+      name: String,
+      fileName: String,
+      fileContent: Array[Byte],
+      mimeType: String
+    ) = {
 
     val rb = new RequestBuilder("POST").setUrl(url)
-     fileMetadata.foreach {
+    fileMetadata.foreach {
       case (key, value) =>
         rb.addBodyPart(new StringPart(key, value))
     }
 
-    val byteParts = new ByteArrayPart(name,fileContent,mimeType,Charset.forName("UTF-8"),fileName)
+    val byteParts = new ByteArrayPart(name, fileContent, mimeType, Charset.forName("UTF-8"), fileName)
     rb.addBodyPart((byteParts))
 
     headers.foreach {
@@ -114,11 +110,15 @@ class ApiCatalogueAdminConnector @Inject() (
     rb
   }
 
-     def addHeader(headerName: String): Boolean = !"Content-Type".equals(headerName) && !"Content-Length".equals(headerName)
+  def addHeader(headerName: String): Boolean = !"Content-Type".equals(headerName) && !"Content-Length".equals(headerName)
 }
 
 object ApiCatalogueAdminConnector {
-  case class Config(baseUrl: String)
-
+  case class Config(baseUrl: String, authorizationKey: String)
+  // def encodedAuthKey(key: String): String = {
+  //   val encodedString =  Try(new String(Base64.getEncoder.encode(key.getBytes), StandardCharsets.UTF_8))
+  //     logger.info(s"API_PLATFORM auth key to publish to API Catalogue - ${encodedString.getOrElse("ERROR-ENCODING")}")
+  //     encodedString
+  // }
 
 }

@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config
+package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.config
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
 import com.google.inject.{AbstractModule, Provider}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import javax.inject.{Inject, Singleton}
 
-
 @Singleton
-class ApiDefinitionConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApiDefinitionConnector.Config] {
-  override def get(): ApiDefinitionConnector.Config = {
-    lazy val baseUrl = sc.baseUrl("api-definition")
-    ApiDefinitionConnector.Config(baseUrl)
+class ApiCatalogueAdminConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApiCatalogueAdminConnector.Config] {
+  override def get(): ApiCatalogueAdminConnector.Config = {
+    lazy val baseUrl = sc.baseUrl("integration-catalogue-admin-api")
+    lazy val authorizationKey = sc.getString("publish.authKey.apiPlatform")
+    ApiCatalogueAdminConnector.Config(baseUrl, authorizationKey)
   }
 }
