@@ -17,7 +17,7 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.ApiDefinitionResult
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.ApiRamlParser
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
 
@@ -29,9 +29,9 @@ import scala.concurrent.ExecutionContext
 import webapi.WebApiDocument
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
 import uk.gov.hmrc.http.Upstream4xxResponse
-
 import cats.data.EitherT
 import cats.implicits._
+
 import scala.util.control.NonFatal
 import play.api.Logging
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.GeneralOpenApiProcessingError
@@ -63,11 +63,11 @@ class PublishService @Inject() (apiDefinitionConnector: ApiDefinitionConnector,
      Right(result.toString())
   }
 
-  def mapApiDefinitionResult(result: Either[Throwable, ApiDefinitionResult]): Either[ParsedResult, ApiDefinitionResult] = {
+  def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult]): Either[ParsedResult, ApiDefinitionResult] = {
     result match {
       case Right(x: ApiDefinitionResult)                     => Right(x)
-      case Left(e: Upstream4xxResponse) => Left(ApiDefinitionNotFoundResult(e.getMessage))
-      case _                            => Left(PublishFailedResult("Unknown error occured"))
+      case Left(e: ApiDefinitionConnector.ApiDefinitionNotFoundResult) => Left(ApiDefinitionNotFoundResult(e.message))
+      case Left(e: ApiDefinitionFailedResult)                            => Left(PublishFailedResult(e.message))
     }
 
   }

@@ -17,10 +17,12 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector
 
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.Config
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.http.ws.WSPut
-import scala.concurrent.{Future, ExecutionContext}
+
+import scala.concurrent.{ExecutionContext, Future}
 import play.api.Logging
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishResult
 import play.api.libs.json.Json
@@ -29,22 +31,32 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishErr
 import uk.gov.hmrc.http.HeaderCarrier
 import play.shaded.ahc.org.asynchttpclient.{DefaultAsyncHttpClient, ListenableFuture, RequestBuilder, Response}
 import play.shaded.ahc.org.asynchttpclient.request.body.multipart.{ByteArrayPart, StringPart}
+
 import java.nio.charset.Charset
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.libs.json.JsValue
+
 import java.util.UUID
 import akka.stream.scaladsl.Source
+import play.api.libs.Files
+import play.api.libs.Files.TemporaryFile
 import play.api.mvc.MultipartFormData
+import play.libs.Files.{TemporaryFile, TemporaryFileCreator}
 
 
 @Singleton
 class ApiCatalogueAdminConnector @Inject() (
-    val ws: WSClient
+    val ws: WSClient,
+    val fileCreator: Files.TemporaryFileCreator
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
   private def publishApiUrl(serviceBaseUrl: String) = s"$serviceBaseUrl/integration-catalogue-admin-api/services/apis/publish"
+  def createTempFile(fileName:String, content: String)={
+      val file = fileCreator.create()
 
+
+  }
   def publishApi(body: String)(implicit hc: HeaderCarrier): Future[JsValue] = {
        implicit val publishErrorReads = Json.format[PublishError]
        implicit val publishdetailsReads = Json.format[PublishDetails]
@@ -53,7 +65,12 @@ class ApiCatalogueAdminConnector @Inject() (
       val headers = Map.empty
 
       ws.url(publishApiUrl("http://localhost:11114"))
+        .withHttpHeaders(("x-platform-type"-> "API_PLATFORM"),
+          ("AUTHORIZATION" -> "dGVzdC1hdXRoLWtleQ=="),
+          ("x-specification-type" -> "OAS_V3"),
+          ("ContentType" -> "multipart/form-data"))
       .put(Source.single(MultipartFormData.DataPart("selectedFile", body)))
+
                    .map(response => {
                     logger.debug(response.body)
                 Json.parse(response.body)}

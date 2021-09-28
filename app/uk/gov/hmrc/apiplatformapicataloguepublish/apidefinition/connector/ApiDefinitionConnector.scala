@@ -18,18 +18,17 @@
 
 
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionResult, Config}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
-
-import javax.inject.{Inject, Singleton}
 import play.api.Logging
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, NotFoundException}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpClient, Upstream4xxResponse}
 import uk.gov.hmrc.play.http.ws.WSGet
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
-import uk.gov.hmrc.http.HttpReads.Implicits._
 
  @Singleton
  class ApiDefinitionConnector @Inject()(
@@ -39,17 +38,19 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
     private def definitionUrl(serviceBaseUrl: String, serviceName: String) =
       s"$serviceBaseUrl/api-definition/$serviceName"
 
-    def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[Throwable, ApiDefinitionResult]] = {
+    def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]] = {
       logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition")
-      val r = http.GET[Option[ApiDefinition]](definitionUrl(config.baseUrl, serviceName)).map{
+      http.GET[Option[ApiDefinition]](definitionUrl(config.baseUrl, serviceName)).map{
         case Some(x) => Right(ApiDefinitionResult(getRamlUri(x), getAccessTypeOfLatestVersion(x), serviceName))
-        case _ => Left(new NotFoundException(" unable to fetch definition"))
-      }
-
-      r.recover {
+        case _ => Left(ApiDefinitionNotFoundResult(" unable to fetch definition"))
+      }.recover {
         case NonFatal(e)          =>
           logger.error(s"Failed $e")
-         Left(e)
+          e match {
+            case x: BadGatewayException => Left(ApiDefinitionBadGatewayResult(x.getMessage))
+            case x: Upstream4xxResponse => Left(ApiDefinitionNotFoundResult(" unable to fetch definition"))
+            case _ => Left(ApiDefinitionGeneralFailedResult(e.getMessage))
+          }
       }
     }
   
@@ -58,4 +59,11 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 object ApiDefinitionConnector {
   case class Config(baseUrl: String)
   case class ApiDefinitionResult(url: String, access: ApiAccess, serviceName: String)
+
+  sealed trait ApiDefinitionFailedResult {
+    val message: String
+  }
+  case class ApiDefinitionNotFoundResult(message: String) extends  ApiDefinitionFailedResult
+  case class ApiDefinitionBadGatewayResult(message: String) extends  ApiDefinitionFailedResult
+  case class ApiDefinitionGeneralFailedResult(message: String) extends  ApiDefinitionFailedResult
 }
