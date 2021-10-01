@@ -17,7 +17,7 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config
 
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import com.google.inject.{AbstractModule, Provider}
+import com.google.inject.{ Provider}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import javax.inject.{Inject, Singleton}
 

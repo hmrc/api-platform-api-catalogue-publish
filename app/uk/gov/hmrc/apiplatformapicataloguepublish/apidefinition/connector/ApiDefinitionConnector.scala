@@ -23,7 +23,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDef
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpClient, Upstream4xxResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.play.http.ws.WSGet
 
 import javax.inject.{Inject, Singleton}
@@ -45,12 +45,8 @@ import scala.util.control.NonFatal
         case _ => Left(ApiDefinitionNotFoundResult(" unable to fetch definition"))
       }.recover {
         case NonFatal(e)          =>
-          logger.error(s"Failed $e")
-          e match {
-            case x: BadGatewayException => Left(ApiDefinitionBadGatewayResult(x.getMessage))
-            case x: Upstream4xxResponse => Left(ApiDefinitionNotFoundResult(" unable to fetch definition"))
-            case _ => Left(ApiDefinitionGeneralFailedResult(e.getMessage))
-          }
+          logger.error(s"Failed", e)
+          Left(ApiDefinitionGeneralFailedResult(e.getMessage))
       }
     }
   
@@ -64,6 +60,5 @@ object ApiDefinitionConnector {
     val message: String
   }
   case class ApiDefinitionNotFoundResult(message: String) extends  ApiDefinitionFailedResult
-  case class ApiDefinitionBadGatewayResult(message: String) extends  ApiDefinitionFailedResult
   case class ApiDefinitionGeneralFailedResult(message: String) extends  ApiDefinitionFailedResult
 }

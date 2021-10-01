@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.config
 
+import com.google.inject.Provider
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
-import com.google.inject.{AbstractModule, Provider}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
 import javax.inject.{Inject, Singleton}
 
 @Singleton

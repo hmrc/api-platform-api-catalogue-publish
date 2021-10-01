@@ -17,17 +17,13 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.openapi
 
 import io.swagger.v3.oas.models.OpenAPI
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{GeneralOpenApiProcessingError, OpenApiProcessingError}
-
 import java.util
 
 trait ValidateXamfText extends OpenAPICommon {
 
-
   def validateAmfOAS(openApi: OpenAPI, apiName: String): Either[OpenApiProcessingError, OpenAPI] = {
 
-
-    def validateSubdocuments(subdocuments: List[SubDocument], openApi: OpenAPI) = {
+    def validateSubdocuments(subdocuments: List[SubDocument], openApi: OpenAPI): Either[GeneralOpenApiProcessingError, OpenAPI] = {
       val errorListAsStrings: List[String] = subdocuments.filter(document => {
         document.content.contains("https://developer.service.hmrc.gov.uk/api-documentation/assets/")
       })
@@ -42,10 +38,10 @@ trait ValidateXamfText extends OpenAPICommon {
     val maybeUserDocumentationExtensions: Option[util.ArrayList[util.LinkedHashMap[String, AnyRef]]] =
       Option(openApi).flatMap(getXamfDocumentationExtensions)
 
-    val listOfsubDocuments: List[SubDocument] =
+    val listOfSubDocuments: List[SubDocument] =
       maybeUserDocumentationExtensions.map(x => extractDocumentation(apiName, x)).getOrElse(List.empty)
 
-    validateSubdocuments(listOfsubDocuments, openApi)
+    validateSubdocuments(listOfSubDocuments, openApi)
 
   }
 

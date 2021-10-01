@@ -18,46 +18,40 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models
 
 import java.util.UUID
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+import play.api.libs.json.Format
+
 import scala.collection.immutable
 
 
+case class IntegrationId(value: UUID) extends AnyVal
 
+object IntegrationId {
 
-  case class IntegrationId(value: UUID) extends AnyVal
+  import play.api.libs.json.Json
 
-  object IntegrationId {
-    import play.api.libs.json.Json
-    implicit val apiIdFormat = Json.valueFormat[IntegrationId]
-  }
+  implicit val apiIdFormat: Format[IntegrationId] = Json.valueFormat[IntegrationId]
+}
 
-  sealed trait PlatformType extends EnumEntry
+sealed trait PlatformType extends EnumEntry
 
-  object PlatformType extends Enum[PlatformType] with PlayJsonEnum[PlatformType] {
+object PlatformType extends Enum[PlatformType] with PlayJsonEnum[PlatformType] {
 
-    val values = findValues
+  val values: immutable.IndexedSeq[PlatformType] = findValues
 
-    case object DES extends PlatformType
-    case object CMA extends PlatformType
-    case object CORE_IF extends PlatformType
-    case object API_PLATFORM extends PlatformType
-    case object CDS_CLASSIC extends PlatformType
-    case object TRANSACTION_ENGINE extends PlatformType
+  case object DES extends PlatformType
 
-  }
+  case object CMA extends PlatformType
 
-  case class PublishResponse(id: IntegrationId, publisherReference: String, platformType: PlatformType)
+  case object CORE_IF extends PlatformType
 
-  case class PublishError(code: Int, message: String)
+  case object API_PLATFORM extends PlatformType
 
-  case class PublishDetails(isUpdate: Boolean, integrationId: IntegrationId, publisherReference: String, platformType: PlatformType)
+  case object CDS_CLASSIC extends PlatformType
 
-  object PublishDetails {
+  case object TRANSACTION_ENGINE extends PlatformType
 
-    def toPublishResponse(details: PublishDetails): PublishResponse = {
-      PublishResponse(details.integrationId, details.publisherReference, details.platformType)
-    }
-  }
+}
 
-  case class ApiPublishRequest(publisherReference: Option[String], platformType: PlatformType, specificationType: String = "OAS_V3", contents: String)
+case class ApiPublishRequest(publisherReference: Option[String], platformType: PlatformType, specificationType: String = "OAS_V3", contents: String)
 
-  case class PublishResult(isSuccess: Boolean, publishDetails: Option[PublishDetails] = None, errors: List[PublishError] = List.empty)
+case class PublishResponse(id: IntegrationId, publisherReference: String, platformType: PlatformType)

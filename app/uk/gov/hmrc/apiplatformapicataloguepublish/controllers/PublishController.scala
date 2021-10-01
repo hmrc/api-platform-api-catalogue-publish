@@ -16,26 +16,28 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, PublishResponse}
+import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import uk.gov.hmrc.apiplatformapicataloguepublish.service.PublishService
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
-import uk.gov.hmrc.apiplatformapicataloguepublish.service.{PublishFailedResult, ApiDefinitionNotFoundResult}
 
 @Singleton()
-class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)(implicit val ec: ExecutionContext) extends BackendController(cc) {
+class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)
+                                  (implicit val ec: ExecutionContext) extends BackendController(cc) with ApiCatalogueAdminJsonFormatters{
 
   def publish(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
     //call api definition to get latest application version?(service name)
-    publishService.publishByServiceName(serviceName).map(maybeResult =>
-      maybeResult match {
-        case Right(oasString: String)      => Ok(oasString)
-        case Left(e: ApiDefinitionNotFoundResult) => NotFound(s"api definition not found ${e.message}")
-        case Left(e: PublishFailedResult) => InternalServerError(s"something went wrong ${e.message}")
-      }
-    )
+
+    publishService.publishByServiceName(serviceName).map {
+      case Right(oasString: PublishResponse) => Ok(Json.toJson(oasString))
+      case Left(e: ApiDefinitionNotFoundResult) => NotFound(s"api definition not found: ${e.message}")
+      case Left(e: PublishFailedResult) => InternalServerError(s"something went wrong: ${e.message}")
+      case _ =>  InternalServerError(s"something went wrong")
+    }
   }
 
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.common.config
+package uk.gov.hmrc.apiplatformapicataloguepublish.config
 
 import com.google.inject.AbstractModule
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.config.ApiCatalogueAdminConnectorConfigProvider
@@ -22,12 +22,12 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCata
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config.ApiDefinitionConnectorConfigProvider
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 
-
 class ConfigurationModule extends AbstractModule {
-
   override def configure(): Unit = {
-             bind(classOf[ApiDefinitionConnector.Config]).toProvider(classOf[ApiDefinitionConnectorConfigProvider])
-             bind(classOf[ApiCatalogueAdminConnector.Config]).toProvider(classOf[ApiCatalogueAdminConnectorConfigProvider])
+    bind(classOf[ApiCatalogueAdminConnector.Config])
+      .toProvider(classOf[ApiCatalogueAdminConnectorConfigProvider])
+    bind(classOf[ApiDefinitionConnector.Config])
+      .toProvider(classOf[ApiDefinitionConnectorConfigProvider])
   }
 
 }

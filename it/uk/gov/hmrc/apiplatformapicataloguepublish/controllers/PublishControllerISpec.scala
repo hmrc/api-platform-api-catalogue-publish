@@ -5,7 +5,9 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers.OK
+import play.api.test.Helpers.{OK, NOT_FOUND, INTERNAL_SERVER_ERROR, BAD_REQUEST}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apiplatformapicataloguepublish.support._
@@ -16,8 +18,11 @@ import java.util.concurrent.TimeUnit
 import scala.io.Source
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
+import java.util.UUID
+
 class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport with BeforeAndAfterEach with MetricsTestSupport
-with ApiDefinitionStub with ApiProducerTeamStub with ApiDefinitionData with ApiDefinitionJsonFormatters with ApiDefinitionUtils{
+with ApiDefinitionStub with ApiProducerTeamStub  with ApiDefinitionData
+with ApiDefinitionJsonFormatters with ApiDefinitionUtils with ApiCatalogueStub with ApiCatalogueAdminJsonFormatters{
 
 
   protected override def appBuilder: GuiceApplicationBuilder =
@@ -28,7 +33,9 @@ with ApiDefinitionStub with ApiProducerTeamStub with ApiDefinitionData with ApiD
         "auditing.consumer.baseUri.host" -> wireMockHost,
         "auditing.consumer.baseUri.port" -> wireMockPort,
         "microservice.services.api-definition.host" -> wireMockHost,
-        "microservice.services.api-definition.port" -> wireMockPort
+        "microservice.services.api-definition.port" -> wireMockPort,
+        "microservice.services.integration-catalogue-admin-api.host" -> wireMockHost,
+        "microservice.services.integration-catalogue-admin-api.port" -> wireMockPort
       )
 
 
@@ -36,6 +43,7 @@ with ApiDefinitionStub with ApiProducerTeamStub with ApiDefinitionData with ApiD
   override def beforeEach(): Unit = {
     super.beforeEach()
     givenCleanMetricRegistry()
+
   }
 
   val url = s"http://localhost:$port/api-platform-api-catalogue-publish/publish"
@@ -64,23 +72,69 @@ with ApiDefinitionStub with ApiProducerTeamStub with ApiDefinitionData with ApiD
         .get(5, TimeUnit.SECONDS).asInstanceOf[WebApiDocument]
     }
 
-    def absoluteRamlFilePath =  Paths.get(".").toAbsolutePath().toString().replace(".", "") + "it/resources/test-ramlFile.raml"
+    def absoluteRamlFilePath =  Paths.get(".").toAbsolutePath.toString.replace(".", "") + "it/resources/test-ramlFile.raml"
 
   }
 
   "PublishController" when {
 
     "POST /publish/[serviceName]" should {
-      "respond with 200 " in new Setup {
+      "respond with 200 when publish successful" in new Setup {
         val serviceName = "my-service"
         val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString = Json.toJson(apiDefinition1withwiremock).toString
-         primeGetByServiceName(OK, apiDefinitionAsString,  serviceName )
+        val publishResponse: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef", API_PLATFORM)
+        val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
+
+        primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
         primeGETWithFileContents("/" + getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
+        primeApiPublish(publishResponseAsJsonString, OK)
+
         val result: WSResponse = callPublishEndpoint(serviceName)
         result.status mustBe OK
-        println(result.body)
       }
+
+
+      "respond with 404 when api definition not found" in new Setup {
+        val serviceName = "my-service"
+
+        primeGetByServiceName(NOT_FOUND, "{}}", serviceName)
+
+        val result: WSResponse = callPublishEndpoint(serviceName)
+        result.status mustBe NOT_FOUND
+      }
+
+      "respond with 500 when getRaml fails" in new Setup {
+        val serviceName = "my-service"
+        val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
+        val apiDefinitionAsString = Json.toJson(apiDefinition1withwiremock).toString
+
+
+        primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
+        primeGETReturnsNotFound("/" + getRamlUri(apiDefinition1))
+
+
+        val result: WSResponse = callPublishEndpoint(serviceName)
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
+
+
+      "respond with 500 when publish fails" in new Setup {
+        val serviceName = "my-service"
+        val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
+        val apiDefinitionAsString = Json.toJson(apiDefinition1withwiremock).toString
+        val publishResponse: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef", API_PLATFORM)
+        val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
+
+        primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
+        primeGETWithFileContents("/" + getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
+        primeApiPublish(publishResponseAsJsonString, BAD_REQUEST)
+
+        val result: WSResponse = callPublishEndpoint(serviceName)
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
+
+
     }
   }
 }

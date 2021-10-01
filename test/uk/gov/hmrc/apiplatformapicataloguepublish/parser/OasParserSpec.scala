@@ -16,25 +16,21 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.MockitoSugar
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{PrivateApiAccess, PublicApiAccess}
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{ConvertedWebApiToOasResult, GeneralOpenApiProcessingError, OpenApiProcessingError}
 import webapi.{Raml10, WebApiDocument}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
-
 import java.util.concurrent.TimeUnit
-import scala.io.Source
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PrivateApiAccess
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import org.scalatest.BeforeAndAfterEach
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ConvertedWebApiToOasResult
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.GeneralOpenApiProcessingError
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.OpenApiProcessingError
+import scala.io.Source
 
 class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with OasStringUtils with ScalaFutures with BeforeAndAfterEach {
 

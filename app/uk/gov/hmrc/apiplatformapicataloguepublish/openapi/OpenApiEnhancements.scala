@@ -17,17 +17,15 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.openapi
 
 import io.swagger.v3.core.util.Yaml
-import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.oas.models.{ExternalDocumentation, OpenAPI}
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 import play.api.Logging
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.headers.OpenApiHeaders
 
 import java.util
 
-import io.swagger.v3.oas.models.ExternalDocumentation
-import org.joda.time.DateTime
-
-trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfText with OpenAPICommon with OpenApiExamples {
+trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfText with OpenAPICommon with OpenApiExamples with OpenApiHeaders{
 
   def addOasSpecAttributes(convertedOasResult: ConvertedWebApiToOasResult, reviewedDate: String): Either[OpenApiProcessingError, String] = {
     val options: ParseOptions = new ParseOptions()
