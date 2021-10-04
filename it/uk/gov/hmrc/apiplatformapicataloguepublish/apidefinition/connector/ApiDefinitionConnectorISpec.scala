@@ -1,31 +1,30 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
 
 import org.scalatest.BeforeAndAfterEach
-import uk.gov.hmrc.apiplatformapicataloguepublish.support.{ApiDefinitionStub, MetricsTestSupport, ServerBaseISpec}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Helpers._
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, Upstream4xxResponse, UpstreamErrorResponse}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionBuilder
 import play.api.libs.json.Json
+import play.api.test.Helpers._
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionGeneralFailedResult, ApiDefinitionNotFoundResult, ApiDefinitionResult}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinitionJsonFormatters
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiVersion._
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.{ApiDefinitionBuilder, ApiDefinitionUtils}
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
-import uk.gov.hmrc.http.NotFoundException
+import uk.gov.hmrc.apiplatformapicataloguepublish.support.{ApiDefinitionStub, MetricsTestSupport, ServerBaseISpec}
+import uk.gov.hmrc.http.HeaderCarrier
 
 class ApiDefinitionConnectorISpec
-    extends ServerBaseISpec
+  extends ServerBaseISpec
     with ApiDefinitionStub
     with ApiDefinitionBuilder
     with ApiDefinitionJsonFormatters
     with ApiDefinitionData
     with BeforeAndAfterEach
-    with MetricsTestSupport {
+    with MetricsTestSupport
+    with ApiDefinitionUtils {
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
       .configure(
-        "metrics.enabled" -> true,
+        "metrics.enabled" -> false,
         "auditing.enabled" -> false,
         "auditing.consumer.baseUri.host" -> wireMockHost,
         "auditing.consumer.baseUri.port" -> wireMockPort,
@@ -44,47 +43,48 @@ class ApiDefinitionConnectorISpec
     val objInTest: ApiDefinitionConnector = app.injector.instanceOf[ApiDefinitionConnector]
   }
 
-  "ApiDeifintionConnector" should {
+  "ApiDefinitionConnector" should {
     "returns an api definition" in new Setup {
-      val jsonBody = Json.toJson(apiDefinition1).toString
+      val expectedResult: ApiDefinitionResult =
+        ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), apiDefinition1.serviceName)
+      val jsonBody: String = Json.toJson(apiDefinition1).toString
       primeGetByServiceName(
         OK,
         jsonBody,
         serviceName
       )
       await(objInTest.getDefinitionByServiceName(serviceName)) match {
-        case Right(x: ApiDefinition) => x mustBe apiDefinition1
-        case _                       => fail
+        case Right(x: ApiDefinitionResult) => x mustBe expectedResult
+        case _ => fail
 
       }
     }
 
-    "returns a Left NotFoundException" in new Setup {
+    "returns a Left ApiDefinitionNotFoundResult when not found returned" in new Setup {
       primeGetByServiceName(
         NOT_FOUND,
         "{}",
         serviceName
       )
       await(objInTest.getDefinitionByServiceName(serviceName)) match {
-        case Left(e: NotFoundException) => succeed
-        case _                       => fail
+        case Left(_: ApiDefinitionNotFoundResult) => succeed
+        case _ => fail
 
       }
     }
-
-    "return an exception" in new Setup {
+    "returns a Left ApiDefinitionBadGatewayResult when bad gateway returned" in new Setup {
       primeGetByServiceName(
-        BAD_REQUEST,
+        BAD_GATEWAY,
         "{}",
         serviceName
       )
+      await(objInTest.getDefinitionByServiceName(serviceName)) match {
+        case Left(_: ApiDefinitionGeneralFailedResult) => succeed
+        case _ => fail
 
-      val result = await(objInTest.getDefinitionByServiceName(serviceName))
-      result match {
-        case Left(e: uk.gov.hmrc.http.Upstream4xxResponse) => succeed
-        case _                                             => fail()
       }
-
     }
+
+
   }
 }

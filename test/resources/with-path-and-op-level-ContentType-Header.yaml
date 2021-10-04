@@ -1,0 +1,184 @@
+openapi: 3.0.0
+info:
+  title: Address Verification
+  description: A description.
+  version: "1.0"
+servers:
+- url: https://api.service.hmrc.gov.uk/
+paths:
+  /misc/address-verification/lookup:
+    get:
+      description: |
+        Lookup of postal and BFPO (British Forces Post Office) address details within the UK
+      operationId: Lookup address
+      parameters:
+      - name: postcode
+        in: query
+        description: Full postcode to search for (must be url escaped)
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          description: Full postcode to search for (must be url escaped)
+          example: BB00+0BB
+      - name: filter
+        in: query
+        description: Refine the search results futher based on house number or street
+          name
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          description: Refine the search results futher based on house number or street
+            name
+          example: 36+Test+Street
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                example:
+                - id: GB200000706253
+                  uprn: 200000706253
+                  address:
+                    lines:
+                    - Test House
+                    - The Tests
+                    town: Test Town
+                    postcode: BB00 0BB
+                    subdivision:
+                      code: GB-ENG
+                      name: England
+                    country:
+                      code: UK
+                      name: United Kingdom
+                  localCustodian:
+                    code: 1760
+                    name: Test Valley
+                  location:
+                  - 50.9986451
+                  - -1.4690977
+                  language: en
+                  administrativeArea: TEST COUNTY
+                items:
+                  required:
+                  - address
+                  - id
+                  - language
+                  - uprn
+                  type: object
+                  properties:
+                    id:
+                      maxLength: 40
+                      minLength: 1
+                      type: string
+                    uprn:
+                      minimum: 0
+                      type: number
+                      description: "Unique property reference number, up to 12 digits"
+                    address:
+                      required:
+                      - country
+                      - lines
+                      - postcode
+                      - town
+                      type: object
+                      properties:
+                        lines:
+                          type: array
+                          items:
+                            maxLength: 35
+                            minLength: 1
+                            type: string
+                        town:
+                          maxLength: 35
+                          minLength: 1
+                          type: string
+                        postcode:
+                          pattern: "^[A-Z]{1,2}[0-9][0-9A-Z]? [0-9][A-Z]{2}$"
+                          type: string
+                          description: "the outcode, incode combination specified\
+                            \ for the UK by Royal Mail"
+                        subdivision:
+                          required:
+                          - code
+                          - name
+                          type: object
+                          properties:
+                            code:
+                              maxLength: 6
+                              minLength: 2
+                              type: string
+                              description: "the ISO3166-2 subdivision - these are\
+                                \ home nations, regions, departments, states, länder\
+                                \ etc as appropriate"
+                            name:
+                              maxLength: 35
+                              minLength: 1
+                              type: string
+                              description: printable name of the country
+                          additionalProperties: false
+                        country:
+                          required:
+                          - code
+                          - name
+                          type: object
+                          properties:
+                            code:
+                              maxLength: 2
+                              minLength: 2
+                              type: string
+                              description: "UK Country Register 2-letter code (like\
+                                \ ISO3166-1), e.g. 'GB' (note that 'GB' is the official\
+                                \ code for UK although 'UK' is an official synonym\
+                                \ and may be used instead)"
+                            name:
+                              maxLength: 35
+                              minLength: 1
+                              type: string
+                              description: printable name of the country
+                          additionalProperties: false
+                      additionalProperties: false
+                      description: Contains a UK-based address
+                    localCustodian:
+                      required:
+                      - code
+                      - name
+                      type: object
+                      properties:
+                        code:
+                          minimum: 0
+                          type: number
+                          description: UK Local Custodian Code
+                        name:
+                          minLength: 1
+                          type: string
+                          description: Name of the UK Local Custodian
+                      description: The local custodian responsible for this address
+                    location:
+                      type: array
+                      items:
+                        maximum: 180
+                        minimum: -180
+                        type: number
+                    language:
+                      maxLength: 2
+                      minLength: 2
+                      type: string
+                      description: "ISO639-1 code, e.g. 'en' for English"
+                    administrativeArea:
+                      type: string
+                      description: Local council or authority
+                  additionalProperties: false
+      x-amf-is:
+      - headers.contentHeader
+    x-amf-is:
+    - headers.contentHeader
+x-amf-uses:
+  sec: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/securitySchemes.raml
+  headers: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/headers.raml
+  annotations: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/annotations.raml
+  types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml

@@ -20,4 +20,15 @@ trait ApiProducerTeamStub {
     )
   }
 
+  def primeGETReturnsNotFound(expectedUrl: String) = {
+
+    stubFor(get(urlEqualTo(expectedUrl))
+      .willReturn(
+        aResponse()
+          .withStatus(404)
+          withBody("")
+      )
+    )
+  }
+
 }

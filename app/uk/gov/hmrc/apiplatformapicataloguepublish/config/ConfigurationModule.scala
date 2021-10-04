@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config
+package uk.gov.hmrc.apiplatformapicataloguepublish.config
 
+import com.google.inject.AbstractModule
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.config.ApiCatalogueAdminConnectorConfigProvider
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config.ApiDefinitionConnectorConfigProvider
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import com.google.inject.{AbstractModule, Provider}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import javax.inject.{Inject, Singleton}
-
 
 class ConfigurationModule extends AbstractModule {
-
   override def configure(): Unit = {
-             bind(classOf[ApiDefinitionConnector.Config]).toProvider(classOf[ApiDefinitionConnectorConfigProvider])
+    bind(classOf[ApiCatalogueAdminConnector.Config])
+      .toProvider(classOf[ApiCatalogueAdminConnectorConfigProvider])
+    bind(classOf[ApiDefinitionConnector.Config])
+      .toProvider(classOf[ApiDefinitionConnectorConfigProvider])
   }
 
-
-}  
-
-@Singleton
-class ApiDefinitionConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApiDefinitionConnector.Config] {
-  override def get(): ApiDefinitionConnector.Config = {
-    lazy val baseUrl = sc.baseUrl("api-definition")
-    ApiDefinitionConnector.Config(baseUrl)
-  }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
+package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 import play.api.Logging
 
@@ -22,14 +22,14 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext}
 import webapi.{Raml10, WebApiDocument}
 import scala.compat.java8._
+import scala.concurrent.Future
 @Singleton
 class ApiRamlParser @Inject() ()(implicit ec: ExecutionContext) extends Logging {
 
-  def getRaml(url: String) = {
+  def getRaml(url: String): Future[WebApiDocument] = {
      FutureConverters.toScala({
       Raml10.parse(url)
     }).map(x => x.asInstanceOf[WebApiDocument])
   }
-
 
 }
