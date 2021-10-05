@@ -25,8 +25,7 @@ trait ValidateXamfText extends OpenAPICommon {
 
     def validateSubdocuments(subdocuments: List[SubDocument], openApi: OpenAPI): Either[GeneralOpenApiProcessingError, OpenAPI] = {
       val errorListAsStrings: List[String] = subdocuments.filter(document => {
-          document.content.contains("https://developer.service.hmrc.gov.uk/api-documentation/assets/") || 
-          document.content.contains("https://api-documentation-frontend.public.mdtp/api-documentation/assets/")
+          document.content.contains("https://developer.service.hmrc.gov.uk/api-documentation/assets/")
       })
         .map(document => s"API: ${document.apiName} content for title: ${document.title} points to a file!! ${document.content} \n")
 
