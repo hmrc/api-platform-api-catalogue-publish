@@ -32,6 +32,7 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
   def addOasSpecAttributes(convertedOasResult: ConvertedWebApiToOasResult, reviewedDate: String): Either[OpenApiProcessingError, String] = {
     val options: ParseOptions = new ParseOptions()
     options.setResolve(false)
+
     val validatedOpenApi = Option(new OpenAPIV3Parser().readContents(externalToInternalUrls(convertedOasResult.oasAsString), new util.ArrayList(), options))
       .flatMap(swaggerParseResult => Option(swaggerParseResult.getOpenAPI)) match {
       case Some(openApi) => validateAmfOAS(openApi, convertedOasResult.apiName)
