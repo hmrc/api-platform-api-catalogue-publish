@@ -146,11 +146,12 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
   }
 
   private def externalToInternalUrls(content: String) ={
-       content.replaceAll("developer.service.hmrc.gov.uk", "api-documentation-frontend.public.mdtp")
-       content.replaceAll("\\(/api-documentation/docs/", "(https://api-documentation-frontend.public.mdtp/api-documentation/docs/")
-  } 
+       content
+         .replaceAll("developer.service.hmrc.gov.uk", "api-documentation-frontend.public.mdtp")
+         .replaceAll("\\(/api-documentation/docs/", "(https://api-documentation-frontend.public.mdtp/api-documentation/docs/")
+  }
 
   private def internalexternalUrls(content: String) ={
        content.replaceAll("api-documentation-frontend.public.mdtp", "developer.service.hmrc.gov.uk")
-  } 
+  }
 }
