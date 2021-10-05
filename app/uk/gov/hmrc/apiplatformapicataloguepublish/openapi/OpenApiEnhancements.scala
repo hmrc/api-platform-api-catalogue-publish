@@ -68,13 +68,8 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
     openApi
   })
 
-  private def fixDocContent(content: String): String = fixDevhubUrls(addNewLineToBulletMarkDownIfNeeded(content))
+  private def fixDocContent(content: String): String = addNewLineToBulletMarkDownIfNeeded(content)
 
-
-
-  def fixDevhubUrls(content: String) ={
-   content.replaceAll("\\(/api-documentation/docs/", "(https://api-documentation-frontend.public.mdtp/api-documentation/docs/")
-  }
 
   def addNewLineToBulletMarkDownIfNeeded(content: String) ={
     content.replaceAll("(?<!\\n)(\\n){1}(\\*){1}( ){1}", "\n\n* ")
@@ -152,6 +147,7 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
 
   private def externalToInternalUrls(content: String) ={
        content.replaceAll("developer.service.hmrc.gov.uk", "api-documentation-frontend.public.mdtp")
+       content.replaceAll("\\(/api-documentation/docs/", "(https://api-documentation-frontend.public.mdtp/api-documentation/docs/")
   } 
 
   private def internalexternalUrls(content: String) ={
