@@ -73,7 +73,7 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
 
 
   def fixDevhubUrls(content: String) ={
-   content.replaceAll("\\(/api-documentation/docs/", "(https://developer.service.hmrc.gov.uk/api-documentation/docs/")
+   content.replaceAll("\\(/api-documentation/docs/", "(https://api-documentation-frontend.public.mdtp/api-documentation/docs/")
   }
 
   def addNewLineToBulletMarkDownIfNeeded(content: String) ={
