@@ -27,10 +27,15 @@ import java.util
 
 trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfText with OpenAPICommon with OpenApiExamples with OpenApiHeaders{
 
+    def fixExternalUrls(content: String) ={
+       content.replaceAll("developer.service.hmrc.gov.uk", "api-documentation-frontend.public.mdtp")
+   
+  } 
+
   def addOasSpecAttributes(convertedOasResult: ConvertedWebApiToOasResult, reviewedDate: String): Either[OpenApiProcessingError, String] = {
     val options: ParseOptions = new ParseOptions()
     options.setResolve(false)
-    val validatedOpenApi = Option(new OpenAPIV3Parser().readContents(convertedOasResult.oasAsString, new util.ArrayList(), options))
+    val validatedOpenApi = Option(new OpenAPIV3Parser().readContents(fixExternalUrls(convertedOasResult.oasAsString), new util.ArrayList(), options))
       .flatMap(swaggerParseResult => Option(swaggerParseResult.getOpenAPI)) match {
       case Some(openApi) => validateAmfOAS(openApi, convertedOasResult.apiName)
       case None => Left(GeneralOpenApiProcessingError(convertedOasResult.apiName, "Swagger Parse failure"))
@@ -67,8 +72,16 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
 
   private def fixDocContent(content: String): String = fixDevhubUrls(addNewLineToBulletMarkDownIfNeeded(content))
 
+
+
   def fixDevhubUrls(content: String) ={
-    content.replaceAll("\\(/api-documentation/docs/", "(https://developer.service.hmrc.gov.uk/api-documentation/docs/")
+   content.replaceAll( "api-documentation-frontend.public.mdtp", "developer.service.hmrc.gov.uk")
+   content.replaceAll("\\(/api-documentation/docs/", "(https://developer.service.hmrc.gov.uk/api-documentation/docs/")
+
+  // content.replaceAll("\\(/api-documentation/docs/", "(https://api-documentation-frontend.public.mdtp/api-documentation/assets/common/docs")
+
+
+   
   }
 
   def addNewLineToBulletMarkDownIfNeeded(content: String) ={
