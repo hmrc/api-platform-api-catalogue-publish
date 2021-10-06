@@ -30,11 +30,15 @@ trait OpenAPICommon extends ExtensionKeys {
       val maybeContent = Option(x.get("content"))
       val mayBeTitle = Option(x.get("title"))
       (mayBeTitle, maybeContent) match {
-        case (Some(title: String), Some(content: String)) => Some(SubDocument(apiName, title, content))
+        case (Some(title: String), Some(content: String)) if(!isUrl(content)) => Some(SubDocument(apiName, title, content))
         case _ => None
       }
     })
   }
+
+  def isUrl(content: String): Boolean = { 
+    content.startsWith("http")
+}
 
   private def getExtensions(openApi: OpenAPI, key: String): Option[util.ArrayList[java.util.LinkedHashMap[String, Object]]] = {
     Option(openApi.getExtensions).flatMap(extensionsMap =>
