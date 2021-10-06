@@ -76,6 +76,7 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
   }
 
 
+
   private def concatenateXamfDescriptions(openAPI: OpenAPI): OpenAPI = {
     def extractExternalDocsContent(externalDocs: ExternalDocumentation): Option[String] = {
       val description = Option(externalDocs.getDescription)
