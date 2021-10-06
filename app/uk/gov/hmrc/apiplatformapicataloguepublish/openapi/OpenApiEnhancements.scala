@@ -33,7 +33,7 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
     val options: ParseOptions = new ParseOptions()
     options.setResolve(false)
 
-    val validatedOpenApi = Option(new OpenAPIV3Parser().readContents(externalToInternalUrls(convertedOasResult.oasAsString), new util.ArrayList(), options))
+    val validatedOpenApi = Option(new OpenAPIV3Parser().readContents(convertedOasResult.oasAsString, new util.ArrayList(), options))
       .flatMap(swaggerParseResult => Option(swaggerParseResult.getOpenAPI)) match {
       case Some(openApi) => validateAmfOAS(openApi, convertedOasResult.apiName)
       case None => Left(GeneralOpenApiProcessingError(convertedOasResult.apiName, "Swagger Parse failure"))
@@ -68,14 +68,16 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
     openApi
   })
 
-  private def fixDocContent(content: String): String = addNewLineToBulletMarkDownIfNeeded(content)
+  private def fixDocContent(content: String): String = fixDevhubUrls(addNewLineToBulletMarkDownIfNeeded(content))
+
+  def fixDevhubUrls(content: String) ={
+    content.replaceAll("\\(/api-documentation/docs/", "(https://developer.service.hmrc.gov.uk/api-documentation/docs/")
+  }
 
 
   def addNewLineToBulletMarkDownIfNeeded(content: String) ={
     content.replaceAll("(?<!\\n)(\\n){1}(\\*){1}( ){1}", "\n\n* ")
   }
-
-
 
   private def concatenateXamfDescriptions(openAPI: OpenAPI): OpenAPI = {
     def extractExternalDocsContent(externalDocs: ExternalDocumentation): Option[String] = {
@@ -143,16 +145,13 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
   }
 
   private def openApiToContent(openApi: OpenAPI): String = {
-    internalexternalUrls(Yaml.mapper().writeValueAsString(openApi))
+   Yaml.mapper().writeValueAsString(openApi)
   }
 
-  private def externalToInternalUrls(content: String) ={
-       content
-         .replaceAll("developer.service.hmrc.gov.uk", "api-documentation-frontend.public.mdtp")
-         .replaceAll("\\(/api-documentation/docs/", "(https://api-documentation-frontend.public.mdtp/api-documentation/docs/")
-  }
+  // private def externalToInternalUrls(content: String) ={
+  //      content
+  //        .replaceAll("\\(/api-documentation/docs/", "(https://developer.service.hmrc.gov.uk/api-documentation/docs/")
+  // }
 
-  private def internalexternalUrls(content: String) ={
-       content.replaceAll("api-documentation-frontend.public.mdtp", "developer.service.hmrc.gov.uk")
-  }
+ 
 }
