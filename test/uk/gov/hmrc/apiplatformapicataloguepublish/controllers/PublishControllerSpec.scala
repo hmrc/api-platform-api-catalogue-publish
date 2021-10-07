@@ -65,7 +65,7 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAnd
     }
 
     "return 200 and NO api definition" in {
-      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(PublishFailedResult(""))))
+      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(PublishFailedResult("",""))))
       
       val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
      
@@ -74,7 +74,7 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAnd
     }
 
     "return 404 and NO api definition" in {
-      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(ApiDefinitionNotFoundResult(""))))
+      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(ApiDefinitionNotFoundResult("",""))))
       
       val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
       

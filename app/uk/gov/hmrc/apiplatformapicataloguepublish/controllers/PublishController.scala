@@ -24,10 +24,15 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
+import uk.gov.hmrc.apiplatformapicataloguepublish.service.ApiCataloguePublishResult
+import play.api.Logging
+import play.api.libs.json.{Format, Json}
 
 @Singleton()
 class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)
-                                  (implicit val ec: ExecutionContext) extends BackendController(cc) with ApiCatalogueAdminJsonFormatters{
+                                  (implicit val ec: ExecutionContext) extends BackendController(cc)
+                                   with ApiCatalogueAdminJsonFormatters with Logging{
 
   def publish(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
     //call api definition to get latest application version?(service name)
@@ -42,8 +47,19 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
 
   def publishAll(): Action[AnyContent] = Action.async { implicit request =>
     publishService.publishAll().map{
-      case Right(x) => Ok("")
-      case Left(_) => InternalServerError(s"something went wrong")
+      case results: List[Either[ApiCataloguePublishResult, PublishResponse]] =>
+        val countSuccess = results.count(_.isRight)
+        val countFailed = results.count(_.isLeft)
+        results.map{
+          case Right(result: PublishResponse) => logger.info(result.toString())
+          case Left(e: ApiCataloguePublishResult) => logger.error(e.toString())
+        }
+        val response = PublishAllResponse(countSuccess, countFailed)
+        Ok(Json.toJson(response))
+      case _ => InternalServerError(s"something went wrong")
     }
   }
+
+  case class PublishAllResponse(successCount: Int, failureCount: Int)
+  implicit val publishAllResponseFormat: Format[PublishAllResponse] = Json.format[PublishAllResponse]
 }

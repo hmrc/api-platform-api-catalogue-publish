@@ -43,43 +43,60 @@ class PublishService @Inject() (
     extends Logging {
 
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
-    val result = for {
-      apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult))
+    (for {
+      apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult(_, serviceName)))
+      result <- publishDefinitionResult(apiDefinitionResult)
+    } yield result).value
+  }
+
+  def publishDefinitionResult(apiDefinitionResult: ApiDefinitionResult) = {
+    val serviceName = apiDefinitionResult.serviceName
+    for {
       ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
       convertedOas <- EitherT(handleRamlToOas(ramlAndDefinition))
       oasDataWithExtensions <- EitherT(handleEnhancingOasForCatalogue(convertedOas))
-      result <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult))
+      result <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult(_, serviceName)))
     } yield result
-    result.value
   }
 
-  def publishAll()(implicit hc:HeaderCarrier) ={
-    val results: Future[Either[GeneralFailedResult, List[ApiDefinitionResult]]] = apiDefinitionConnector.getAllServices
-    results.map{
-      case Right(x: List[ApiDefinitionResult]) => x.map(z => println(s"${z.serviceName} - ${z.url}"))
-      case _ => ()
+  def publishAll()(implicit hc: HeaderCarrier): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
+    apiDefinitionConnector.getAllServices
+    .flatMap {
+      case Right(definitionList: List[ApiDefinitionResult]) => Future.sequence {
+          definitionList.map(definitionResult => 
+           (for {
+              result <- publishDefinitionResult(definitionResult)
+            } yield result).value)
+        }
+      case Left(x: GeneralFailedResult)        => Future.successful(List(Left(PublishFailedResult("All Services", "something went wrong calling api definition"))))
     }
-    results
+
   }
 
-  def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse]): Either[ApiCataloguePublishResult, PublishResponse] = {
+  def processDefinitionResult(apiDefinitionResult: ApiDefinitionResult) = {
+    logger.info(s"processing ${apiDefinitionResult.serviceName}")
+    getRamlForApiDefinition(apiDefinitionResult)
+
+  }
+
+  def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse], serviceName: String): Either[ApiCataloguePublishResult, PublishResponse] = {
     result match {
       case Right(response: PublishResponse)  => Right(response)
       case Left(e: ApiCatalogueFailedResult) => logger.error(s"publish to catalogue failed ${e.message}")
-        Left(ApiCataloguePublishFailedResult(s"publish to catalogue failed ${e.message}"))
+        Left(ApiCataloguePublishFailedResult(serviceName, s"publish to catalogue failed ${e.message}"))
     }
   }
 
-  def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult]): Either[ApiCataloguePublishResult, ApiDefinitionResult] = {
+  def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult], serviceName: String): Either[ApiCataloguePublishResult, ApiDefinitionResult] = {
     result match {
-      case Right(x: ApiDefinitionResult)                               => Right(x)
+      case Right(x: ApiDefinitionResult)                  => Right(x)
       case Left(e: ApiDefinitionConnector.NotFoundResult) => {
         logger.error(s"Api definition not found: ${e.message}")
-        Left(ApiDefinitionNotFoundResult(e.message))
+        Left(ApiDefinitionNotFoundResult(serviceName, e.message))
       }
-      case Left(e: ApiDefinitionFailedResult)                          => {
+      case Left(e: ApiDefinitionFailedResult)             => {
         logger.error(s"Api definition failed: ${e.message}")
-        Left(PublishFailedResult(e.message))
+        Left(PublishFailedResult(serviceName, e.message))
       }
     }
 
@@ -90,26 +107,26 @@ class PublishService @Inject() (
       .map(x => Right(ResultHolder(apiDefinitionResult, x)))
       .recover {
         case NonFatal(e: Throwable) => logger.error("getRamlForApiDefinition failed: ", e)
-          Left(PublishFailedResult(s"getRamlForApiDefinition failed: ${e.getMessage}"))
+          Left(PublishFailedResult(apiDefinitionResult.serviceName ,s"getRamlForApiDefinition failed: ${e.getMessage}"))
       }
   }
 
-  def handleRamlToOas(ResultHolder: ResultHolder): Future[Either[ApiCataloguePublishResult, ConvertedWebApiToOasResult]] = {
-    oasParser.parseWebApiDocument(ResultHolder.document, ResultHolder.apiDefinitionResult.serviceName, ResultHolder.apiDefinitionResult.access)
+  def handleRamlToOas(resultHolder: ResultHolder): Future[Either[ApiCataloguePublishResult, ConvertedWebApiToOasResult]] = {
+    oasParser.parseWebApiDocument(resultHolder.document, resultHolder.apiDefinitionResult.serviceName, resultHolder.apiDefinitionResult.access)
       .map(Right(_))
       .recover {
         case NonFatal(e: Throwable) => logger.error("handleRamlToOas failed: ", e)
-          Left(PublishFailedResult(s"handleRamlToOas failed: ${e.getMessage}"))
+          Left(PublishFailedResult(resultHolder.apiDefinitionResult.serviceName , s"handleRamlToOas failed: ${e.getMessage}"))
       }
   }
 
   def handleEnhancingOasForCatalogue(oasResult: ConvertedWebApiToOasResult): Future[Either[ApiCataloguePublishResult, String]] = {
     oasParser.enhanceOas(oasResult) match {
       case Right(value: String)                   => Future.successful(Right(value))
-      case Left(e: GeneralOpenApiProcessingError) => 
+      case Left(e: GeneralOpenApiProcessingError) =>
         logger.error(s"OpenAPI enhancements failed: ${e.message}")
-        Future.successful(Left(OpenApiEnhancementFailedResult(s"handleEnhancingOasForCatalogue failed: ${e.message}")))
-      
+        Future.successful(Left(OpenApiEnhancementFailedResult(oasResult.apiName, s"handleEnhancingOasForCatalogue failed: ${e.message}")))
+
     }
   }
 
@@ -119,7 +136,7 @@ case class ResultHolder(apiDefinitionResult: ApiDefinitionResult, document: WebA
 
 sealed trait ApiCataloguePublishResult
 
-case class ApiDefinitionNotFoundResult(message: String) extends ApiCataloguePublishResult
-case class PublishFailedResult(message: String) extends ApiCataloguePublishResult
-case class OpenApiEnhancementFailedResult(message: String) extends ApiCataloguePublishResult
-case class ApiCataloguePublishFailedResult(message: String) extends ApiCataloguePublishResult
+case class ApiDefinitionNotFoundResult(serviceName: String, message: String) extends ApiCataloguePublishResult
+case class PublishFailedResult(serviceName: String, message: String) extends ApiCataloguePublishResult
+case class OpenApiEnhancementFailedResult(serviceName: String, message: String) extends ApiCataloguePublishResult
+case class ApiCataloguePublishFailedResult(serviceName: String, message: String) extends ApiCataloguePublishResult
