@@ -47,7 +47,7 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
 
   def publishAll(): Action[AnyContent] = Action.async { implicit request =>
     publishService.publishAll().map{
-      case results: List[Either[ApiCataloguePublishResult, PublishResponse]] =>
+     results: List[Either[ApiCataloguePublishResult, PublishResponse]] =>
         val countSuccess = results.count(_.isRight)
         val countFailed = results.count(_.isLeft)
         results.map{
@@ -56,7 +56,6 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
         }
         val response = PublishAllResponse(countSuccess, countFailed)
         Ok(Json.toJson(response))
-      case _ => InternalServerError(s"something went wrong")
     }
   }
 

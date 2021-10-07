@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
 
-
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
@@ -37,49 +36,59 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-
-class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAndAfterEach
-  with Matchers with ApiDefinitionData with ApiCatalogueAdminJsonFormatters{
+class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAndAfterEach with Matchers with ApiDefinitionData with ApiCatalogueAdminJsonFormatters {
 
   private val fakeRequest = FakeRequest("POST", "/")
   private val mockPublishService = mock[PublishService]
   private val controller = new PublishController(mockPublishService, Helpers.stubControllerComponents())
 
-    override def beforeEach(): Unit = {
+  override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockPublishService)
   }
 
+  "PublishController" when {
+    "POST /publish/[service-name]" should {
+      val serviceName = "service1"
+      "return 200 and an api definition" in {
 
-  "POST /publish/[service-name]" should {
-   val serviceName = "service1"
-    "return 200 and an api definition" in {
+        val publishResult = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
+        when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier]))
+          .thenReturn(Future.successful(Right(publishResult)))
+        val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
+        status(result) shouldBe Status.OK
+        contentAsString(result) shouldBe Json.toJson(publishResult).toString()
+        verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
+      }
 
-      val publishResult = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
-      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Right(publishResult)))
-      val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
-      status(result) shouldBe Status.OK
-      contentAsString(result) shouldBe Json.toJson(publishResult).toString()
-      verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
+      "return 200 and NO api definition" in {
+        when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(PublishFailedResult("", ""))))
+
+        val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
+
+        status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+        verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
+      }
+
+      "return 404 and NO api definition" in {
+        when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(ApiDefinitionNotFoundResult("", ""))))
+
+        val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
+
+        status(result) shouldBe Status.NOT_FOUND
+        verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
+      }
     }
 
-    "return 200 and NO api definition" in {
-      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(PublishFailedResult("",""))))
-      
-      val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
-     
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-      verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
-    }
+    "POST /publish-all" should {
+      "returns OK with PublishAllResponse" in {
+        when(mockPublishService.publishAll()(any[HeaderCarrier])).thenReturn(Future.successful(List(Left(ApiDefinitionNotFoundResult(apiDefinition1.serviceName, "Api not found")))))
+        val result = controller.publishAll()(fakeRequest)
+        status(result) shouldBe Status.OK
+        contentAsString(result) shouldBe """{"successCount":0,"failureCount":1}"""
 
-    "return 404 and NO api definition" in {
-      when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier])).thenReturn(Future.successful(Left(ApiDefinitionNotFoundResult("",""))))
-      
-      val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
-      
-      status(result) shouldBe Status.NOT_FOUND
-      verify(mockPublishService).publishByServiceName(eqTo(serviceName))(any[HeaderCarrier])
+        verify(mockPublishService).publishAll()(any[HeaderCarrier])
+      }
     }
   }
 }

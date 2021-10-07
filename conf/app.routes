@@ -1,4 +1,4 @@
 # microservice specific routes
 
 POST       /publish/:serviceName    uk.gov.hmrc.apiplatformapicataloguepublish.controllers.PublishController.publish(serviceName)
-POST       /publishall                 uk.gov.hmrc.apiplatformapicataloguepublish.controllers.PublishController.publishAll()
+POST       /publish-all                 uk.gov.hmrc.apiplatformapicataloguepublish.controllers.PublishController.publishAll()
