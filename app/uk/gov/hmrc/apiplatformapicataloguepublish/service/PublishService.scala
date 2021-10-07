@@ -53,6 +53,15 @@ class PublishService @Inject() (
     result.value
   }
 
+  def publishAll()(implicit hc:HeaderCarrier) ={
+    val results: Future[Either[GeneralFailedResult, List[ApiDefinitionResult]]] = apiDefinitionConnector.getAllServices
+    results.map{
+      case Right(x: List[ApiDefinitionResult]) => x.map(z => println(s"${z.serviceName} - ${z.url}"))
+      case _ => ()
+    }
+    results
+  }
+
   def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse]): Either[ApiCataloguePublishResult, PublishResponse] = {
     result match {
       case Right(response: PublishResponse)  => Right(response)
@@ -64,7 +73,7 @@ class PublishService @Inject() (
   def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult]): Either[ApiCataloguePublishResult, ApiDefinitionResult] = {
     result match {
       case Right(x: ApiDefinitionResult)                               => Right(x)
-      case Left(e: ApiDefinitionConnector.ApiDefinitionNotFoundResult) => {
+      case Left(e: ApiDefinitionConnector.NotFoundResult) => {
         logger.error(s"Api definition not found: ${e.message}")
         Left(ApiDefinitionNotFoundResult(e.message))
       }

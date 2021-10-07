@@ -28,7 +28,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCata
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{IntegrationId, PublishResponse}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ ApiDefinitionGeneralFailedResult, ApiDefinitionResult}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ GeneralFailedResult, ApiDefinitionResult}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, PublicApiAccess}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
@@ -165,7 +165,7 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers wit
      "return Left with PublishFailedResult when connector returns Left with exception" in new Setup {
 
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
-        .thenReturn(Future.successful(Left(ApiDefinitionGeneralFailedResult("Some Message"))))
+        .thenReturn(Future.successful(Left(GeneralFailedResult("Some Message"))))
 
       val result: Either[ApiCataloguePublishResult,PublishResponse] = await(objInTest.publishByServiceName(serviceName))
       result shouldBe Left(PublishFailedResult("Some Message"))
@@ -203,7 +203,7 @@ class PublishServiceSpec extends AnyWordSpec with MockitoSugar with Matchers wit
     "return Left ApiDefinitionNotFoundResult when connector returns Left UpStream4xxResponse" in new Setup {
 
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
-        .thenReturn(Future.successful(Left(ApiDefinitionConnector.ApiDefinitionNotFoundResult("Some Message"))))
+        .thenReturn(Future.successful(Left(ApiDefinitionConnector.NotFoundResult("Some Message"))))
 
       val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
       result shouldBe Left(ApiDefinitionNotFoundResult("Some Message"))

@@ -4,15 +4,16 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionGeneralFailedResult, ApiDefinitionNotFoundResult, ApiDefinitionResult}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionResult, GeneralFailedResult, NotFoundResult}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinitionJsonFormatters
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.{ApiDefinitionBuilder, ApiDefinitionUtils}
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apiplatformapicataloguepublish.support.{ApiDefinitionStub, MetricsTestSupport, ServerBaseISpec}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
 
 class ApiDefinitionConnectorISpec
-  extends ServerBaseISpec
+    extends ServerBaseISpec
     with ApiDefinitionStub
     with ApiDefinitionBuilder
     with ApiDefinitionJsonFormatters
@@ -40,51 +41,89 @@ class ApiDefinitionConnectorISpec
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   trait Setup {
+    val definitionResult1: ApiDefinitionResult = buildResult(apiDefinition1)
+    val definitionResult2: ApiDefinitionResult = buildResult(apiDefinition2)
+
     val objInTest: ApiDefinitionConnector = app.injector.instanceOf[ApiDefinitionConnector]
   }
 
-  "ApiDefinitionConnector" should {
-    "returns an api definition" in new Setup {
-      val expectedResult: ApiDefinitionResult =
-        ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), apiDefinition1.serviceName)
-      val jsonBody: String = Json.toJson(apiDefinition1).toString
-      primeGetByServiceName(
-        OK,
-        jsonBody,
-        serviceName
-      )
-      await(objInTest.getDefinitionByServiceName(serviceName)) match {
-        case Right(x: ApiDefinitionResult) => x mustBe expectedResult
-        case _ => fail
+  def buildResult(definition: ApiDefinition) = {
+    ApiDefinitionResult(getRamlUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName)
+  }
+
+  "ApiDefinitionConnector" when {
+
+    "getDefinitionByServiceName" should {
+      "returns an api definition" in new Setup {
+
+        val jsonBody: String = Json.toJson(apiDefinition1).toString
+        primeGetByServiceName(
+          OK,
+          jsonBody,
+          serviceName
+        )
+        await(objInTest.getDefinitionByServiceName(serviceName)) match {
+          case Right(x: ApiDefinitionResult) => x mustBe definitionResult1
+          case _                             => fail
+
+        }
+      }
+
+      "returns a Left ApiDefinitionNotFoundResult when not found returned" in new Setup {
+        primeGetByServiceName(
+          NOT_FOUND,
+          "{}",
+          serviceName
+        )
+        await(objInTest.getDefinitionByServiceName(serviceName)) match {
+          case Left(_: NotFoundResult) => succeed
+          case _                       => fail
+
+        }
+      }
+      "returns a Left ApiDefinitionBadGatewayResult when bad gateway returned" in new Setup {
+        primeGetByServiceName(
+          BAD_GATEWAY,
+          "{}",
+          serviceName
+        )
+        await(objInTest.getDefinitionByServiceName(serviceName)) match {
+          case Left(_: GeneralFailedResult) => succeed
+          case _                            => fail
+
+        }
+      }
+
+    }
+  }
+  "getAllServices" should {
+
+    "returns right with list of definitions when successful" in new Setup {
+      val jsonBody = Json.toJson(List(apiDefinition1, apiDefinition2)).toString
+      primeGetAll(OK, jsonBody)
+      await(objInTest.getAllServices()) match {
+        case Left(_: GeneralFailedResult)              => fail
+        case Right(results: List[ApiDefinitionResult]) =>
+          results mustBe List(definitionResult1, definitionResult2)
 
       }
     }
 
-    "returns a Left ApiDefinitionNotFoundResult when not found returned" in new Setup {
-      primeGetByServiceName(
-        NOT_FOUND,
-        "{}",
-        serviceName
-      )
-      await(objInTest.getDefinitionByServiceName(serviceName)) match {
-        case Left(_: ApiDefinitionNotFoundResult) => succeed
-        case _ => fail
-
-      }
-    }
-    "returns a Left ApiDefinitionBadGatewayResult when bad gateway returned" in new Setup {
-      primeGetByServiceName(
-        BAD_GATEWAY,
-        "{}",
-        serviceName
-      )
-      await(objInTest.getDefinitionByServiceName(serviceName)) match {
-        case Left(_: ApiDefinitionGeneralFailedResult) => succeed
-        case _ => fail
-
+    "return right with empty list when no definitions returned" in new Setup {
+      primeGetAll(OK, "[]")
+      await(objInTest.getAllServices()) match {
+        case Right(x: List[ApiDefinitionResult])              => x mustBe List.empty
+        case x => fail
       }
     }
 
-
+    "return left with error when error returned" in new Setup {
+       primeGetAll(INTERNAL_SERVER_ERROR, "[]")
+        await(objInTest.getAllServices()) match {
+          case Left(x: GeneralFailedResult) => 
+            x.message mustBe s"GET of 'http://localhost:$wireMockPort/api-definition?type=all' returned 500. Response body: '[]'"
+          case _ => fail
+        }
+    }
   }
 }

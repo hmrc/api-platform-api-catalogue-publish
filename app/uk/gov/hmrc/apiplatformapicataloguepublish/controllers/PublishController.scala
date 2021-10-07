@@ -40,4 +40,10 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
     }
   }
 
+  def publishAll(): Action[AnyContent] = Action.async { implicit request =>
+    publishService.publishAll().map{
+      case Right(x) => Ok("")
+      case Left(_) => InternalServerError(s"something went wrong")
+    }
+  }
 }
