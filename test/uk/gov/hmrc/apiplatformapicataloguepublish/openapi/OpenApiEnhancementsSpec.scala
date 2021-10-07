@@ -74,14 +74,11 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
       validateExpectedFileContents("noIntCatExtensions.yaml", "expectedWithIntCatExtensions.yaml")
     }
 
-    // "Return Left(GeneralOpenApiProcessingError) if contents to parse has invalid x-amf-userDocumentation content" in new Setup {
+    // "Return Right if contents to parse has invalid x-amf-userDocumentation content" in new Setup {
     //   val contentsToParse = getFileContents("noIntCatExtensions-withInvalidXAmfDocumentation.yaml")
     //   addOasSpecAttributes(ConvertedWebApiToOasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
-    //     case Right(_)                                   => fail()
-    //     case Left(error: GeneralOpenApiProcessingError) => {
-    //       error.apiName shouldBe "iamAnApi"
-    //       error.message shouldBe "API: iamAnApi content for title: Versioning points to a file!! https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/versioning.md \nAPI: iamAnApi content for title: Errors points to a file!! https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/errors.md \n"
-    //     }
+    //     case Right(oasString: String)                                   => succeed
+    //     case _ => fail()
     //   }
     // }
 

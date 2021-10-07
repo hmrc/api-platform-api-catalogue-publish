@@ -25,7 +25,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.headers.OpenApiHeaders
 
 import java.util
 
-trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfText with OpenAPICommon with OpenApiExamples with OpenApiHeaders{
+trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon with OpenApiExamples with OpenApiHeaders{
 
 
 
@@ -35,7 +35,7 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
 
     val validatedOpenApi = Option(new OpenAPIV3Parser().readContents(convertedOasResult.oasAsString, new util.ArrayList(), options))
       .flatMap(swaggerParseResult => Option(swaggerParseResult.getOpenAPI)) match {
-      case Some(openApi) => validateAmfOAS(openApi, convertedOasResult.apiName)
+      case Some(openApi) => Right(openApi)
       case None => Left(GeneralOpenApiProcessingError(convertedOasResult.apiName, "Swagger Parse failure"))
     }
 
@@ -147,11 +147,6 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with ValidateXamfTe
   private def openApiToContent(openApi: OpenAPI): String = {
    Yaml.mapper().writeValueAsString(openApi)
   }
-
-  // private def externalToInternalUrls(content: String) ={
-  //      content
-  //        .replaceAll("\\(/api-documentation/docs/", "(https://developer.service.hmrc.gov.uk/api-documentation/docs/")
-  // }
 
  
 }
