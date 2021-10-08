@@ -32,6 +32,8 @@ import webapi.WebApiDocument
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus._
 
 @Singleton()
 class PublishService @Inject() (
@@ -51,12 +53,16 @@ class PublishService @Inject() (
 
   def publishDefinitionResult(apiDefinitionResult: ApiDefinitionResult): EitherT[Future, ApiCataloguePublishResult, PublishResponse] = {
     val serviceName = apiDefinitionResult.serviceName
-    for {
-      ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
-      convertedOas <- EitherT(handleRamlToOas(ramlAndDefinition))
-      oasDataWithExtensions <- EitherT(handleEnhancingOasForCatalogue(convertedOas))
-      result <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult(_, serviceName)))
-    } yield result
+      apiDefinitionResult.status match {
+      case ApiStatus.RETIRED => EitherT.left(Future.successful(ApiDefinitionInvalidStatusResult(apiDefinitionResult.serviceName, "definition record was RETIRED for this service")))
+      case _ =>   for {
+                    ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
+                    convertedOas <- EitherT(handleRamlToOas(ramlAndDefinition))
+                    oasDataWithExtensions <- EitherT(handleEnhancingOasForCatalogue(convertedOas))
+                    result <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult(_, serviceName)))
+                  } yield result
+    }
+   
   }
 
   def publishAll()(implicit hc: HeaderCarrier): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
@@ -67,12 +73,6 @@ class PublishService @Inject() (
         }
       case Left(x: GeneralFailedResult) => Future.successful(List(Left(PublishFailedResult("All Services", "something went wrong calling api definition"))))
     }
-
-  }
-
-  def processDefinitionResult(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, ResultHolder]] = {
-    logger.info(s"processing ${apiDefinitionResult.serviceName}")
-    getRamlForApiDefinition(apiDefinitionResult)
 
   }
 
@@ -130,6 +130,7 @@ case class ResultHolder(apiDefinitionResult: ApiDefinitionResult, document: WebA
 
 sealed trait ApiCataloguePublishResult
 
+case class ApiDefinitionInvalidStatusResult(serviceName: String, message: String) extends ApiCataloguePublishResult
 case class ApiDefinitionNotFoundResult(serviceName: String, message: String) extends ApiCataloguePublishResult
 case class PublishFailedResult(serviceName: String, message: String) extends ApiCataloguePublishResult
 case class OpenApiEnhancementFailedResult(serviceName: String, message: String) extends ApiCataloguePublishResult

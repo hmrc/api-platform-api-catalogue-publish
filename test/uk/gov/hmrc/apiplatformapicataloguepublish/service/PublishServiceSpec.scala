@@ -44,6 +44,7 @@ import scala.concurrent.Future
 import org.mulesoft.lexer.failfast
 import io.jsonwebtoken.Header
 import com.rabbitmq.client.impl.AMQImpl.Connection.Open
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 
 class PublishServiceSpec
     extends AnyWordSpec
@@ -68,8 +69,8 @@ class PublishServiceSpec
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName)
-    val apiDefinitionResult2: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition2), getAccessTypeOfLatestVersion(apiDefinition2), apiDefinition2.serviceName)
+    val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
+    val apiDefinitionResult2: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition2), getAccessTypeOfLatestVersion(apiDefinition2), apiDefinition2.serviceName, ApiStatus.STABLE)
     val expectedDescription = "A description."
     val convertedWebApiToOasResult: ConvertedWebApiToOasResult = ConvertedWebApiToOasResult("", serviceName, expectedDescription)
     val publishResponse: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
@@ -127,7 +128,7 @@ class PublishServiceSpec
 
       "return a Left when ApiRamlParser returns an error" in new Setup {
 
-        override val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName)
+        override val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
 
         val errorMessage = "Parse failed"
 
@@ -148,7 +149,7 @@ class PublishServiceSpec
 
       "return a Left when OasParser returns an error" in new Setup {
 
-        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName)
+        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
 
         val errorMessage: String = "Parse failed"
 
@@ -209,6 +210,22 @@ class PublishServiceSpec
 
         val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
         result shouldBe Left(ApiDefinitionNotFoundResult(serviceName, "Some Message"))
+
+        verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+        verifyZeroInteractions(mockApiRamlParser)
+        verifyZeroInteractions(mockOasParser)
+
+      }
+
+
+      "return Left ApiDefinitionInvalidStatusResult when connector returns definition with RETIRED status" in new Setup {
+        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.RETIRED)
+
+        when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+          .thenReturn(Future.successful(Right(apiDeinitionResult)))
+
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
+        result shouldBe Left(ApiDefinitionInvalidStatusResult(serviceName, "definition record was RETIRED for this service"))
 
         verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
         verifyZeroInteractions(mockApiRamlParser)
