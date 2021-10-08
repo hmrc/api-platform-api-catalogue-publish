@@ -53,6 +53,7 @@ class PublishService @Inject() (
 
   def publishDefinitionResult(apiDefinitionResult: ApiDefinitionResult): EitherT[Future, ApiCataloguePublishResult, PublishResponse] = {
     val serviceName = apiDefinitionResult.serviceName
+    logger.info(s"publishDefinitionResult START for $serviceName")
       apiDefinitionResult.status match {
       case ApiStatus.RETIRED => EitherT.left(Future.successful(ApiDefinitionInvalidStatusResult(apiDefinitionResult.serviceName, "definition record was RETIRED for this service")))
       case _ =>   for {
@@ -97,6 +98,7 @@ class PublishService @Inject() (
   }
 
   private def getRamlForApiDefinition(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, ResultHolder]] = {
+    logger.info(s"getRamlForApiDefinition called for ${apiDefinitionResult.serviceName}")
     apiRamlParser.getRaml(apiDefinitionResult.url)
       .map(x => Right(ResultHolder(apiDefinitionResult, x)))
       .recover {

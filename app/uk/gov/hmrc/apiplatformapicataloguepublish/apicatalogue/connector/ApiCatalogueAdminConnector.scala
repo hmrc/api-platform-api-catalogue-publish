@@ -37,7 +37,7 @@ class ApiCatalogueAdminConnector @Inject()(val ws: WSClient,
   extends Logging with ApiCatalogueAdminJsonFormatters {
 
   def publishApi(body: String): Future[Either[ApiCatalogueFailedResult, PublishResponse]] = {
-
+    logger.info(s"publishApi called")
     val authKey = new String(Base64.getEncoder.encode(config.authorizationKey.getBytes))
 
     val headers = Seq("x-platform-type" -> "API_PLATFORM",
