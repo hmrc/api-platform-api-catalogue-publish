@@ -23,13 +23,22 @@ import scala.concurrent.{ExecutionContext}
 import webapi.{Raml10, WebApiDocument}
 import scala.compat.java8._
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 @Singleton
 class ApiRamlParser @Inject() ()(implicit ec: ExecutionContext) extends Logging {
 
   def getRaml(url: String): Future[WebApiDocument] = {
      FutureConverters.toScala({
       Raml10.parse(url)
-    }).map(x => x.asInstanceOf[WebApiDocument])
+    }).map(x => {
+            logger.info(s"getRaml - have webapiDocument for $url")
+            x.asInstanceOf[WebApiDocument]
+    })
+   .recover {
+      case NonFatal(e) =>
+        logger.error(s"getRaml Failed:", e)
+        throw e
+    }
   }
 
 }
