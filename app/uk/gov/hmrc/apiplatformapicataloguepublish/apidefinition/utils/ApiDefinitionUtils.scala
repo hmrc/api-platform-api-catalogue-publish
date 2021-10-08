@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 
 trait ApiDefinitionUtils {
 
@@ -43,4 +44,10 @@ trait ApiDefinitionUtils {
       .headOption.map(apiVersionDefinition => apiVersionDefinition.access).getOrElse(PublicApiAccess())
   }
 
+
+    def getStatusfLatestVersion(apiDefinition: ApiDefinition): ApiStatus = {
+    apiDefinition.versions
+      .sorted
+      .headOption.map(apiVersionDefinition => apiVersionDefinition.status).getOrElse(ApiStatus.DEPRECATED)
+  }
 }

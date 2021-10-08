@@ -27,6 +27,7 @@ import uk.gov.hmrc.play.http.ws.WSGet
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 
 @Singleton
 class ApiDefinitionConnector @Inject() (
@@ -55,7 +56,7 @@ class ApiDefinitionConnector @Inject() (
   }
 
   private def definitionToResult(definition: ApiDefinition): ApiDefinitionResult = {
-    ApiDefinitionResult(getRamlUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName)
+    ApiDefinitionResult(getRamlUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName, getStatusfLatestVersion(definition))
   }
 
   def getAllServices()(implicit hc: HeaderCarrier): Future[Either[GeneralFailedResult, List[ApiDefinitionResult]]] = {
@@ -73,7 +74,7 @@ class ApiDefinitionConnector @Inject() (
 
 object ApiDefinitionConnector {
   case class Config(baseUrl: String)
-  case class ApiDefinitionResult(url: String, access: ApiAccess, serviceName: String)
+  case class ApiDefinitionResult(url: String, access: ApiAccess, serviceName: String, status: ApiStatus)
 
   sealed trait ApiDefinitionFailedResult {
     val message: String
