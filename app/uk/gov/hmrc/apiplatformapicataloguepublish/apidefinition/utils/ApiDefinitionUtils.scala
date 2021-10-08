@@ -45,7 +45,7 @@ trait ApiDefinitionUtils {
   }
 
 
-    def getStatusfLatestVersion(apiDefinition: ApiDefinition): ApiStatus = {
+    def getStatusOfLatestVersion(apiDefinition: ApiDefinition): ApiStatus = {
     apiDefinition.versions
       .sorted
       .headOption.map(apiVersionDefinition => apiVersionDefinition.status).getOrElse(ApiStatus.DEPRECATED)
