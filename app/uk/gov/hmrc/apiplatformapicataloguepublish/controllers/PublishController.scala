@@ -16,18 +16,15 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
 
-import play.api.libs.json.Json
+import play.api.Logging
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, PublishResponse}
-import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
+import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiCataloguePublishResult, ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import uk.gov.hmrc.apiplatformapicataloguepublish.service.ApiCataloguePublishResult
-import play.api.Logging
-import play.api.libs.json.{Format, Json}
 
 @Singleton()
 class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)
@@ -35,8 +32,6 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
                                    with ApiCatalogueAdminJsonFormatters with Logging{
 
   def publish(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
-    //call api definition to get latest application version?(service name)
-
     publishService.publishByServiceName(serviceName).map {
       case Right(oasString: PublishResponse) => Ok(Json.toJson(oasString))
       case Left(e: ApiDefinitionNotFoundResult) => NotFound(s"api definition not found: ${e.message}")
@@ -54,8 +49,7 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
           case Right(result: PublishResponse) => logger.info(result.toString())
           case Left(e: ApiCataloguePublishResult) => logger.error(e.toString())
         }
-        val response = PublishAllResponse(countSuccess, countFailed)
-        Ok(Json.toJson(response))
+        Ok(Json.toJson(PublishAllResponse(countSuccess, countFailed)))
     }
   }
 

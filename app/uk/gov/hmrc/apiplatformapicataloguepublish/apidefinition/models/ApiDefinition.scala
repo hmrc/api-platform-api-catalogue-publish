@@ -21,6 +21,8 @@ import enumeratum._
 import play.api.libs.json.Json
 import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models.ApplicationId
 
+import scala.collection.immutable
+
 case class ApiContext(value: String) extends AnyVal
 
 object ApiContext {
@@ -73,7 +75,7 @@ sealed trait ApiStatus extends EnumEntry
 
 object ApiStatus extends Enum[ApiStatus] with PlayJsonEnum[ApiStatus] {
 
-  val values = findValues
+  val values: immutable.IndexedSeq[ApiStatus] = findValues
   case object ALPHA extends ApiStatus
   case object BETA extends ApiStatus
   case object STABLE extends ApiStatus
@@ -85,7 +87,7 @@ sealed trait ApiAccessType extends EnumEntry
 
 object ApiAccessType extends Enum[ApiAccessType] with PlayJsonEnum[ApiAccessType] {
 
-  val values = findValues
+  val values: immutable.IndexedSeq[ApiAccessType] = findValues
 
   case object PRIVATE extends ApiAccessType
   case object PUBLIC extends ApiAccessType
@@ -101,7 +103,7 @@ sealed trait HttpMethod extends EnumEntry
 
 object HttpMethod extends Enum[HttpMethod] with PlayJsonEnum[HttpMethod] {
 
-  val values = findValues
+  val values: immutable.IndexedSeq[HttpMethod] = findValues
 
   case object GET extends HttpMethod
   case object POST extends HttpMethod
@@ -115,7 +117,7 @@ sealed trait AuthType extends EnumEntry
 
 object AuthType extends Enum[AuthType] with PlayJsonEnum[AuthType] {
 
-  val values = findValues
+  val values: immutable.IndexedSeq[AuthType] = findValues
 
   case object NONE extends AuthType
   case object APPLICATION extends AuthType

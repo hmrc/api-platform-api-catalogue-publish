@@ -36,7 +36,7 @@ trait OpenAPICommon extends ExtensionKeys {
     })
   }
 
-  def isUrl(content: String): Boolean = { 
+  def isUrl(content: String): Boolean = {
     content.startsWith("http")
 }
 

@@ -40,15 +40,14 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon 
     }
 
     validatedOpenApi match {
-      case Right(openAPI) => {
+      case Right(openAPI) =>
         addAccessTypeToDescription(openAPI, convertedOasResult.accessTypeDescription)
           .flatMap(addExtensions(_, convertedOasResult.apiName, reviewedDate))
           .map(concatenateXamfDescriptions)
           .map(addCommonHeaders(convertedOasResult.apiName, _))
           .map(addExamples)
-          .map((x => Right(openApiToContent(x))))
+          .map(x => Right(openApiToContent(x)))
           .getOrElse(Left(GeneralOpenApiProcessingError(convertedOasResult.apiName, "Swagger Parse failure")))
-      }
       case Left(e: OpenApiProcessingError) => Left(e)
     }
   }
@@ -61,7 +60,7 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon 
   private def addAccessTypeToDescription(openApi: OpenAPI, accessTypeDescription: String): Option[OpenAPI] = Option(openApi.getInfo).map(info => {
     Option(info.getDescription) match {
       case None => info.setDescription(accessTypeDescription)
-      case Some(x) if (x.isEmpty || x == "null") => info.setDescription(accessTypeDescription)
+      case Some(x) if x.isEmpty || x == "null" => info.setDescription(accessTypeDescription)
       case Some(_) => ()
     }
     openApi.setInfo(info)
@@ -70,12 +69,12 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon 
 
   private def fixDocContent(content: String): String = fixDevhubUrls(addNewLineToBulletMarkDownIfNeeded(content))
 
-  def fixDevhubUrls(content: String) ={
+  def fixDevhubUrls(content: String): String ={
     content.replaceAll("\\(/api-documentation/docs/", "(https://developer.service.hmrc.gov.uk/api-documentation/docs/")
   }
 
 
-  def addNewLineToBulletMarkDownIfNeeded(content: String) ={
+  def addNewLineToBulletMarkDownIfNeeded(content: String): String ={
     content.replaceAll("(?<!\\n)(\\n){1}(\\*){1}( ){1}", "\n\n* ")
   }
 
