@@ -41,6 +41,7 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
   }
 
   def publishAll(): Action[AnyContent] = Action.async { implicit request =>
+    logger.info("publishAll endpoint called")
     publishService.publishAll().map{
      results: List[Either[ApiCataloguePublishResult, PublishResponse]] =>
         val countSuccess = results.count(_.isRight)
@@ -49,6 +50,7 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
           case Right(result: PublishResponse) => logger.info(result.toString())
           case Left(e: ApiCataloguePublishResult) => logger.error(e.toString())
         }
+      logger.info("publishAll about to return result")
         Ok(Json.toJson(PublishAllResponse(countSuccess, countFailed)))
     }
   }
