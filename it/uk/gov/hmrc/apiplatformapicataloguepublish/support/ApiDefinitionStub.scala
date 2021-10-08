@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping
 trait ApiDefinitionStub {
 
   def getDefinitionByNamedUrl(serviceName: String) = s"/api-definition/$serviceName"
+  val getAllDefinitionsUrl = s"/api-definition?type=all"
 
 
   def primeGetByServiceName(status: Int, responseBody: String, serviceName: String): StubMapping = {
@@ -15,6 +16,10 @@ trait ApiDefinitionStub {
 
   def primeGETWithBody(status: Int, responseBody: String, urlResolver: => String): StubMapping = {
     primeWithBody(get(urlEqualTo(urlResolver)), responseBody,  status)
+  }
+
+  def primeGetAll(status: Int, responseBody: String) ={
+     primeWithBody(get(getAllDefinitionsUrl), responseBody,  status)
   }
 
 

@@ -22,7 +22,7 @@ import play.api.libs.Files
 import play.api.libs.json.{JsError, JsResult, JsSuccess}
 import play.api.libs.ws.WSClient
 import play.api.mvc.MultipartFormData
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.{ApiCatalogueFailedResult, ApiCatalogueGeneralFailureResult, Config}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector._
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, PublishResponse}
 
 import java.util.Base64

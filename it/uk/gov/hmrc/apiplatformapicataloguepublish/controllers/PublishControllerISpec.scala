@@ -5,7 +5,7 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
-import play.api.test.Helpers.{OK, NOT_FOUND, INTERNAL_SERVER_ERROR, BAD_REQUEST}
+import play.api.test.Helpers.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
@@ -20,10 +20,18 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinit
 
 import java.util.UUID
 
-class PublishControllerISpec extends ServerBaseISpec  with AwaitTestSupport with BeforeAndAfterEach with MetricsTestSupport
-with ApiDefinitionStub with ApiProducerTeamStub  with ApiDefinitionData
-with ApiDefinitionJsonFormatters with ApiDefinitionUtils with ApiCatalogueStub with ApiCatalogueAdminJsonFormatters{
-
+class PublishControllerISpec
+    extends ServerBaseISpec
+    with AwaitTestSupport
+    with BeforeAndAfterEach
+    with MetricsTestSupport
+    with ApiDefinitionStub
+    with ApiProducerTeamStub
+    with ApiDefinitionData
+    with ApiDefinitionJsonFormatters
+    with ApiDefinitionUtils
+    with ApiCatalogueStub
+    with ApiCatalogueAdminJsonFormatters {
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -38,15 +46,13 @@ with ApiDefinitionJsonFormatters with ApiDefinitionUtils with ApiCatalogueStub w
         "microservice.services.integration-catalogue-admin-api.port" -> wireMockPort
       )
 
-
-
   override def beforeEach(): Unit = {
     super.beforeEach()
     givenCleanMetricRegistry()
 
   }
 
-  val url = s"http://localhost:$port/api-platform-api-catalogue-publish/publish"
+  val url = s"http://localhost:$port/api-platform-api-catalogue-publish"
 
   val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
@@ -62,9 +68,13 @@ with ApiDefinitionJsonFormatters with ApiDefinitionUtils with ApiCatalogueStub w
 
   trait Setup {
 
-      def callPublishEndpoint(serviceName: String)={
-        callPostEndpoint(s"$url/$serviceName", body= "", List.empty)
-      }
+    def callPublishEndpoint(serviceName: String) = {
+      callPostEndpoint(s"$url/publish/$serviceName", body = "", List.empty)
+    }
+
+    def callPublishAllEndpoint() = {
+      callPostEndpoint(s"$url/publish-all", body = "", List.empty)
+    }
 
     def getWebApiDocument(filePath: String): WebApiDocument = {
       val fileContents = Source.fromResource(filePath).mkString
@@ -72,7 +82,7 @@ with ApiDefinitionJsonFormatters with ApiDefinitionUtils with ApiCatalogueStub w
         .get(5, TimeUnit.SECONDS).asInstanceOf[WebApiDocument]
     }
 
-    def absoluteRamlFilePath =  Paths.get(".").toAbsolutePath.toString.replace(".", "") + "it/resources/test-ramlFile.raml"
+    def absoluteRamlFilePath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "it/resources/test-ramlFile.raml"
 
   }
 
@@ -94,7 +104,6 @@ with ApiDefinitionJsonFormatters with ApiDefinitionUtils with ApiCatalogueStub w
         result.status mustBe OK
       }
 
-
       "respond with 404 when api definition not found" in new Setup {
         val serviceName = "my-service"
 
@@ -109,15 +118,12 @@ with ApiDefinitionJsonFormatters with ApiDefinitionUtils with ApiCatalogueStub w
         val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString = Json.toJson(apiDefinition1withwiremock).toString
 
-
         primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
         primeGETReturnsNotFound("/" + getRamlUri(apiDefinition1))
-
 
         val result: WSResponse = callPublishEndpoint(serviceName)
         result.status mustBe INTERNAL_SERVER_ERROR
       }
-
 
       "respond with 500 when publish fails" in new Setup {
         val serviceName = "my-service"
@@ -134,7 +140,49 @@ with ApiDefinitionJsonFormatters with ApiDefinitionUtils with ApiCatalogueStub w
         result.status mustBe INTERNAL_SERVER_ERROR
       }
 
+    }
 
+    "POST /publish-all" should {
+      "respond with 200 when get all definitions fails" in new Setup {
+        val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
+        val apiDefinitionAsString = Json.toJson(List(apiDefinition1withwiremock)).toString
+
+        primeGetAll(NOT_FOUND, apiDefinitionAsString)
+
+        val result: WSResponse = callPublishAllEndpoint()
+        result.status mustBe OK
+        result.body mustBe """{"successCount":0,"failureCount":1}"""
+      }
+
+      "respond with 200 when publish fails" in new Setup {
+        val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
+        val apiDefinitionAsString = Json.toJson(List(apiDefinition1withwiremock)).toString
+        val publishResponse: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef", API_PLATFORM)
+        val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
+
+        primeGetAll(OK, apiDefinitionAsString)
+        primeGETWithFileContents("/" + getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
+        primeApiPublish(publishResponseAsJsonString, BAD_REQUEST)
+
+        val result: WSResponse = callPublishAllEndpoint()
+        result.status mustBe OK
+        result.body mustBe """{"successCount":0,"failureCount":1}"""
+      }
+
+      "respond with 200 when publish is successful" in new Setup {
+        val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
+        val apiDefinitionAsString = Json.toJson(List(apiDefinition1withwiremock)).toString
+        val publishResponse: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef", API_PLATFORM)
+        val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
+
+        primeGetAll(OK, apiDefinitionAsString)
+        primeGETWithFileContents("/" + getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
+        primeApiPublish(publishResponseAsJsonString, OK)
+
+        val result: WSResponse = callPublishAllEndpoint()
+        result.status mustBe OK
+        result.body mustBe """{"successCount":1,"failureCount":0}"""
+      }
     }
   }
 }

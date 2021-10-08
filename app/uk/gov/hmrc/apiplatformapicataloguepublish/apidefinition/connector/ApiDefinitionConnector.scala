@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
- package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
-
-
+package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
 
 import play.api.Logging
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
@@ -30,26 +28,47 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
- @Singleton
- class ApiDefinitionConnector @Inject()(
-   val http: HttpClient with WSGet,
-   val config: Config)(implicit val ec: ExecutionContext) extends Logging with ApiDefinitionJsonFormatters with ApiDefinitionUtils {
+@Singleton
+class ApiDefinitionConnector @Inject() (
+    val http: HttpClient with WSGet,
+    val config: Config
+  )(implicit val ec: ExecutionContext)
+    extends Logging
+    with ApiDefinitionJsonFormatters
+    with ApiDefinitionUtils {
 
-    private def definitionUrl(serviceBaseUrl: String, serviceName: String) =
-      s"$serviceBaseUrl/api-definition/$serviceName"
+  private def definitionUrl(serviceName: String) =
+    s"${config.baseUrl}/api-definition/$serviceName"
 
-    def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]] = {
-      logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition")
-      http.GET[Option[ApiDefinition]](definitionUrl(config.baseUrl, serviceName)).map{
-        case Some(x) => Right(ApiDefinitionResult(getRamlUri(x), getAccessTypeOfLatestVersion(x), serviceName))
-        case _ => Left(ApiDefinitionNotFoundResult(" unable to fetch definition"))
-      }.recover {
-        case NonFatal(e)          =>
-          logger.error(s"Failed", e)
-          Left(ApiDefinitionGeneralFailedResult(e.getMessage))
-      }
+  private val fetchAllUrl = s"${config.baseUrl}/api-definition"
+
+  def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]] = {
+    logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition")
+    http.GET[Option[ApiDefinition]](definitionUrl(serviceName)).map {
+      case Some(x) => Right(definitionToResult(x))
+      case _       => Left(NotFoundResult(s"unable to fetch definition: $serviceName"))
+    }.recover {
+      case NonFatal(e) =>
+        logger.error(s"Failed to getDefinitionByServiceName: $serviceName ", e)
+        Left(GeneralFailedResult(e.getMessage))
     }
-  
+  }
+
+  private def definitionToResult(definition: ApiDefinition): ApiDefinitionResult = {
+    ApiDefinitionResult(getRamlUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName)
+  }
+
+  def getAllServices()(implicit hc: HeaderCarrier): Future[Either[GeneralFailedResult, List[ApiDefinitionResult]]] = {
+    http.GET[Seq[ApiDefinition]](fetchAllUrl, List(("type", "all")))
+    .map(definitions =>
+      Right(definitions.map(definitionToResult).toList.sortBy(_.serviceName))
+    ).recover {
+      case NonFatal(e) =>
+        logger.error(s"getAllServices Failed:", e)
+        Left(GeneralFailedResult(e.getMessage))
+    }
+  }
+
 }
 
 object ApiDefinitionConnector {
@@ -59,6 +78,7 @@ object ApiDefinitionConnector {
   sealed trait ApiDefinitionFailedResult {
     val message: String
   }
-  case class ApiDefinitionNotFoundResult(message: String) extends  ApiDefinitionFailedResult
-  case class ApiDefinitionGeneralFailedResult(message: String) extends  ApiDefinitionFailedResult
+  case class NotFoundResult(message: String) extends ApiDefinitionFailedResult
+  case class GeneralFailedResult(message: String) extends ApiDefinitionFailedResult
+
 }
