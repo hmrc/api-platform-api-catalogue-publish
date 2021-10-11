@@ -70,15 +70,29 @@ class PublishService @Inject() (
   def publishAll()(implicit hc: HeaderCarrier): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
     apiDefinitionConnector.getAllServices
     .flatMap {
-      case Right(definitionList: List[ApiDefinitionResult]) => Future.sequence {
+      case Right(definitionList: List[ApiDefinitionResult]) => 
+      // Future.sequence {
          
-          definitionList.map(result => {
-             Thread.sleep(500)
-            publishDefinitionResult(result).value})
-        }
+      //     definitionList.map(result => {
+      //        Thread.sleep(500)
+      //       publishDefinitionResult(result).value})
+      //   }
+      batchFutures(definitionList, List.empty)
       case Left(x: GeneralFailedResult) => Future.successful(List(Left(PublishFailedResult("All Services", "something went wrong calling api definition"))))
     }
 
+  }
+
+    def batchFutures(input: Seq[ApiDefinitionResult], results: List[Either[ApiCataloguePublishResult, PublishResponse]])(implicit ec: ExecutionContext): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
+    input.splitAt(5) match {
+      case (Nil, Nil) => Future.successful(results)
+      case (doNow: Seq[ApiDefinitionResult], doLater: Seq[ApiDefinitionResult]) => 
+        Future.sequence(doNow.map(publishDefinitionResult(_).value)).flatMap( newResults => {
+           Thread.sleep(1000)
+          logger.debug("Done batch of items")
+          batchFutures(doLater, (results ++ newResults))
+        })
+    }
   }
 
   def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse],
