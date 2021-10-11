@@ -84,12 +84,12 @@ class PublishService @Inject() (
   }
 
     def batchFutures(input: Seq[ApiDefinitionResult], results: List[Either[ApiCataloguePublishResult, PublishResponse]])(implicit ec: ExecutionContext): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
-    input.splitAt(5) match {
+    input.splitAt(2) match {
       case (Nil, Nil) => Future.successful(results)
       case (doNow: Seq[ApiDefinitionResult], doLater: Seq[ApiDefinitionResult]) => 
         Future.sequence(doNow.map(publishDefinitionResult(_).value)).flatMap( newResults => {
-           Thread.sleep(1000)
-          logger.info(s"Done batch of items ${input.map(_.serviceName).mkString(" - ")}")
+           Thread.sleep(500)
+          logger.info(s"batchFutures - Done batch of items ${doNow.map(_.serviceName).mkString(" - ")}")
           batchFutures(doLater, (results ++ newResults))
         })
     }
