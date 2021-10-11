@@ -71,8 +71,10 @@ class PublishService @Inject() (
     apiDefinitionConnector.getAllServices
     .flatMap {
       case Right(definitionList: List[ApiDefinitionResult]) => Future.sequence {
-          Thread.sleep(500)
-          definitionList.map(publishDefinitionResult(_).value)
+         
+          definitionList.map(result => {
+             Thread.sleep(500)
+            publishDefinitionResult(result).value})
         }
       case Left(x: GeneralFailedResult) => Future.successful(List(Left(PublishFailedResult("All Services", "something went wrong calling api definition"))))
     }
