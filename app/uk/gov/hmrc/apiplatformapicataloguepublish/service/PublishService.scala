@@ -32,6 +32,7 @@ import webapi.WebApiDocument
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+import scala.concurrent.duration._
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus._
 
@@ -70,6 +71,7 @@ class PublishService @Inject() (
     apiDefinitionConnector.getAllServices
     .flatMap {
       case Right(definitionList: List[ApiDefinitionResult]) => Future.sequence {
+          Thread.sleep(500)
           definitionList.map(publishDefinitionResult(_).value)
         }
       case Left(x: GeneralFailedResult) => Future.successful(List(Left(PublishFailedResult("All Services", "something went wrong calling api definition"))))
@@ -79,6 +81,7 @@ class PublishService @Inject() (
 
   def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse],
                                 serviceName: String): Either[ApiCataloguePublishResult, PublishResponse] = {
+    logger.info(s"mapCataloguePublishResult called for $serviceName")                              
     result match {
       case Right(response: PublishResponse)  => Right(response)
       case Left(e: ApiCatalogueFailedResult) => logger.error(s"publish to catalogue failed ${e.message}")
@@ -108,6 +111,7 @@ class PublishService @Inject() (
   }
 
   def handleRamlToOas(resultHolder: ResultHolder): Future[Either[ApiCataloguePublishResult, ConvertedWebApiToOasResult]] = {
+    logger.info(s"handleRamlToOas called for ${resultHolder.apiDefinitionResult.serviceName}")
     oasParser.parseWebApiDocument(resultHolder.document, resultHolder.apiDefinitionResult.serviceName, resultHolder.apiDefinitionResult.access)
       .map(Right(_))
       .recover {
@@ -117,6 +121,7 @@ class PublishService @Inject() (
   }
 
   def handleEnhancingOasForCatalogue(oasResult: ConvertedWebApiToOasResult): Future[Either[ApiCataloguePublishResult, String]] = {
+    logger.info(s"handleEnhancingOasForCatalogue called for ${oasResult.apiName}")
     oasParser.enhanceOas(oasResult) match {
       case Right(value: String)                   => Future.successful(Right(value))
       case Left(e: GeneralOpenApiProcessingError) =>
