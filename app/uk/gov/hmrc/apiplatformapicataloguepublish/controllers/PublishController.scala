@@ -50,7 +50,7 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
           case Right(result: PublishResponse) => logger.info(result.toString())
           case Left(e: ApiCataloguePublishResult) => logger.error(e.toString())
         }
-      logger.info("publishAll about to return result")
+      logger.info(s"publishAll about to return result -  success: $countSuccess, failed: $countFailed")
         Ok(Json.toJson(PublishAllResponse(countSuccess, countFailed)))
     }
   }
