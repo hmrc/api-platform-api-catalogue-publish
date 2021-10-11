@@ -89,7 +89,7 @@ class PublishService @Inject() (
       case (doNow: Seq[ApiDefinitionResult], doLater: Seq[ApiDefinitionResult]) => 
         Future.sequence(doNow.map(publishDefinitionResult(_).value)).flatMap( newResults => {
            Thread.sleep(1000)
-          logger.debug("Done batch of items")
+          logger.info(s"Done batch of items ${input.map(_.serviceName).mkString(" - ")}")
           batchFutures(doLater, (results ++ newResults))
         })
     }
