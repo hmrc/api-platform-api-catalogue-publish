@@ -18,25 +18,28 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 import play.api.Logging
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext}
 import webapi.{Raml10, WebApiDocument}
 import scala.compat.java8._
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
+@Singleton
 class ApiRamlParser @Inject() ()(implicit ec: ExecutionContext) extends Logging {
 
   def getRaml(url: String): Future[WebApiDocument] = {
+    val startTime = System.currentTimeMillis()
+
      FutureConverters.toScala({
       Raml10.parse(url)
     }).map(x => {
-            logger.info(s"getRaml - have webapiDocument for $url")
+            logger.info(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds - have webapiDocument for $url")
             x.asInstanceOf[WebApiDocument]
     })
    .recover {
       case NonFatal(e) =>
-        logger.error(s"getRaml Failed:", e)
+        logger.error(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds -Failed:", e)
         throw e
     }
   }

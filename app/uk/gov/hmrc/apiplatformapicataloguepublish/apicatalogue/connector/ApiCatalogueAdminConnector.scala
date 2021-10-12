@@ -37,6 +37,7 @@ class ApiCatalogueAdminConnector @Inject()(val ws: WSClient,
   extends Logging with ApiCatalogueAdminJsonFormatters {
 
   def publishApi(body: String): Future[Either[ApiCatalogueFailedResult, PublishResponse]] = {
+    val startTime = System.currentTimeMillis()
     logger.info(s"publishApi called")
     val authKey = new String(Base64.getEncoder.encode(config.authorizationKey.getBytes))
 
@@ -49,8 +50,12 @@ class ApiCatalogueAdminConnector @Inject()(val ws: WSClient,
       .withHttpHeaders(headers: _*)
       .put(Source.single(MultipartFormData.DataPart("selectedFile", body)))
       .map(response => response.status match {
-          case s: Int if(s ==200 || s==201) =>  handleJsResult(response.json.validate[PublishResponse])
-          case _ => Left(ApiCatalogueGeneralFailureResult("Publish failed"))
+          case s: Int if(s ==200 || s==201) =>  
+            logger.info(s"publishApi successful and took ${System.currentTimeMillis() - startTime} milliseconds")
+            handleJsResult(response.json.validate[PublishResponse])
+          case _ => 
+            logger.info(s"publishApi failed and took ${System.currentTimeMillis() - startTime} milliseconds")
+            Left(ApiCatalogueGeneralFailureResult("Publish failed"))
         })
   }
 
