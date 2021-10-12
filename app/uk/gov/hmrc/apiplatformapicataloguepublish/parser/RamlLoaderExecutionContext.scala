@@ -16,20 +16,9 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
-import javax.inject.{Inject, Singleton}
-import scala.compat.java8.FutureConverters
-import java.util.concurrent.TimeUnit
-import webapi.Oas30
-import webapi.WebApiDocument
-import scala.concurrent.Future
-import play.api.Logging
+import javax.inject.{Singleton, Inject}
+import akka.actor.ActorSystem
+import play.api.libs.concurrent.CustomExecutionContext
 
 @Singleton
-class Oas30Wrapper @Inject() () extends Logging {
-
-  def ramlToOas(model: WebApiDocument): Future[String] = {
-    FutureConverters.toScala({
-      Oas30.generateYamlString(model)
-    })
-  }
-}
+class RamlLoaderExecutionContext @Inject()(actorSystem: ActorSystem) extends CustomExecutionContext(actorSystem, "contexts.ramlloader-dispatcher")
