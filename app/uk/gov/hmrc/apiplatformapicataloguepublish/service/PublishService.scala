@@ -71,12 +71,6 @@ class PublishService @Inject() (
     apiDefinitionConnector.getAllServices
     .flatMap {
       case Right(definitionList: List[ApiDefinitionResult]) => 
-      // Future.sequence {
-         
-      //     definitionList.map(result => {
-      //        Thread.sleep(500)
-      //       publishDefinitionResult(result).value})
-      //   }
       batchFutures(definitionList, List.empty)
       case Left(x: GeneralFailedResult) => Future.successful(List(Left(PublishFailedResult("All Services", "something went wrong calling api definition"))))
     }
@@ -84,7 +78,7 @@ class PublishService @Inject() (
   }
 
     def batchFutures(input: Seq[ApiDefinitionResult], results: List[Either[ApiCataloguePublishResult, PublishResponse]])(implicit ec: ExecutionContext): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
-    input.splitAt(2) match {
+    input.splitAt(5) match {
       case (Nil, Nil) => Future.successful(results)
       case (doNow: Seq[ApiDefinitionResult], doLater: Seq[ApiDefinitionResult]) => 
         Future.sequence(doNow.map(publishDefinitionResult(_).value)).flatMap( newResults => {
