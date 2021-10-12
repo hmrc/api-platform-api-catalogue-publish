@@ -83,7 +83,7 @@ class PublishService @Inject() (
     )(implicit ec: ExecutionContext
     ): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
     val startTime = System.currentTimeMillis()
-    input.splitAt(5) match {
+    input.splitAt(20) match {
       case (Nil, Nil)                                                           => Future.successful(results)
       case (doNow: Seq[ApiDefinitionResult], doLater: Seq[ApiDefinitionResult]) =>
         Future.sequence(doNow.map(publishDefinitionResult(_).value)).flatMap(newResults => {
