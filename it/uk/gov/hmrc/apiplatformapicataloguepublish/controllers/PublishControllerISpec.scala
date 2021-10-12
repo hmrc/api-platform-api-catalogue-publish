@@ -151,7 +151,7 @@ class PublishControllerISpec
 
         val result: WSResponse = callPublishAllEndpoint()
         result.status mustBe OK
-        result.body mustBe """{"successCount":0,"failureCount":1}"""
+        result.body mustBe """Publish all called and is working in the background, check application logs for progress"""
       }
 
       "respond with 200 when publish fails" in new Setup {
@@ -166,7 +166,7 @@ class PublishControllerISpec
 
         val result: WSResponse = callPublishAllEndpoint()
         result.status mustBe OK
-        result.body mustBe """{"successCount":0,"failureCount":1}"""
+        result.body mustBe """Publish all called and is working in the background, check application logs for progress"""
       }
 
       "respond with 200 when publish is successful" in new Setup {
@@ -181,7 +181,7 @@ class PublishControllerISpec
 
         val result: WSResponse = callPublishAllEndpoint()
         result.status mustBe OK
-        result.body mustBe """{"successCount":1,"failureCount":0}"""
+        result.body mustBe """Publish all called and is working in the background, check application logs for progress"""
       }
     }
   }

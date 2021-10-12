@@ -85,7 +85,7 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAnd
         when(mockPublishService.publishAll()(any[HeaderCarrier])).thenReturn(Future.successful(List(Left(ApiDefinitionNotFoundResult(apiDefinition1.serviceName, "Api not found")))))
         val result = controller.publishAll()(fakeRequest)
         status(result) shouldBe Status.OK
-        contentAsString(result) shouldBe """{"successCount":0,"failureCount":1}"""
+        contentAsString(result) shouldBe """Publish all called and is working in the background, check application logs for progress"""
 
         verify(mockPublishService).publishAll()(any[HeaderCarrier])
       }
