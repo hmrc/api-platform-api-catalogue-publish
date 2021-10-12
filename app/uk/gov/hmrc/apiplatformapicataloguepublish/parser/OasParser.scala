@@ -18,7 +18,7 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 import play.api.Logging
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 import webapi.WebApiDocument
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
@@ -29,7 +29,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApi
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PrivateApiAccess
 
 
-@Singleton
+
 class OasParser @Inject()(oas30Wrapper: Oas30Wrapper, dateTimeWrapper: DateTimeWrapper)
                          (implicit ec: ExecutionContext) extends OpenApiEnhancements with Logging {
 
