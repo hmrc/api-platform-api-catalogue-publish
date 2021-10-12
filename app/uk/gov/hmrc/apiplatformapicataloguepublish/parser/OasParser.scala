@@ -18,7 +18,7 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 import play.api.Logging
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import webapi.WebApiDocument
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
@@ -28,14 +28,16 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{ConvertedWebApiToOasR
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PrivateApiAccess
 
-
-
+@Singleton
 class OasParser @Inject()(oas30Wrapper: Oas30Wrapper, dateTimeWrapper: DateTimeWrapper)
                          (implicit ec: ExecutionContext) extends OpenApiEnhancements with Logging {
 
   def parseWebApiDocument(model: WebApiDocument, apiName: String, accessType: ApiAccess): Future[ConvertedWebApiToOasResult] = {
-    oas30Wrapper.ramlToOas(model)
+    val startTime = System.currentTimeMillis()
+    val result = oas30Wrapper.ramlToOas(model)
       .map(oasAsString => ConvertedWebApiToOasResult(oasAsString, apiName, accessTypeDescription(accessType)))
+        logger.info(s"ramlToOas completed for $apiName and took ${System.currentTimeMillis() - startTime} milliseconds")
+        result
   }
 
   def enhanceOas(convertedWebApiToOasResult: ConvertedWebApiToOasResult): Either[OpenApiProcessingError, String] = {

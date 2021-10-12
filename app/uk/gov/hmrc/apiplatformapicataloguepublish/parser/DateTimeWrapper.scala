@@ -18,8 +18,9 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 import java.time.format.DateTimeFormatter
 import java.time.LocalDateTime
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
+@Singleton
 class DateTimeWrapper @Inject()(){
     def generateDateNowString() = {
          val dateFmt =   DateTimeFormatter.ISO_LOCAL_DATE_TIME
