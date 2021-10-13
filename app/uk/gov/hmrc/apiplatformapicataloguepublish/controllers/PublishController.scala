@@ -17,15 +17,14 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
 
 import play.api.Logging
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, PublishResponse}
 import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiCataloguePublishResult, ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton()
 class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)
@@ -42,16 +41,18 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
   }
 
   def publishAll(): Action[AnyContent] = Action.async { implicit request =>
+    val startTime = System.currentTimeMillis()
     logger.info("publishAll endpoint called")
     publishService.publishAll().map{
      results: List[Either[ApiCataloguePublishResult, PublishResponse]] =>
         val countSuccess = results.count(_.isRight)
         val countFailed = results.count(_.isLeft)
-        results.map{
-          case Right(result: PublishResponse) => logger.info(result.toString())
-          case Left(e: ApiCataloguePublishResult) => logger.error(e.toString())
+        results.foreach {
+          case Right(result: PublishResponse) => logger.info(result.toString)
+          case Left(e: ApiCataloguePublishResult) => logger.error(e.toString)
         }
-      logger.info(s"publishAll about to return result -  success: $countSuccess, failed: $countFailed")    
+
+      logger.info(s"publishAll about to return result -  success: $countSuccess, failed: $countFailed.took ${System.currentTimeMillis() - startTime} milliseconds ")
     }
     Future.successful(Ok("Publish all called and is working in the background, check application logs for progress"))
   }
