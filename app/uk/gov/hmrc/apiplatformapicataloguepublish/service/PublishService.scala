@@ -43,7 +43,7 @@ class PublishService @Inject() (
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
-  val BATCH_AMOUNT = 1
+  val BATCH_AMOUNT = 5
 
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
     (for {
@@ -71,11 +71,8 @@ class PublishService @Inject() (
   def publishAll()(implicit hc: HeaderCarrier): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
     apiDefinitionConnector.getAllServices
       .flatMap {
-        case Right(definitionList: List[ApiDefinitionResult]) => Future.sequence {
-                    definitionList.map(result => {
-            //  Thread.sleep(500)
-            publishDefinitionResult(result).value})
-                    }
+        case Right(definitionList: List[ApiDefinitionResult]) => 
+          batchFutures(definitionList, List.empty)
         case Left(_: GeneralFailedResult)                     =>
           Future.successful(List(Left(PublishFailedResult("All Services", "something went wrong calling api definition"))))
       }
