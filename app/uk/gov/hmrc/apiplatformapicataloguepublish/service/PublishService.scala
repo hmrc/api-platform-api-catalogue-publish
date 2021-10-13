@@ -43,7 +43,7 @@ class PublishService @Inject() (
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
-  val BATCH_AMOUNT = 5
+  val BATCH_AMOUNT = 4
 
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
     (for {

@@ -65,16 +65,16 @@ class PublishServiceSpec
 
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
+    val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), apiDefinition1.serviceName, ApiStatus.STABLE)
     val apiDefinitionResult2: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition2), getAccessTypeOfLatestVersion(apiDefinition2), apiDefinition2.serviceName, ApiStatus.STABLE)
     val expectedDescription = "A description."
-    val convertedWebApiToOasResult: ConvertedWebApiToOasResult = ConvertedWebApiToOasResult("", serviceName, expectedDescription)
+    val convertedWebApiToOasResult: ConvertedWebApiToOasResult = ConvertedWebApiToOasResult("", apiDefinition1.serviceName, expectedDescription)
     val publishResponse: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
 
     val objInTest = new PublishService(mockConnector, mockApiRamlParser, mockOasParser, mockCatalogueConnector)
 
     def primeBeforeCataloguePublish(apiDefinitionResult: ApiDefinitionResult, expectedDescription: String, convertedWebApiToOasResult: ConvertedWebApiToOasResult): Unit = {
-      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+      when(mockConnector.getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc)))
         .thenReturn(Future.successful(Right(apiDefinitionResult)))
       when(mockApiRamlParser.getRaml(any[String])).thenReturn(Future.successful(mockWebApiDocument))
       when(mockWebApiDocument.raw).thenReturn(Optional.of(expectedDescription))
@@ -84,9 +84,9 @@ class PublishServiceSpec
     }
 
     def verifyMocksHappyPathBeforePublishCall() = {
-      verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+      verify(mockConnector).getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc))
       verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
-      verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(serviceName), eqTo(PublicApiAccess()))
+      verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition1.serviceName), eqTo(PublicApiAccess()))
       verify(mockOasParser).enhanceOas(eqTo(convertedWebApiToOasResult))
     }
 
@@ -99,7 +99,7 @@ class PublishServiceSpec
         primeBeforeCataloguePublish(apiDefinitionResult, expectedDescription, convertedWebApiToOasResult)
 
         when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Right(publishResponse)))
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(apiDefinition1.serviceName))
         result match {
           case Right(value: PublishResponse) => value shouldBe publishResponse
           case _                             => fail()
@@ -114,7 +114,7 @@ class PublishServiceSpec
         primeBeforeCataloguePublish(apiDefinitionResult, expectedDescription, convertedWebApiToOasResult)
 
         when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Left(ApiCatalogueGeneralFailureResult("some error"))))
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(apiDefinition1.serviceName))
         result match {
           case Left(x: ApiCataloguePublishFailedResult) => succeed
           case _                                        => fail()
@@ -124,57 +124,57 @@ class PublishServiceSpec
 
       "return a Left when ApiRamlParser returns an error" in new Setup {
 
-        override val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
+        override val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), apiDefinition1.serviceName, ApiStatus.STABLE)
 
         val errorMessage = "Parse failed"
 
-        when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        when(mockConnector.getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc)))
           .thenReturn(Future.successful(Right(apiDefinitionResult)))
         when(mockApiRamlParser.getRaml(any[String])).thenReturn(Future.failed(new RuntimeException(errorMessage)))
 
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(apiDefinition1.serviceName))
         result match {
           case Left(e: PublishFailedResult) => e.message shouldBe s"getRamlForApiDefinition failed: $errorMessage"
           case _                            => fail()
         }
 
-        verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+        verify(mockConnector).getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc))
         verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
         verifyZeroInteractions(mockOasParser)
       }
 
       "return a Left when OasParser returns an error" in new Setup {
 
-        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
+        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), apiDefinition1.serviceName, ApiStatus.STABLE)
 
         val errorMessage: String = "Parse failed"
 
-        when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        when(mockConnector.getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc)))
           .thenReturn(Future.successful(Right(apiDeinitionResult)))
         when(mockApiRamlParser.getRaml(any[String])).thenReturn(Future.successful(mockWebApiDocument))
         when(mockOasParser.parseWebApiDocument(any[WebApiDocument], any[String], any[ApiAccess]))
           .thenReturn(Future.failed(new RuntimeException(errorMessage)))
 
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(apiDefinition1.serviceName))
         result match {
           case Left(e: PublishFailedResult) => e.message shouldBe s"handleRamlToOas failed: $errorMessage"
           case _                            => fail()
         }
 
-        verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+        verify(mockConnector).getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc))
         verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
-        verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(serviceName), eqTo(PublicApiAccess()))
+        verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition1.serviceName), eqTo(PublicApiAccess()))
       }
 
       "return Left with PublishFailedResult when connector returns Left with exception" in new Setup {
 
-        when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        when(mockConnector.getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc)))
           .thenReturn(Future.successful(Left(GeneralFailedResult("Some Message"))))
 
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
-        result shouldBe Left(PublishFailedResult(serviceName, "Some Message"))
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(apiDefinition1.serviceName))
+        result shouldBe Left(PublishFailedResult(apiDefinition1.serviceName, "Some Message"))
 
-        verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+        verify(mockConnector).getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc))
         verifyZeroInteractions(mockApiRamlParser)
         verifyZeroInteractions(mockOasParser)
 
@@ -183,31 +183,31 @@ class PublishServiceSpec
       "return Left with OpenApiEnhancementFailedResult when oas parser returns Left with GeneralOpenApiProcessingError" in new Setup {
         val errorMessage = "Swagger Parse failure"
 
-        when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))).thenReturn(Future.successful(Right(apiDefinitionResult)))
+        when(mockConnector.getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc))).thenReturn(Future.successful(Right(apiDefinitionResult)))
         when(mockApiRamlParser.getRaml(any[String])).thenReturn(Future.successful(mockWebApiDocument))
         when(mockWebApiDocument.raw).thenReturn(Optional.of(expectedDescription))
         when(mockOasParser.parseWebApiDocument(any[WebApiDocument], any[String], any[ApiAccess])).thenReturn(Future.successful(convertedWebApiToOasResult))
-        when(mockOasParser.enhanceOas(any[ConvertedWebApiToOasResult])).thenReturn(Left(GeneralOpenApiProcessingError(serviceName, errorMessage)))
+        when(mockOasParser.enhanceOas(any[ConvertedWebApiToOasResult])).thenReturn(Left(GeneralOpenApiProcessingError(apiDefinition1.serviceName, errorMessage)))
 
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
-        result shouldBe Left(OpenApiEnhancementFailedResult(serviceName, s"handleEnhancingOasForCatalogue failed: $errorMessage"))
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(apiDefinition1.serviceName))
+        result shouldBe Left(OpenApiEnhancementFailedResult(apiDefinition1.serviceName, s"handleEnhancingOasForCatalogue failed: $errorMessage"))
 
-        verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+        verify(mockConnector).getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc))
         verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
-        verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(serviceName), eqTo(PublicApiAccess()))
+        verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition1.serviceName), eqTo(PublicApiAccess()))
         verify(mockOasParser).enhanceOas(eqTo(convertedWebApiToOasResult))
 
       }
 
       "return Left ApiDefinitionNotFoundResult when connector returns Left UpStream4xxResponse" in new Setup {
 
-        when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        when(mockConnector.getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc)))
           .thenReturn(Future.successful(Left(ApiDefinitionConnector.NotFoundResult("Some Message"))))
 
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
-        result shouldBe Left(ApiDefinitionNotFoundResult(serviceName, "Some Message"))
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(apiDefinition1.serviceName))
+        result shouldBe Left(ApiDefinitionNotFoundResult(apiDefinition1.serviceName, "Some Message"))
 
-        verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+        verify(mockConnector).getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc))
         verifyZeroInteractions(mockApiRamlParser)
         verifyZeroInteractions(mockOasParser)
 
@@ -215,15 +215,15 @@ class PublishServiceSpec
 
 
       "return Left ApiDefinitionInvalidStatusResult when connector returns definition with RETIRED status" in new Setup {
-        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.RETIRED)
+        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), apiDefinition1.serviceName, ApiStatus.RETIRED)
 
-        when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        when(mockConnector.getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc)))
           .thenReturn(Future.successful(Right(apiDeinitionResult)))
 
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
-        result shouldBe Left(ApiDefinitionInvalidStatusResult(serviceName, "definition record was RETIRED for this service"))
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(apiDefinition1.serviceName))
+        result shouldBe Left(ApiDefinitionInvalidStatusResult(apiDefinition1.serviceName, "definition record was RETIRED for this service"))
 
-        verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
+        verify(mockConnector).getDefinitionByServiceName(eqTo(apiDefinition1.serviceName))(eqTo(hc))
         verifyZeroInteractions(mockApiRamlParser)
         verifyZeroInteractions(mockOasParser)
 
@@ -251,7 +251,7 @@ class PublishServiceSpec
 
         val results = await(objInTest.publishAll())
         results shouldBe List(
-          Left(PublishFailedResult("my-service", "getRamlForApiDefinition failed: errorMessage")),
+          Left(PublishFailedResult("my-service-1", "getRamlForApiDefinition failed: errorMessage")),
           Left(PublishFailedResult("my-service-2", "getRamlForApiDefinition failed: errorMessage"))
         )
 
@@ -267,7 +267,7 @@ class PublishServiceSpec
 
         val results = await(objInTest.publishAll())
         results shouldBe List(
-          Left(PublishFailedResult("my-service", "handleRamlToOas failed: errorMessage")),
+          Left(PublishFailedResult("my-service-1", "handleRamlToOas failed: errorMessage")),
           Left(PublishFailedResult("my-service-2", "handleRamlToOas failed: errorMessage"))
         )
 
@@ -283,12 +283,12 @@ class PublishServiceSpec
         when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
         when(mockApiRamlParser.getRaml(any[String])).thenReturn(Future.successful(mockWebApiDocument))
         when(mockOasParser.parseWebApiDocument(any[WebApiDocument], any[String], any[ApiAccess])).thenReturn(Future.successful(convertedWebApiToOasResult))
-        when(mockOasParser.enhanceOas(any[ConvertedWebApiToOasResult])).thenReturn(Left(GeneralOpenApiProcessingError(serviceName, "some error")))
+        when(mockOasParser.enhanceOas(any[ConvertedWebApiToOasResult])).thenReturn(Left(GeneralOpenApiProcessingError(apiDefinition1.serviceName, "some error")))
 
         val results = await(objInTest.publishAll())
         results shouldBe List(
-          Left(OpenApiEnhancementFailedResult("my-service", "handleEnhancingOasForCatalogue failed: some error")),
-          Left(OpenApiEnhancementFailedResult("my-service", "handleEnhancingOasForCatalogue failed: some error"))
+          Left(OpenApiEnhancementFailedResult("my-service-1", "handleEnhancingOasForCatalogue failed: some error")),
+          Left(OpenApiEnhancementFailedResult("my-service-1", "handleEnhancingOasForCatalogue failed: some error"))
         )
 
         verify(mockConnector).getAllServices()(any[HeaderCarrier])
@@ -309,7 +309,7 @@ class PublishServiceSpec
 
         val results = await(objInTest.publishAll())
         results shouldBe List(
-          Left(ApiCataloguePublishFailedResult("my-service", "publish to catalogue failed some error")),
+          Left(ApiCataloguePublishFailedResult("my-service-1", "publish to catalogue failed some error")),
           Left(ApiCataloguePublishFailedResult("my-service-2", "publish to catalogue failed some error"))
         )
 

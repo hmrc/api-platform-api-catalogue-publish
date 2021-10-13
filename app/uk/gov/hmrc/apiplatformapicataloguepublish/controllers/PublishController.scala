@@ -25,6 +25,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import play.api.libs.json.{Format, Json}
 
 @Singleton()
 class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)
@@ -51,9 +52,12 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
           case Right(result: PublishResponse) => logger.info(result.toString)
           case Left(e: ApiCataloguePublishResult) => logger.error(e.toString)
         }
-
-      logger.info(s"publishAll about to return result -  success: $countSuccess, failed: $countFailed.took ${System.currentTimeMillis() - startTime} milliseconds ")
+       logger.info(s"publishAll about to return result -  success: $countSuccess, failed: $countFailed.took ${System.currentTimeMillis() - startTime} milliseconds ")
+        val response = PublishAllResponse(countSuccess, countFailed)
+        Ok(Json.toJson(response))
     }
-    Future.successful(Ok("Publish all called and is working in the background, check application logs for progress"))
   }
+
+  case class PublishAllResponse(successCount: Int, failureCount: Int)
+  implicit val publishAllResponseFormat: Format[PublishAllResponse] = Json.format[PublishAllResponse]
 }

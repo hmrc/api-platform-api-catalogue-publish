@@ -29,7 +29,7 @@ class ApiRamlParser @Inject()()(implicit ec: ExecutionContext) extends Logging {
 
   def getRaml(url: String): Future[WebApiDocument] = {
     val startTime = System.currentTimeMillis()
-
+    logger.info(s"getRaml called for url $url")
      FutureConverters.toScala({
       Raml10.parse(url)
     }).map(x => {

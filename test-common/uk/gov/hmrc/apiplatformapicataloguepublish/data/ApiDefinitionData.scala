@@ -21,10 +21,20 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinit
 
 
 trait ApiDefinitionData extends ApiDefinitionBuilder {
-      val categories = List(ApiCategory("category1"), ApiCategory("category2"))
-    val serviceName = "my-service"
+    val categories = List(ApiCategory("category1"), ApiCategory("category2"))
     val versions = List(apiVersion(version = ApiVersion("1.0")), apiVersion(version = (ApiVersion("2.0"))))
 
-    val apiDefinition1 = ApiDefinition("serviceBaseUrl", serviceName, s"$serviceName-name", s"$serviceName-description", ApiContext(s"$serviceName-context"), false, false, versions.toList, categories)
-     val apiDefinition2 = ApiDefinition("serviceBaseUrl2", s"$serviceName-2", s"$serviceName-name2", s"$serviceName-description2", ApiContext(s"$serviceName-context2"), false, false, versions.toList, categories)
+    val apiDefinition1: ApiDefinition = createApiDefinition("serviceBaseUrl1", "my-service-1", List("1.0", "2.0"))
+      //ApiDefinition("serviceBaseUrl1", serviceName, s"$serviceName-name", s"$serviceName-description",
+      // ApiContext(s"$serviceName-context"), false, false, versions.toList, categories)
+    val apiDefinition2: ApiDefinition = createApiDefinition("serviceBaseUrl2", "my-service-2",List("1.0", "2.0"))
+     //ApiDefinition("serviceBaseUrl2", s"$serviceName-2", s"$serviceName-name2", s"$serviceName-description2",
+  // ApiContext(s"$serviceName-context2"), false, false, versions.toList, categories)
+
+  def createApiDefinition(serviceBaseUrl: String, serviceName: String,  versionStrings: List[String]) ={
+    val versions = versionStrings.map(x=> apiVersion(version = ApiVersion(x)))
+
+    ApiDefinition(serviceBaseUrl, s"$serviceName", s"$serviceName-name", s"$serviceName-description", ApiContext(s"$serviceName-context"), requiresTrust = false, isTestSupport = false, versions, categories)
+
+  }
 }

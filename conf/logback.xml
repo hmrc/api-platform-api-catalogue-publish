@@ -47,6 +47,8 @@
 
     <logger name="uk.gov" level="INFO"/>
 
+    <logger name="amf.client" level="DEBUG"/>
+
     <logger name="application" level="DEBUG"/>
 
     <logger name="connector" level="TRACE">

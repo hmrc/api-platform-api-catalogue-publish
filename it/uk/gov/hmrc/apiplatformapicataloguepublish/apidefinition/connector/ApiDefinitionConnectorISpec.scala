@@ -60,9 +60,9 @@ class ApiDefinitionConnectorISpec
         primeGetByServiceName(
           OK,
           jsonBody,
-          serviceName
+          apiDefinition1.serviceName
         )
-        await(objInTest.getDefinitionByServiceName(serviceName)) match {
+        await(objInTest.getDefinitionByServiceName( apiDefinition1.serviceName)) match {
           case Right(x: ApiDefinitionResult) => x mustBe definitionResult1
           case _                             => fail
 
@@ -73,9 +73,9 @@ class ApiDefinitionConnectorISpec
         primeGetByServiceName(
           NOT_FOUND,
           "{}",
-          serviceName
+          apiDefinition1.serviceName
         )
-        await(objInTest.getDefinitionByServiceName(serviceName)) match {
+        await(objInTest.getDefinitionByServiceName( apiDefinition1.serviceName)) match {
           case Left(_: NotFoundResult) => succeed
           case _                       => fail
 
@@ -85,9 +85,9 @@ class ApiDefinitionConnectorISpec
         primeGetByServiceName(
           BAD_GATEWAY,
           "{}",
-          serviceName
+          apiDefinition1.serviceName
         )
-        await(objInTest.getDefinitionByServiceName(serviceName)) match {
+        await(objInTest.getDefinitionByServiceName( apiDefinition1.serviceName)) match {
           case Left(_: GeneralFailedResult) => succeed
           case _                            => fail
 

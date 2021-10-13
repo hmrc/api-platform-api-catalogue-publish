@@ -119,7 +119,7 @@ class PublishControllerISpec
         val apiDefinitionAsString = Json.toJson(apiDefinition1withwiremock).toString
 
         primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
-        primeGETReturnsNotFound("/" + getRamlUri(apiDefinition1))
+        primeGETReturnsError("/" + getRamlUri(apiDefinition1))
 
         val result: WSResponse = callPublishEndpoint(serviceName)
         result.status mustBe INTERNAL_SERVER_ERROR
@@ -133,6 +133,7 @@ class PublishControllerISpec
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
+        println(getRamlUri(apiDefinition1))
         primeGETWithFileContents("/" + getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
         primeApiPublish(publishResponseAsJsonString, BAD_REQUEST)
 
@@ -151,7 +152,7 @@ class PublishControllerISpec
 
         val result: WSResponse = callPublishAllEndpoint()
         result.status mustBe OK
-        result.body mustBe """Publish all called and is working in the background, check application logs for progress"""
+        result.body mustBe """{"successCount":0,"failureCount":1}"""
       }
 
       "respond with 200 when publish fails" in new Setup {
@@ -166,7 +167,7 @@ class PublishControllerISpec
 
         val result: WSResponse = callPublishAllEndpoint()
         result.status mustBe OK
-        result.body mustBe """Publish all called and is working in the background, check application logs for progress"""
+        result.body mustBe """{"successCount":0,"failureCount":1}"""
       }
 
       "respond with 200 when publish is successful" in new Setup {
@@ -181,7 +182,7 @@ class PublishControllerISpec
 
         val result: WSResponse = callPublishAllEndpoint()
         result.status mustBe OK
-        result.body mustBe """Publish all called and is working in the background, check application logs for progress"""
+        result.body mustBe """{"successCount":1,"failureCount":0}"""
       }
     }
   }
