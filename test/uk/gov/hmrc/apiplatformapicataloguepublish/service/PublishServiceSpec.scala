@@ -29,7 +29,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformTy
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{IntegrationId, PublishResponse}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionResult, GeneralFailedResult}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, PublicApiAccess}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiStatus, PublicApiAccess}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{ConvertedWebApiToOasResult, GeneralOpenApiProcessingError}
@@ -41,10 +41,6 @@ import webapi.WebApiDocument
 import java.util.{Optional, UUID}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import org.mulesoft.lexer.failfast
-import io.jsonwebtoken.Header
-import com.rabbitmq.client.impl.AMQImpl.Connection.Open
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 
 class PublishServiceSpec
     extends AnyWordSpec

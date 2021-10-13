@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
+import play.api.Logging
+import webapi.{Oas30, WebApiDocument}
+
 import javax.inject.{Inject, Singleton}
 import scala.compat.java8.FutureConverters
-import java.util.concurrent.TimeUnit
-import webapi.Oas30
-import webapi.WebApiDocument
 import scala.concurrent.Future
-import play.api.Logging
 
 @Singleton
 class Oas30Wrapper @Inject() () extends Logging {

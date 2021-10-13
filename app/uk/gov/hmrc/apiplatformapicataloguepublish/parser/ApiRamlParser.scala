@@ -17,15 +17,14 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 import play.api.Logging
-
-import javax.inject.{Inject, Singleton}
 import webapi.{Raml10, WebApiDocument}
+
+import javax.inject.Inject
 import scala.compat.java8._
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
-@Singleton
-class ApiRamlParser @Inject() ()(implicit ec: RamlLoaderExecutionContext) extends Logging {
+class ApiRamlParser @Inject()()(implicit ec: RamlLoaderExecutionContext) extends Logging {
 
   def getRaml(url: String): Future[WebApiDocument] = {
     val startTime = System.currentTimeMillis()

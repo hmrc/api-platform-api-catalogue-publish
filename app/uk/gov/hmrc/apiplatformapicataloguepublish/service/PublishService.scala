@@ -24,6 +24,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCata
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishResponse
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{ConvertedWebApiToOasResult, GeneralOpenApiProcessingError}
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.{ApiRamlParser, OasParser}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -32,9 +33,6 @@ import webapi.WebApiDocument
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
-import scala.concurrent.duration._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus._
 
 @Singleton()
 class PublishService @Inject() (
@@ -44,6 +42,8 @@ class PublishService @Inject() (
     catalogueConnector: ApiCatalogueAdminConnector
   )(implicit val ec: ExecutionContext)
     extends Logging {
+
+  val BATCH_AMOUNT = 5
 
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
     (for {
@@ -56,7 +56,8 @@ class PublishService @Inject() (
     val serviceName = apiDefinitionResult.serviceName
     logger.info(s"publishDefinitionResult START for $serviceName")
     apiDefinitionResult.status match {
-      case ApiStatus.RETIRED => EitherT.left(Future.successful(ApiDefinitionInvalidStatusResult(apiDefinitionResult.serviceName, "definition record was RETIRED for this service")))
+      case ApiStatus.RETIRED =>
+        EitherT.left(Future.successful(ApiDefinitionInvalidStatusResult(apiDefinitionResult.serviceName, "definition record was RETIRED for this service")))
       case _                 => for {
           ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
           convertedOas <- EitherT(handleRamlToOas(ramlAndDefinition))
@@ -72,7 +73,8 @@ class PublishService @Inject() (
       .flatMap {
         case Right(definitionList: List[ApiDefinitionResult]) =>
           batchFutures(definitionList, List.empty)
-        case Left(x: GeneralFailedResult)                     => Future.successful(List(Left(PublishFailedResult("All Services", "something went wrong calling api definition"))))
+        case Left(_: GeneralFailedResult)                     =>
+          Future.successful(List(Left(PublishFailedResult("All Services", "something went wrong calling api definition"))))
       }
 
   }
@@ -83,19 +85,20 @@ class PublishService @Inject() (
     )(implicit ec: ExecutionContext
     ): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
     val startTime = System.currentTimeMillis()
-    input.splitAt(10) match {
+    input.splitAt(BATCH_AMOUNT) match {
       case (Nil, Nil)                                                           => Future.successful(results)
       case (doNow: Seq[ApiDefinitionResult], doLater: Seq[ApiDefinitionResult]) =>
         Future.sequence(doNow.map(publishDefinitionResult(_).value)).flatMap(newResults => {
           logger.info(s"batchFutures - Done batch of items ${doNow.map(_.serviceName).mkString(" - ")}")
           val totalTime = System.currentTimeMillis() - startTime
           logger.info(s"batchFutures took $totalTime milliseconds")
-          batchFutures(doLater, (results ++ newResults))
+          batchFutures(doLater, results ++ newResults)
         })
     }
   }
 
-  def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse], serviceName: String): Either[ApiCataloguePublishResult, PublishResponse] = {
+  def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse],
+                                serviceName: String): Either[ApiCataloguePublishResult, PublishResponse] = {
     logger.info(s"mapCataloguePublishResult called for $serviceName")
     result match {
       case Right(response: PublishResponse)  => Right(response)
@@ -104,7 +107,8 @@ class PublishService @Inject() (
     }
   }
 
-  def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult], serviceName: String): Either[ApiCataloguePublishResult, ApiDefinitionResult] =
+  def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult],
+                             serviceName: String): Either[ApiCataloguePublishResult, ApiDefinitionResult] =
     result match {
       case Right(x: ApiDefinitionResult)                  => Right(x)
       case Left(e: ApiDefinitionConnector.NotFoundResult) =>
@@ -116,7 +120,6 @@ class PublishService @Inject() (
     }
 
   private def getRamlForApiDefinition(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, ResultHolder]] = {
-    val startTime = System.currentTimeMillis()
     logger.info(s"getRamlForApiDefinition called for ${apiDefinitionResult.serviceName}")
     apiRamlParser.getRaml(apiDefinitionResult.url)
       .map(x => Right(ResultHolder(apiDefinitionResult, x)))
