@@ -41,6 +41,7 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
   }
 
   def publishAll(): Action[AnyContent] = Action.async { implicit request =>
+    implicit val formatPublishAllResponse = Json.format[PublishAllResponse]
     val startTime = System.currentTimeMillis()
     logger.info("publishAll endpoint called")
     publishService.publishAll().map{
@@ -54,6 +55,10 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
 
       logger.info(s"publishAll about to return result -  success: $countSuccess, failed: $countFailed.took ${System.currentTimeMillis() - startTime} milliseconds ")
     }
-    Future.successful(Ok("Publish all called and is working in the background, check application logs for progress"))
+    val publishAllResponse = PublishAllResponse(message = "Publish all called and is working in the background, check application logs for progress")
+    Future.successful(Ok(Json.toJson(publishAllResponse)))
   }
 }
+
+case class PublishAllResponse(message: String)
+
