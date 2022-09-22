@@ -24,7 +24,7 @@ import webapi.WebApiDocument
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
 
 import scala.concurrent.Future
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{ConvertedWebApiToOasResult, OpenApiEnhancements, OpenApiProcessingError}
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{OasResult, OpenApiEnhancements, OpenApiProcessingError}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PrivateApiAccess
 
@@ -32,19 +32,19 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PrivateAp
 class OasParser @Inject()(oas30Wrapper: Oas30Wrapper, dateTimeWrapper: DateTimeWrapper)
                          (implicit ec: ExecutionContext) extends OpenApiEnhancements with Logging {
 
-  def parseWebApiDocument(model: WebApiDocument, apiName: String, accessType: ApiAccess): Future[ConvertedWebApiToOasResult] = {
+  def parseWebApiDocument(model: WebApiDocument, apiName: String, accessType: ApiAccess): Future[OasResult] = {
     val startTime = System.currentTimeMillis()
     val result = oas30Wrapper.ramlToOas(model)
-      .map(oasAsString => ConvertedWebApiToOasResult(oasAsString, apiName, accessTypeDescription(accessType)))
+      .map(oasAsString => OasResult(oasAsString, apiName, accessTypeDescription(accessType)))
         logger.info(s"ramlToOas completed for $apiName and took ${System.currentTimeMillis() - startTime} milliseconds")
         result
   }
 
-  def enhanceOas(convertedWebApiToOasResult: ConvertedWebApiToOasResult): Either[OpenApiProcessingError, String] = {
+  def enhanceOas(convertedWebApiToOasResult: OasResult): Either[OpenApiProcessingError, String] = {
     addOasSpecAttributes(convertedWebApiToOasResult, dateTimeWrapper.generateDateNowString())
   }
 
-  private def accessTypeDescription(accessType: ApiAccess): String = {
+  def accessTypeDescription(accessType: ApiAccess): String = {
     accessType match {
       case _: PublicApiAccess => "This is a public API."
       case _: PrivateApiAccess => "This is a private API."

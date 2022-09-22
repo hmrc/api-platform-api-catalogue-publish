@@ -18,14 +18,16 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
 import cats.data.EitherT
 import cats.implicits._
+import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.parser.OpenAPIV3Parser
 import play.api.Logging
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueFailedResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishResponse
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{ConvertedWebApiToOasResult, GeneralOpenApiProcessingError}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiDefinition, ApiStatus}
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult}
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.{ApiRamlParser, OasParser}
 import uk.gov.hmrc.http.HeaderCarrier
 import webapi.WebApiDocument
@@ -39,11 +41,19 @@ class PublishService @Inject() (
     apiDefinitionConnector: ApiDefinitionConnector,
     apiRamlParser: ApiRamlParser,
     oasParser: OasParser,
-    catalogueConnector: ApiCatalogueAdminConnector
+    catalogueConnector: ApiCatalogueAdminConnector,
+    apiMicroserviceConnector: ApiMicroserviceConnector
   )(implicit val ec: ExecutionContext)
     extends Logging {
 
   val BATCH_AMOUNT = 5
+
+  def getRamlUrl(apiDefinitionResult: ApiDefinitionResult) ={
+    apiDefinitionResult.url+".raml"
+  }
+  def getYamlUrl(apiDefinitionResult: ApiDefinitionResult) ={
+    apiDefinitionResult.url+".yaml"
+  }
 
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
     (for {
@@ -59,13 +69,41 @@ class PublishService @Inject() (
       case ApiStatus.RETIRED =>
         EitherT.left(Future.successful(ApiDefinitionInvalidStatusResult(apiDefinitionResult.serviceName, "definition record was RETIRED for this service")))
       case _                 => for {
-          ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
-          convertedOas <- EitherT(handleRamlToOas(ramlAndDefinition))
-          oasDataWithExtensions <- EitherT(handleEnhancingOasForCatalogue(convertedOas))
+          oasValue <- EitherT(ramlOrYaml(apiDefinitionResult))
+          oasDataWithExtensions <- EitherT(handleEnhancingOasForCatalogue(oasValue))
           result <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult(_, serviceName)))
         } yield result
     }
 
+  }
+
+  def ramlOrYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
+
+    def getYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[Throwable, String]] ={
+      apiMicroserviceConnector.fetchApiDocumentationResourceByUrl(getYamlUrl(apiDefinitionResult))
+    }
+
+    def handleYamlResult(result: Either[Throwable, String]): Future[Either[ApiCataloguePublishResult, OasResult]] ={
+      result match {
+        case Left(_) =>  handleRaml(apiDefinitionResult)
+        case Right(oas: String) => Future.successful(Right(OasResult(
+          oas,
+          apiDefinitionResult.serviceName,
+          oasParser.accessTypeDescription(apiDefinitionResult.access))))
+      }
+    }
+    for {
+      yamlResult <- getYaml(apiDefinitionResult)
+      handledResult <- handleYamlResult(yamlResult)
+    }yield handledResult
+
+  }
+
+  def handleRaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] ={
+    (for {
+      ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
+      convertedOas <- EitherT(handleRamlToOas(ramlAndDefinition))
+    } yield convertedOas).value
   }
 
   def publishAll()(implicit hc: HeaderCarrier): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
@@ -121,7 +159,7 @@ class PublishService @Inject() (
 
   private def getRamlForApiDefinition(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, ResultHolder]] = {
     logger.info(s"getRamlForApiDefinition called for ${apiDefinitionResult.serviceName}")
-    apiRamlParser.getRaml(apiDefinitionResult.url)
+    apiRamlParser.getRaml(getRamlUrl(apiDefinitionResult))
       .map(x => Right(ResultHolder(apiDefinitionResult, x)))
       .recover {
         case NonFatal(e: Throwable) => logger.error("getRamlForApiDefinition failed: ", e)
@@ -129,7 +167,7 @@ class PublishService @Inject() (
       }
   }
 
-  def handleRamlToOas(resultHolder: ResultHolder): Future[Either[ApiCataloguePublishResult, ConvertedWebApiToOasResult]] = {
+  def handleRamlToOas(resultHolder: ResultHolder): Future[Either[ApiCataloguePublishResult, OasResult]] = {
     logger.info(s"handleRamlToOas called for ${resultHolder.apiDefinitionResult.serviceName}")
     oasParser.parseWebApiDocument(resultHolder.document, resultHolder.apiDefinitionResult.serviceName, resultHolder.apiDefinitionResult.access)
       .map(Right(_))
@@ -139,7 +177,7 @@ class PublishService @Inject() (
       }
   }
 
-  def handleEnhancingOasForCatalogue(oasResult: ConvertedWebApiToOasResult): Future[Either[ApiCataloguePublishResult, String]] = {
+  def handleEnhancingOasForCatalogue(oasResult: OasResult): Future[Either[ApiCataloguePublishResult, String]] = {
     logger.info(s"handleEnhancingOasForCatalogue called for ${oasResult.apiName}")
     oasParser.enhanceOas(oasResult) match {
       case Right(value: String)                   => Future.successful(Right(value))
