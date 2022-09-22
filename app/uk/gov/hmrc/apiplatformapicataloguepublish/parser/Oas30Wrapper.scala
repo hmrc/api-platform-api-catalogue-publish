@@ -21,8 +21,7 @@ import webapi.{Oas30, WebApiDocument}
 
 import javax.inject.{Inject, Singleton}
 import scala.compat.java8.FutureConverters
-import scala.concurrent.{Future, ExecutionContext}
-import scala.util.control.NonFatal
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class Oas30Wrapper @Inject()()(implicit ec: ExecutionContext) extends Logging {

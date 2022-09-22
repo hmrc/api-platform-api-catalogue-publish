@@ -23,18 +23,18 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{IntegrationId, PublishResponse}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionResult, GeneralFailedResult}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiStatus, PublicApiAccess}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiStatus, PublicApiAccess}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{OasResult, GeneralOpenApiProcessingError}
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult}
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.{ApiRamlParser, OasParser}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import webapi.WebApiDocument
 
@@ -57,21 +57,28 @@ class PublishServiceSpec
   private val mockOasParser = mock[OasParser]
   private val mockWebApiDocument = mock[WebApiDocument]
   private val mockCatalogueConnector = mock[ApiCatalogueAdminConnector]
+  private val mockApiMicroserviceConnector = mock[ApiMicroserviceConnector]
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockConnector, mockApiRamlParser, mockOasParser, mockWebApiDocument, mockCatalogueConnector)
+    reset(mockConnector, mockApiRamlParser, mockOasParser, mockWebApiDocument, mockCatalogueConnector, mockApiMicroserviceConnector)
   }
 
   trait Setup {
+    def getRamlUri(definition: ApiDefinition) ={
+      getUri(definition) + ".raml"
+    }
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
-    val apiDefinitionResult2: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition2), getAccessTypeOfLatestVersion(apiDefinition2), apiDefinition2.serviceName, ApiStatus.STABLE)
+    val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
+    val apiDefinitionResult2: ApiDefinitionResult = ApiDefinitionResult(getUri(apiDefinition2), getAccessTypeOfLatestVersion(apiDefinition2), apiDefinition2.serviceName, ApiStatus.STABLE)
     val expectedDescription = "A description."
     val convertedWebApiToOasResult: OasResult = OasResult("", serviceName, expectedDescription)
     val publishResponse: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
 
-    val objInTest = new PublishService(mockConnector, mockApiRamlParser, mockOasParser, mockCatalogueConnector)
+    val objInTest = new PublishService(mockConnector, mockApiRamlParser, mockOasParser, mockCatalogueConnector, mockApiMicroserviceConnector)
+
+
+    when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
 
     def primeBeforeCataloguePublish(apiDefinitionResult: ApiDefinitionResult, expectedDescription: String, convertedWebApiToOasResult: OasResult): Unit = {
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
@@ -124,7 +131,7 @@ class PublishServiceSpec
 
       "return a Left when ApiRamlParser returns an error" in new Setup {
 
-        override val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
+        override val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
 
         val errorMessage = "Parse failed"
 
@@ -145,7 +152,7 @@ class PublishServiceSpec
 
       "return a Left when OasParser returns an error" in new Setup {
 
-        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
+        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
 
         val errorMessage: String = "Parse failed"
 
@@ -215,7 +222,7 @@ class PublishServiceSpec
 
 
       "return Left ApiDefinitionInvalidStatusResult when connector returns definition with RETIRED status" in new Setup {
-        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getRamlUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.RETIRED)
+        val apiDeinitionResult: ApiDefinitionResult = ApiDefinitionResult(getUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.RETIRED)
 
         when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
           .thenReturn(Future.successful(Right(apiDeinitionResult)))
@@ -272,8 +279,8 @@ class PublishServiceSpec
         )
 
         verify(mockConnector).getAllServices()(any[HeaderCarrier])
-        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url))
-        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult2.url))
+        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url + ".raml"))
+        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult2.url + ".raml"))
         verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition1.serviceName), any[ApiAccess])
         verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition2.serviceName), any[ApiAccess])
       }
@@ -292,8 +299,8 @@ class PublishServiceSpec
         )
 
         verify(mockConnector).getAllServices()(any[HeaderCarrier])
-        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url))
-        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult2.url))
+        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url + ".raml"))
+        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult2.url + ".raml"))
         verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition1.serviceName), any[ApiAccess])
         verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition2.serviceName), any[ApiAccess])
         verify(mockOasParser, times(2)).enhanceOas(any[OasResult])
@@ -314,8 +321,8 @@ class PublishServiceSpec
         )
 
         verify(mockConnector).getAllServices()(any[HeaderCarrier])
-        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url))
-        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult2.url))
+        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url + ".raml"))
+        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult2.url + ".raml"))
         verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition1.serviceName), any[ApiAccess])
         verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition2.serviceName), any[ApiAccess])
         verify(mockOasParser, times(2)).enhanceOas(any[OasResult])
@@ -335,8 +342,8 @@ class PublishServiceSpec
         results shouldBe List(Right(publishResponse), Right(publishResponse))
 
         verify(mockConnector).getAllServices()(any[HeaderCarrier])
-        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url))
-        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult2.url))
+        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url+".raml"))
+        verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult2.url+".raml"))
         verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition1.serviceName), any[ApiAccess])
         verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(apiDefinition2.serviceName), any[ApiAccess])
         verify(mockOasParser, times(2)).enhanceOas(any[OasResult])

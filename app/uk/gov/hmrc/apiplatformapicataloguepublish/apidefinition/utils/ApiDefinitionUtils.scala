@@ -27,7 +27,6 @@ trait ApiDefinitionUtils {
     getBaseUrl(apiDefinition) + s"/api/conf/${getLatestVersion(apiDefinition)}/application"
   }
 
-
   private def getBaseUrl(apiDefinition: ApiDefinition): String = {
     apiDefinition.serviceBaseUrl
   }

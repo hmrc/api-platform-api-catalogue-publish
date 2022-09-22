@@ -18,15 +18,13 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
 import cats.data.EitherT
 import cats.implicits._
-import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.parser.OpenAPIV3Parser
 import play.api.Logging
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueFailedResult
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishResponse
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiDefinition, ApiStatus}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult}
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.{ApiRamlParser, OasParser}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -44,7 +42,7 @@ class PublishService @Inject() (
     catalogueConnector: ApiCatalogueAdminConnector,
     apiMicroserviceConnector: ApiMicroserviceConnector
   )(implicit val ec: ExecutionContext)
-    extends Logging {
+    extends Logging{
 
   val BATCH_AMOUNT = 5
 
