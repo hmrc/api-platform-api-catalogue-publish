@@ -94,6 +94,15 @@ object ApiAccessType extends Enum[ApiAccessType] with PlayJsonEnum[ApiAccessType
 }
 
 trait ApiAccess
+
+object ApiAccess {
+  def apiAccessToDescription(accessType: ApiAccess): String = {
+    accessType match {
+      case _: PublicApiAccess => "This is a public API."
+      case _: PrivateApiAccess => "This is a private API."
+    }
+  }
+}
 case class PublicApiAccess() extends ApiAccess
 case class PrivateApiAccess(allowlistedApplicationIds: List[ApplicationId] = List.empty, isTrial: Boolean = false) extends ApiAccess
 

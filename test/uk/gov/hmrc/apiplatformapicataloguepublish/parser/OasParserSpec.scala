@@ -34,7 +34,7 @@ import scala.io.Source
 
 class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with OasStringUtils with ScalaFutures with BeforeAndAfterEach {
 
-  // private val mockWebApiDocument = mock[WebApiDocument]
+
   val mockOas30Wrapper = mock[Oas30Wrapper]
   val mockDateTimeWrapper = mock[DateTimeWrapper]
 
@@ -45,7 +45,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
   }
   trait Setup {
 
-    val objInTest = new OasParser(mockOas30Wrapper, mockDateTimeWrapper)
+    val objInTest = new OasParser(mockDateTimeWrapper)
 
     def getWebApiDocument(filePath: String): WebApiDocument = {
       val fileContents = Source.fromResource(filePath).mkString
@@ -56,38 +56,6 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
     def webApiDocumentWithDescription = getWebApiDocument("test-ramlFile-with-description.raml")
   }
 
-  "parseWebApiDocument" should {
-
-    val serviceName = "service1"
-    val publicAccessTypeDescription = "This is a public API."
-    val privateAccessTypeDescription = "This is a private API."
-
-    "return a ConvertedWebApiToOasResult when API is Public" in new Setup {
-
-      when(mockOas30Wrapper.ramlToOas(any[WebApiDocument]))
-      .thenReturn(Future.successful(oasStringWithDescription))
-      val result: OasResult = await(objInTest.parseWebApiDocument(webApiDocumentWithDescription, serviceName, PublicApiAccess()))
-
-      result.oasAsString shouldBe oasStringWithDescription
-      result.apiName shouldBe serviceName
-      result.accessTypeDescription shouldBe publicAccessTypeDescription
-
-      verify(mockOas30Wrapper).ramlToOas(any[WebApiDocument])
-    }
-
-    "return a Right(ConvertedWebApiToOasResult) when API is Private" in new Setup {
-
-      when(mockOas30Wrapper.ramlToOas(any[WebApiDocument])).thenReturn(Future.successful(oasStringWithDescription))
-      val result: OasResult = await(objInTest.parseWebApiDocument(webApiDocumentWithDescription, serviceName, PrivateApiAccess()))
-
-      result.oasAsString shouldBe oasStringWithDescription
-      result.apiName shouldBe serviceName
-      result.accessTypeDescription shouldBe privateAccessTypeDescription
-
-      verify(mockOas30Wrapper).ramlToOas(any[WebApiDocument])
-    }
-
-  }
 
   "enhanceOas" should {
    "return right with enhanced OAS" in new Setup {
