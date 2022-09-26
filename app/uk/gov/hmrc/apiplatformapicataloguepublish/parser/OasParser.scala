@@ -36,7 +36,7 @@ class OasParser @Inject()(dateTimeWrapper: DateTimeWrapper)
         Left(OpenApiEnhancementFailedResult(oasResult.apiName, s"handleEnhancingOasForCatalogue failed: ${e.message}"))
     }
   }
-  def enhanceOas(convertedWebApiToOasResult: OasResult): Either[OpenApiProcessingError, String] = {
+  protected[parser] def enhanceOas(convertedWebApiToOasResult: OasResult): Either[OpenApiProcessingError, String] = {
     addOasSpecAttributes(convertedWebApiToOasResult, dateTimeWrapper.generateDateNowString())
   }
 

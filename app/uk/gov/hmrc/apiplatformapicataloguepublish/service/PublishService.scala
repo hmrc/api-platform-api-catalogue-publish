@@ -47,10 +47,6 @@ class PublishService @Inject() (
 
   val BATCH_AMOUNT = 5
 
-  def getYamlUrl(apiDefinitionResult: ApiDefinitionResult) ={
-    apiDefinitionResult.url+".yaml"
-  }
-
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
     (for {
       apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult(_, serviceName)))
@@ -76,7 +72,7 @@ class PublishService @Inject() (
   def ramlOrYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
 
     def getYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[Throwable, String]] ={
-      apiMicroserviceConnector.fetchApiDocumentationResourceByUrl(getYamlUrl(apiDefinitionResult))
+      apiMicroserviceConnector.fetchApiDocumentationResourceByUrl(apiDefinitionResult.url + ".yaml")
     }
 
     def handleYamlResult(result: Either[Throwable, String]): Future[Either[ApiCataloguePublishResult, OasResult]] ={

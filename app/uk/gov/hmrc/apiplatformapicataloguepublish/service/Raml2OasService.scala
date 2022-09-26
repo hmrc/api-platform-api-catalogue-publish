@@ -33,12 +33,6 @@ import scala.util.control.NonFatal
 class Raml2OasService @Inject()(oas30Wrapper: Oas30Wrapper, apiRamlParser: ApiRamlParser)
                                (implicit ec: ExecutionContext) extends Logging  {
 
-
-
-  def getRamlUrl(apiDefinitionResult: ApiDefinitionResult) = {
-    apiDefinitionResult.url + ".raml"
-  }
-
   def getRamlAndConvert(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
     (for {
       ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
@@ -48,7 +42,7 @@ class Raml2OasService @Inject()(oas30Wrapper: Oas30Wrapper, apiRamlParser: ApiRa
 
   def getRamlForApiDefinition(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, ResultHolder]] = {
     logger.info(s"getRamlForApiDefinition called for ${apiDefinitionResult.serviceName}")
-    apiRamlParser.getRaml(getRamlUrl(apiDefinitionResult))
+    apiRamlParser.getRaml(apiDefinitionResult.url + ".raml")
       .map(x => Right(ResultHolder(apiDefinitionResult, x)))
       .recover {
         case NonFatal(e: Throwable) => logger.error("getRamlForApiDefinition failed: ", e)

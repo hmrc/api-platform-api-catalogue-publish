@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
-import org.mockito.ArgumentMatchersSugar.any
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{PrivateApiAccess, PublicApiAccess}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.ApiDefinitionResult
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiStatus, PrivateApiAccess, PublicApiAccess}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.OasResult
@@ -51,6 +52,7 @@ class Raml2OasServiceSpec
     val mockOas30Wrapper = mock[Oas30Wrapper]
   val mockApiRamlParser = mock[ApiRamlParser]
 
+
     val objInTest = new Raml2OasService(mockOas30Wrapper, mockApiRamlParser)
 
     def getWebApiDocument(filePath: String): WebApiDocument = {
@@ -59,9 +61,102 @@ class Raml2OasServiceSpec
         .get(5, TimeUnit.SECONDS).asInstanceOf[WebApiDocument]
     }
 
-    def webApiDocumentWithDescription = getWebApiDocument("test-ramlFile-with-description.raml")
+    val apiDefinitionResult = ApiDefinitionResult("/path/path/somepath", PrivateApiAccess(), "my-service", ApiStatus.STABLE)
+    val webApiDocumentWithDescription = getWebApiDocument("test-ramlFile-with-description.raml")
+    val resultHolder = ResultHolder(apiDefinitionResult, webApiDocumentWithDescription)
   }
 
+  "getRamlAndConvert" should {
+    "return right with oasResult when successful" in new Setup {
+      when(mockApiRamlParser.getRaml(eqTo(apiDefinitionResult.url + ".raml"))).thenReturn(Future.successful(webApiDocumentWithDescription))
+      when(mockOas30Wrapper.ramlToOas(any[WebApiDocument]))
+        .thenReturn(Future.successful(oasStringWithDescription))
+      val result = await(objInTest.getRamlAndConvert(apiDefinitionResult))
+      result match {
+        case Right(oasResult: OasResult) => oasResult.oasAsString shouldBe oasStringWithDescription
+        case _ => fail
+      }
+
+      verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url + ".raml"))
+      verify(mockOas30Wrapper).ramlToOas(any[WebApiDocument])
+    }
+
+    "return left with PublishFailedResult when getRaml fails" in new Setup {
+      when(mockApiRamlParser.getRaml(eqTo(apiDefinitionResult.url + ".raml"))).thenReturn(Future.failed(new RuntimeException("something bad happened")))
+      when(mockOas30Wrapper.ramlToOas(any[WebApiDocument]))
+        .thenReturn(Future.successful(oasStringWithDescription))
+      val result = await(objInTest.getRamlAndConvert(apiDefinitionResult))
+      result match {
+        case Left(r: PublishFailedResult) => r.serviceName shouldBe apiDefinitionResult.serviceName
+          r.message shouldBe "getRamlForApiDefinition failed: something bad happened"
+        case _ => fail
+      }
+      verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url + ".raml"))
+      verifyZeroInteractions(mockOas30Wrapper)
+    }
+
+    "return left with PublishFailedResult when ramlToOas fails" in new Setup {
+      when(mockApiRamlParser.getRaml(eqTo(apiDefinitionResult.url + ".raml"))).thenReturn(Future.successful(webApiDocumentWithDescription))
+      when(mockOas30Wrapper.ramlToOas(any[WebApiDocument]))
+        .thenReturn(Future.failed(new RuntimeException("Some error")))
+
+      val result = await(objInTest.getRamlAndConvert(apiDefinitionResult))
+      result match {
+        case Left(r: PublishFailedResult) => r.serviceName shouldBe apiDefinitionResult.serviceName
+          r.message shouldBe "handleRamlToOas failed: Some error"
+        case _ => fail
+      }
+      verify(mockApiRamlParser).getRaml(eqTo(apiDefinitionResult.url + ".raml"))
+      verify(mockOas30Wrapper).ramlToOas(any[WebApiDocument])
+
+    }
+  }
+
+  "getRamlForApiDefinition" should {
+    "return Right with resultHolder when getRaml is successful" in new Setup {
+      when(mockApiRamlParser.getRaml(eqTo(apiDefinitionResult.url + ".raml"))).thenReturn(Future.successful(webApiDocumentWithDescription))
+      val result = await(objInTest.getRamlForApiDefinition(apiDefinitionResult))
+      result match {
+        case Right(resultHolder: ResultHolder) => resultHolder.document shouldBe webApiDocumentWithDescription
+        case _ => fail
+      }
+    }
+
+    "return Left with publish failed result when get raml fails" in new Setup {
+      when(mockApiRamlParser.getRaml(eqTo(apiDefinitionResult.url + ".raml"))).thenReturn(Future.failed(new RuntimeException("something bad happened")))
+      val result = await(objInTest.getRamlForApiDefinition(apiDefinitionResult))
+      result match {
+        case Left(r: PublishFailedResult) =>  r.serviceName shouldBe apiDefinitionResult.serviceName
+        r.message shouldBe "getRamlForApiDefinition failed: something bad happened"
+        case _ => fail
+      }
+    }
+  }
+
+  "handleRamlToOas" should {
+    "return Right with oasResult " in new Setup {
+      when(mockOas30Wrapper.ramlToOas(any[WebApiDocument]))
+        .thenReturn(Future.successful(oasStringWithDescription))
+
+      val result = await(objInTest.handleRamlToOas(resultHolder))
+      result match {
+        case Right(oasResult: OasResult) => oasResult.oasAsString shouldBe oasStringWithDescription
+        case _ => fail
+      }
+    }
+
+    "return Left with PublishFailedResult when ramlToOas fails " in new Setup {
+      when(mockOas30Wrapper.ramlToOas(any[WebApiDocument]))
+        .thenReturn(Future.failed(new RuntimeException("Some error")))
+
+      val result = await(objInTest.handleRamlToOas(resultHolder))
+      result match {
+        case Left(r: PublishFailedResult) => r.serviceName shouldBe apiDefinitionResult.serviceName
+          r.message shouldBe "handleRamlToOas failed: Some error"
+        case _ => fail
+      }
+    }
+  }
 
   "parseWebApiDocument" should {
 
@@ -82,7 +177,7 @@ class Raml2OasServiceSpec
       verify(mockOas30Wrapper).ramlToOas(any[WebApiDocument])
     }
 
-    "return a Right(ConvertedWebApiToOasResult) when API is Private" in new Setup {
+    "return ConvertedWebApiToOasResult when API is Private" in new Setup {
 
       when(mockOas30Wrapper.ramlToOas(any[WebApiDocument])).thenReturn(Future.successful(oasStringWithDescription))
       val result: OasResult = await(objInTest.parseWebApiDocument(webApiDocumentWithDescription, serviceName, PrivateApiAccess()))
