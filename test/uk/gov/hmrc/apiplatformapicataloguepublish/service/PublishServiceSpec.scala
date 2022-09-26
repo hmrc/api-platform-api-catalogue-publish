@@ -71,11 +71,14 @@ class PublishServiceSpec
     import java.nio.file.{Files, Paths}
 
     val filePath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "test/resources/noIntCatExtensions.yaml"
+    val expectedOasFilePath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "test/resources/expectedWithIntCatExtensions.yaml"
+
     def getRamlUri(definition: ApiDefinition) ={
       getUri(definition) + ".raml"
     }
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val yamlResponseString = Files.readAllLines(Paths.get(filePath)).asScala.mkString
+    val expectedConvertedOasString = Files.readAllLines(Paths.get(expectedOasFilePath)).asScala.mkString
     val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
     val apiDefinitionResult2: ApiDefinitionResult = ApiDefinitionResult(getUri(apiDefinition2), getAccessTypeOfLatestVersion(apiDefinition2), apiDefinition2.serviceName, ApiStatus.STABLE)
     val expectedDescription = "A description."
@@ -83,7 +86,7 @@ class PublishServiceSpec
     val publishResponse: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
 
     val objInTest = new PublishService(mockConnector, mockApiRamlParser, mockOasParser, mockCatalogueConnector, mockApiMicroserviceConnector)
-
+    val publicAccessAsString = "Public Access"
 
 
     def primeBeforeCataloguePublish(apiDefinitionResult: ApiDefinitionResult, expectedDescription: String, convertedWebApiToOasResult: OasResult): Unit = {
@@ -93,13 +96,13 @@ class PublishServiceSpec
       when(mockWebApiDocument.raw).thenReturn(Optional.of(expectedDescription))
       when(mockOasParser.parseWebApiDocument(any[WebApiDocument], any[String], any[ApiAccess]))
         .thenReturn(Future.successful(convertedWebApiToOasResult))
-      when(mockOasParser.accessTypeDescription(any[ApiAccess])).thenReturn("Public Access")
+      when(mockOasParser.accessTypeDescription(any[ApiAccess])).thenReturn(publicAccessAsString)
       when(mockOasParser.enhanceOas(any[OasResult])).thenReturn(Right("oas string"))
     }
 
     def verifyMocksHappyPathBeforePublishCall() = {
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
-      verify(mockOasParser).enhanceOas(eqTo(convertedWebApiToOasResult))
+
     }
 
   }
@@ -138,7 +141,7 @@ class PublishServiceSpec
         }
 
         verifyMocksHappyPathBeforePublishCall()
-
+        verify(mockOasParser).enhanceOas(eqTo(OasResult(expectedConvertedOasString, apiDefinitionResult.serviceName, publicAccessAsString)))
       }
 
 
