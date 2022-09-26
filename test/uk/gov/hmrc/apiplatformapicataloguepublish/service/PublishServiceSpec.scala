@@ -28,7 +28,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.{ApiCat
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{IntegrationId, PublishResponse}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionFailedResult, ApiDefinitionResult, GeneralFailedResult}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionFailedResult, ApiDefinitionResult, GeneralFailedResult, NotFoundResult}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiStatus, PublicApiAccess}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
@@ -138,7 +138,7 @@ class PublishServiceSpec
 
       "return Left when publish to api catalogue fails for raml" in new Setup {
 
-        val expectedError =  ApiCataloguePublishFailedResult("my-service", "publish to catalogue failed some error")
+        val expectedError = ApiCataloguePublishFailedResult("my-service", "publish to catalogue failed some error")
         primePublishFail(isYaml = false, ApiCatalogueGeneralFailureResult("some error"))
 
 
@@ -146,7 +146,39 @@ class PublishServiceSpec
 
         result match {
           case Left(error: ApiCataloguePublishResult) => error shouldBe expectedError
-          case _ =>  fail
+          case _ => fail
+        }
+      }
+
+        "return Left when api definition get bye service name fails, general fail" in new Setup {
+          val expectedError = PublishFailedResult("my-service", "some error")
+
+          when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+            .thenReturn(Future.successful(Left(GeneralFailedResult("some error"))))
+
+
+          val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
+
+          result match {
+            case Left(error: PublishFailedResult) => error shouldBe expectedError
+            case _ => fail
+          }
+
+
+        }
+
+      "return Left when api definition get bye service name fails not found" in new Setup {
+        val expectedError = ApiDefinitionNotFoundResult("my-service", "some error")
+
+        when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+          .thenReturn(Future.successful(Left(NotFoundResult("some error"))))
+
+
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
+
+        result match {
+          case Left(error: ApiDefinitionNotFoundResult) => error shouldBe expectedError
+          case _ => fail
         }
 
 
