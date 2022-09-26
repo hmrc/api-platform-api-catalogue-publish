@@ -41,6 +41,8 @@ import webapi.WebApiDocument
 import java.util.{Optional, UUID}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.io.Source
+import collection.JavaConverters._
 
 class PublishServiceSpec
     extends AnyWordSpec
@@ -65,10 +67,15 @@ class PublishServiceSpec
   }
 
   trait Setup {
+
+    import java.nio.file.{Files, Paths}
+
+    val filePath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "test/resources/noIntCatExtensions.yaml"
     def getRamlUri(definition: ApiDefinition) ={
       getUri(definition) + ".raml"
     }
     implicit val hc: HeaderCarrier = HeaderCarrier()
+    val yamlResponseString = Files.readAllLines(Paths.get(filePath)).asScala.mkString
     val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
     val apiDefinitionResult2: ApiDefinitionResult = ApiDefinitionResult(getUri(apiDefinition2), getAccessTypeOfLatestVersion(apiDefinition2), apiDefinition2.serviceName, ApiStatus.STABLE)
     val expectedDescription = "A description."
@@ -78,7 +85,6 @@ class PublishServiceSpec
     val objInTest = new PublishService(mockConnector, mockApiRamlParser, mockOasParser, mockCatalogueConnector, mockApiMicroserviceConnector)
 
 
-    when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
 
     def primeBeforeCataloguePublish(apiDefinitionResult: ApiDefinitionResult, expectedDescription: String, convertedWebApiToOasResult: OasResult): Unit = {
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
@@ -87,13 +93,12 @@ class PublishServiceSpec
       when(mockWebApiDocument.raw).thenReturn(Optional.of(expectedDescription))
       when(mockOasParser.parseWebApiDocument(any[WebApiDocument], any[String], any[ApiAccess]))
         .thenReturn(Future.successful(convertedWebApiToOasResult))
+      when(mockOasParser.accessTypeDescription(any[ApiAccess])).thenReturn("Public Access")
       when(mockOasParser.enhanceOas(any[OasResult])).thenReturn(Right("oas string"))
     }
 
     def verifyMocksHappyPathBeforePublishCall() = {
       verify(mockConnector).getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc))
-      verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
-      verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(serviceName), eqTo(PublicApiAccess()))
       verify(mockOasParser).enhanceOas(eqTo(convertedWebApiToOasResult))
     }
 
@@ -101,7 +106,8 @@ class PublishServiceSpec
   "publishService" when {
     "publishByServiceName" should {
 
-      "return Right with publish details when publish is successful" in new Setup {
+      "return Right with publish details when publish is successful for raml" in new Setup {
+        when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
 
         primeBeforeCataloguePublish(apiDefinitionResult, expectedDescription, convertedWebApiToOasResult)
 
@@ -111,10 +117,30 @@ class PublishServiceSpec
           case Right(value: PublishResponse) => value shouldBe publishResponse
           case _                             => fail()
         }
+        verify(mockOasParser).parseWebApiDocument(eqTo(mockWebApiDocument), eqTo(serviceName), eqTo(PublicApiAccess()))
+
+        verify(mockApiRamlParser).getRaml(eqTo(getRamlUri(apiDefinition1)))
+        verifyMocksHappyPathBeforePublishCall()
+
+      }
+
+      "return Right with publish details when publish is successful for yaml" in new Setup {
+
+        when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Right(yamlResponseString)))
+
+        primeBeforeCataloguePublish(apiDefinitionResult, expectedDescription, convertedWebApiToOasResult)
+
+        when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Right(publishResponse)))
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
+        result match {
+          case Right(value: PublishResponse) => value shouldBe publishResponse
+          case _ => fail()
+        }
 
         verifyMocksHappyPathBeforePublishCall()
 
       }
+
 
       "return Left with error when publish is unsuccessful" in new Setup {
 

@@ -47,12 +47,8 @@ class ApiDefinitionConnectorISpec
     val objInTest: ApiDefinitionConnector = app.injector.instanceOf[ApiDefinitionConnector]
   }
 
-  def getRamlUri(apiDefinition: ApiDefinition) ={
-    getUri(apiDefinition) + ".raml"
-  }
-
   def buildResult(definition: ApiDefinition) = {
-    ApiDefinitionResult(getRamlUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName, getStatusOfLatestVersion(definition))
+    ApiDefinitionResult(getUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName, getStatusOfLatestVersion(definition))
   }
 
   "ApiDefinitionConnector" when {
