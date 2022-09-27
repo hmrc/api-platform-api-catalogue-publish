@@ -93,27 +93,55 @@ class PublishServiceSpec
 //
 //    }
 
-    def commonStubs (isYaml: Boolean) ={
+    def primeApiDefinitionSuccess() ={
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
         .thenReturn(Future.successful(Right(apiDefinitionResult)))
+    }
 
-      if (isYaml) {
-        when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Right(yamlResponseString)))
-      } else {
-        when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
-        when(mockRaml2OasService.getRamlAndConvert(eqTo(apiDefinitionResult))).thenReturn(successful(Right(convertedWebApiToOasResult)))
-      }
+    def primeApiDefinitionFailure(result: ApiDefinitionFailedResult) = {
+      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+        .thenReturn(Future.successful(Left(result)))
+    }
 
+    def primeOasEnhanceSuccess() ={
       when(mockOasParser.handleEnhancingOasForCatalogue(eqTo(convertedWebApiToOasResult))).thenReturn(Right(expectedEnhancedOasString))
     }
-    def primePublishFail(isYaml: Boolean,  failedResult : ApiCatalogueFailedResult) ={
-     commonStubs(isYaml)
 
-      when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Left(failedResult)))
+    def primeApiMicroserviceConnectorSuccess() ={
+        when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Right(yamlResponseString)))
+    }
 
+    def primeApiMicroserviceConnectorFailure() ={
+      when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
+    }
+
+    def primeGetRamlAndConvertSuccess() ={
+      when(mockRaml2OasService.getRamlAndConvert(eqTo(apiDefinitionResult))).thenReturn(successful(Right(convertedWebApiToOasResult)))
+    }
+
+    def primeGetRamlAndConvertFailure() = {
+      when(mockRaml2OasService.getRamlAndConvert(eqTo(apiDefinitionResult))).thenReturn(successful(Left(PublishFailedResult(serviceName, "some error"))))
+    }
+
+
+    def primePublishFail(isYaml: Boolean) ={
+      primeApiDefinitionSuccess()
+      if (isYaml) primeApiMicroserviceConnectorSuccess() else {
+        primeApiMicroserviceConnectorFailure()
+        primeGetRamlAndConvertSuccess()
+      }
+      primeOasEnhanceSuccess()
+
+      when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Left( ApiCatalogueGeneralFailureResult("some error"))))
     }
     def primePublishSuccess(isYaml: Boolean) ={
-      commonStubs(isYaml)
+      primeApiDefinitionSuccess()
+      if (isYaml) primeApiMicroserviceConnectorSuccess() else {
+        primeApiMicroserviceConnectorFailure()
+        primeGetRamlAndConvertSuccess()
+      }
+      primeOasEnhanceSuccess()
+
 
       when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Right(publishResponse)))
     }
@@ -133,14 +161,12 @@ class PublishServiceSpec
           case _ => fail()
         }
 
-
       }
 
       "return Left when publish to api catalogue fails for raml" in new Setup {
 
-        val expectedError = ApiCataloguePublishFailedResult("my-service", "publish to catalogue failed some error")
-        primePublishFail(isYaml = false, ApiCatalogueGeneralFailureResult("some error"))
-
+        val expectedError = ApiCataloguePublishFailedResult(serviceName, "publish to catalogue failed some error")
+        primePublishFail(isYaml = false)
 
         val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
 
@@ -150,12 +176,9 @@ class PublishServiceSpec
         }
       }
 
-        "return Left when api definition get bye service name fails, general fail" in new Setup {
-          val expectedError = PublishFailedResult("my-service", "some error")
-
-          when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
-            .thenReturn(Future.successful(Left(GeneralFailedResult("some error"))))
-
+        "return Left when api definition get by service name fails, general fail" in new Setup {
+          val expectedError = PublishFailedResult(serviceName, "some error")
+          primeApiDefinitionFailure(GeneralFailedResult("some error"))
 
           val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
 
@@ -164,15 +187,12 @@ class PublishServiceSpec
             case _ => fail
           }
 
-
         }
 
-      "return Left when api definition get bye service name fails not found" in new Setup {
-        val expectedError = ApiDefinitionNotFoundResult("my-service", "some error")
+      "return Left when api definition get by service name fails not found" in new Setup {
+        val expectedError = ApiDefinitionNotFoundResult(serviceName, "some error")
 
-        when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
-          .thenReturn(Future.successful(Left(NotFoundResult("some error"))))
-
+        primeApiDefinitionFailure(NotFoundResult("some error"))
 
         val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
 
@@ -181,6 +201,22 @@ class PublishServiceSpec
           case _ => fail
         }
 
+      }
+
+
+      "return Left when get raml and convert fails" in new Setup {
+        val expectedError = PublishFailedResult(serviceName, "some error")
+
+        primeApiDefinitionSuccess()
+        primeApiMicroserviceConnectorFailure()
+        primeGetRamlAndConvertFailure()
+
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
+
+        result match {
+          case Left(error: PublishFailedResult) => error shouldBe expectedError
+          case _ => fail
+        }
 
       }
 //
