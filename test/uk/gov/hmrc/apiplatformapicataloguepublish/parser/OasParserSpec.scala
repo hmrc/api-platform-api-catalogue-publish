@@ -16,25 +16,19 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
-import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{PrivateApiAccess, PublicApiAccess}
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{ConvertedWebApiToOasResult, GeneralOpenApiProcessingError, OpenApiProcessingError}
-import webapi.{Raml10, WebApiDocument}
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult, OpenApiProcessingError}
+import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiCataloguePublishResult, OpenApiEnhancementFailedResult}
 
-import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.io.Source
 
 class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with OasStringUtils with ScalaFutures with BeforeAndAfterEach {
 
-  // private val mockWebApiDocument = mock[WebApiDocument]
+
   val mockOas30Wrapper = mock[Oas30Wrapper]
   val mockDateTimeWrapper = mock[DateTimeWrapper]
 
@@ -44,55 +38,41 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
     reset(mockDateTimeWrapper)
   }
   trait Setup {
-
-    val objInTest = new OasParser(mockOas30Wrapper, mockDateTimeWrapper)
-
-    def getWebApiDocument(filePath: String): WebApiDocument = {
-      val fileContents = Source.fromResource(filePath).mkString
-      Raml10.parse(fileContents)
-        .get(5, TimeUnit.SECONDS).asInstanceOf[WebApiDocument]
-    }
-
-    def webApiDocumentWithDescription = getWebApiDocument("test-ramlFile-with-description.raml")
+    val objInTest = new OasParser(mockDateTimeWrapper)
   }
 
-  "parseWebApiDocument" should {
 
-    val serviceName = "service1"
-    val publicAccessTypeDescription = "This is a public API."
-    val privateAccessTypeDescription = "This is a private API."
+  "handleEnhancingOasForCatalogue" should {
+    "return right with enhanced OAS when successful" in new Setup {
+      val convertedOasResult: OasResult = OasResult(oasStringWithDescription, "apiName", "PRIVATE")
+      val validISODate: String = "2021-12-25T12:00:00Z"
+      when(mockDateTimeWrapper.generateDateNowString()).thenReturn(validISODate)
 
-    "return a ConvertedWebApiToOasResult when API is Public" in new Setup {
+      val result: Either[ApiCataloguePublishResult, String] = objInTest.handleEnhancingOasForCatalogue(convertedOasResult)
 
-      when(mockOas30Wrapper.ramlToOas(any[WebApiDocument]))
-      .thenReturn(Future.successful(oasStringWithDescription))
-      val result: ConvertedWebApiToOasResult = await(objInTest.parseWebApiDocument(webApiDocumentWithDescription, serviceName, PublicApiAccess()))
-
-      result.oasAsString shouldBe oasStringWithDescription
-      result.apiName shouldBe serviceName
-      result.accessTypeDescription shouldBe publicAccessTypeDescription
-
-      verify(mockOas30Wrapper).ramlToOas(any[WebApiDocument])
+      result match {
+        case Right(convertedOas: String) => convertedOas shouldBe oasStringWithEnhancements
+        case Left(e) => fail
+      }
     }
 
-    "return a Right(ConvertedWebApiToOasResult) when API is Private" in new Setup {
+    "return Left when oas is invalid" in new Setup {
+      val convertedOasResult: OasResult = OasResult("something invalid", "apiName", "PRIVATE")
 
-      when(mockOas30Wrapper.ramlToOas(any[WebApiDocument])).thenReturn(Future.successful(oasStringWithDescription))
-      val result: ConvertedWebApiToOasResult = await(objInTest.parseWebApiDocument(webApiDocumentWithDescription, serviceName, PrivateApiAccess()))
+      val result: Either[ApiCataloguePublishResult, String] = objInTest.handleEnhancingOasForCatalogue(convertedOasResult)
 
-      result.oasAsString shouldBe oasStringWithDescription
-      result.apiName shouldBe serviceName
-      result.accessTypeDescription shouldBe privateAccessTypeDescription
-
-      verify(mockOas30Wrapper).ramlToOas(any[WebApiDocument])
+      result match {
+        case Right(convertedOas: String) => fail()
+        case Left(e: OpenApiEnhancementFailedResult) => e.message shouldBe "handleEnhancingOasForCatalogue failed: Swagger Parse failure"
+      }
     }
 
   }
 
   "enhanceOas" should {
-   "return right with enhanced OAS" in new Setup {
+   "return right with enhanced OAS when successful" in new Setup {
      
-      val convertedOasResult: ConvertedWebApiToOasResult = ConvertedWebApiToOasResult(oasStringWithDescription, "apiName", "PRIVATE")
+      val convertedOasResult: OasResult = OasResult(oasStringWithDescription, "apiName", "PRIVATE")
       val validISODate: String = "2021-12-25T12:00:00Z"
       when(mockDateTimeWrapper.generateDateNowString()).thenReturn(validISODate)
      
@@ -105,11 +85,11 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
     }
 
     "return Left when oas is invalid" in new Setup {
-      val convertedOasResult: ConvertedWebApiToOasResult = ConvertedWebApiToOasResult("something invalid", "apiName", "PRIVATE")
+      val convertedOasResult: OasResult = OasResult("something invalid", "apiName", "PRIVATE")
 
-     
+
       val result: Either[OpenApiProcessingError,String] = objInTest.enhanceOas(convertedOasResult)
-      
+
       result match{
         case Right(convertedOas: String) => fail()
         case Left(e: GeneralOpenApiProcessingError) => e.message shouldBe "Swagger Parse failure"

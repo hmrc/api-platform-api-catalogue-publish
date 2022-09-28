@@ -23,9 +23,8 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 
 trait ApiDefinitionUtils {
 
-  def getRamlUri(apiDefinition: ApiDefinition) = {
-    getBaseUrl(apiDefinition) + s"/api/conf/${getLatestVersion(apiDefinition)}/application.raml"
-
+  def getUri(apiDefinition: ApiDefinition) = {
+    getBaseUrl(apiDefinition) + s"/api/conf/${getLatestVersion(apiDefinition)}/application"
   }
 
   private def getBaseUrl(apiDefinition: ApiDefinition): String = {

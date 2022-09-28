@@ -17,38 +17,27 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 import play.api.Logging
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult, OpenApiEnhancements, OpenApiProcessingError}
+import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiCataloguePublishResult, OpenApiEnhancementFailedResult}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import webapi.WebApiDocument
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
-
-import scala.concurrent.Future
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{ConvertedWebApiToOasResult, OpenApiEnhancements, OpenApiProcessingError}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PrivateApiAccess
 
 @Singleton
-class OasParser @Inject()(oas30Wrapper: Oas30Wrapper, dateTimeWrapper: DateTimeWrapper)
+class OasParser @Inject()(dateTimeWrapper: DateTimeWrapper)
                          (implicit ec: ExecutionContext) extends OpenApiEnhancements with Logging {
 
-  def parseWebApiDocument(model: WebApiDocument, apiName: String, accessType: ApiAccess): Future[ConvertedWebApiToOasResult] = {
-    val startTime = System.currentTimeMillis()
-    val result = oas30Wrapper.ramlToOas(model)
-      .map(oasAsString => ConvertedWebApiToOasResult(oasAsString, apiName, accessTypeDescription(accessType)))
-        logger.info(s"ramlToOas completed for $apiName and took ${System.currentTimeMillis() - startTime} milliseconds")
-        result
+  def handleEnhancingOasForCatalogue(oasResult: OasResult): Either[ApiCataloguePublishResult, String] = {
+    logger.info(s"handleEnhancingOasForCatalogue called for ${oasResult.apiName}")
+    enhanceOas(oasResult) match {
+      case Right(value: String) => Right(value)
+      case Left(e: GeneralOpenApiProcessingError) =>
+        logger.error(s"OpenAPI enhancements failed: ${e.message}")
+        Left(OpenApiEnhancementFailedResult(oasResult.apiName, s"handleEnhancingOasForCatalogue failed: ${e.message}"))
+    }
   }
-
-  def enhanceOas(convertedWebApiToOasResult: ConvertedWebApiToOasResult): Either[OpenApiProcessingError, String] = {
+  protected[parser] def enhanceOas(convertedWebApiToOasResult: OasResult): Either[OpenApiProcessingError, String] = {
     addOasSpecAttributes(convertedWebApiToOasResult, dateTimeWrapper.generateDateNowString())
   }
 
-  private def accessTypeDescription(accessType: ApiAccess): String = {
-    accessType match {
-      case _: PublicApiAccess => "This is a public API."
-      case _: PrivateApiAccess => "This is a private API."
-    }
-  }
 }
-

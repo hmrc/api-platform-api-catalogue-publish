@@ -56,7 +56,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
     def validateExpectedFileContents(inputFile: String, expectedFile: String) = {
       val contentsToParse = getFileContents(inputFile)
       val expectedYaml = getFileContents(expectedFile)
-      addOasSpecAttributes(ConvertedWebApiToOasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => oasString shouldBe expectedYaml
       }
@@ -66,21 +66,13 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
 
   "addOasSpecAttributes " should {
     "handle empty string" in new Setup {
-      addOasSpecAttributes(ConvertedWebApiToOasResult("", "iamAnApi", "This is a public API."), validISODate) shouldBe Left(GeneralOpenApiProcessingError("iamAnApi", "Swagger Parse failure"))
+      addOasSpecAttributes(OasResult("", "iamAnApi", "This is a public API."), validISODate) shouldBe Left(GeneralOpenApiProcessingError("iamAnApi", "Swagger Parse failure"))
 
     }
 
     "add integration catalogue extensions to expected yaml file when short-description DOESN'T need to be truncated" in new Setup {
       validateExpectedFileContents("noIntCatExtensions.yaml", "expectedWithIntCatExtensions.yaml")
     }
-
-    // "Return Right if contents to parse has invalid x-amf-userDocumentation content" in new Setup {
-    //   val contentsToParse = getFileContents("noIntCatExtensions-withInvalidXAmfDocumentation.yaml")
-    //   addOasSpecAttributes(ConvertedWebApiToOasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
-    //     case Right(oasString: String)                                   => succeed
-    //     case _ => fail()
-    //   }
-    // }
 
     "Return Right if contents to parse does not have x-amf-userDocumentation tag" in new Setup {
       validateExpectedFileContents("noIntCatExtensions-withNOxAmfDocumentation.yaml", "expectedWithIntCatExtensions-NOxAmfDocumentation.yaml")
@@ -90,7 +82,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
       val contentsToParse = getFileContents("noIntCatExtensions-with-long-description.yaml")
       val expectedYaml = getFileContents("expectedWithIntCatExtensions-with-truncated-short-decription.yaml")
       val expectedShortDesc = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
-      addOasSpecAttributes(ConvertedWebApiToOasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc = getShortDescriptionFromOasString(oasString).getOrElse("")
@@ -105,7 +97,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
       val expectedYaml = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
       val expectedShortDesc = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
       val expectedDescription = getDescriptionFromOasString(expectedYaml).getOrElse("")
-      addOasSpecAttributes(ConvertedWebApiToOasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc = getShortDescriptionFromOasString(oasString).getOrElse("")
@@ -123,7 +115,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
       val expectedYaml = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
       val expectedShortDesc = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
       val expectedDescription = getDescriptionFromOasString(expectedYaml).getOrElse("")
-      addOasSpecAttributes(ConvertedWebApiToOasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc = getShortDescriptionFromOasString(oasString).getOrElse("")
@@ -169,7 +161,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
 
     "Return Right with examples when input file contains x-amf-examples in the Request and Response" in new Setup {
       validateExpectedFileContents("with-x-amf-examples-in-request-and-response.yaml", "expected-with-examples-in-request-and-response.yaml")
-    }      
+    }
     
     "Return Right with examples when input file contains x-amf-examples containing description and value" in new Setup {
     validateExpectedFileContents("with-x-amf-examples-containing-description-and-value.yaml", "expected-with-examples-containing-description-and-value.yaml")

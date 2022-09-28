@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.openapi
 
-case class ConvertedWebApiToOasResult(oasAsString: String, apiName: String, accessTypeDescription: String)
+case class OasResult(oasAsString: String, apiName: String, accessTypeDescription: String)
 
 sealed trait OpenApiProcessingError
 

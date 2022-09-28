@@ -56,7 +56,7 @@ class ApiDefinitionConnector @Inject() (
   }
 
   private def definitionToResult(definition: ApiDefinition): ApiDefinitionResult = {
-    ApiDefinitionResult(getRamlUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName, getStatusOfLatestVersion(definition))
+    ApiDefinitionResult(getUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName, getStatusOfLatestVersion(definition))
   }
 
   def getAllServices()(implicit hc: HeaderCarrier): Future[Either[GeneralFailedResult, List[ApiDefinitionResult]]] = {

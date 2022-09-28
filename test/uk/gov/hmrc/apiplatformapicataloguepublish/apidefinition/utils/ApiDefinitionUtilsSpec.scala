@@ -25,7 +25,7 @@ class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with Api
 
   "getRamlUri" should {
     "return correct uri" in {
-        getRamlUri(apiDefinition1)  shouldBe "serviceBaseUrl/api/conf/2.0/application.raml"   
+        getUri(apiDefinition1)  shouldBe "serviceBaseUrl/api/conf/2.0/application"
     }
   }
 

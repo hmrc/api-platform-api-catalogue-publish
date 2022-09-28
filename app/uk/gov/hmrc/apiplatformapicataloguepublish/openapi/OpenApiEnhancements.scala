@@ -29,7 +29,7 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon 
 
 
 
-  def addOasSpecAttributes(convertedOasResult: ConvertedWebApiToOasResult, reviewedDate: String): Either[OpenApiProcessingError, String] = {
+  def addOasSpecAttributes(convertedOasResult: OasResult, reviewedDate: String): Either[OpenApiProcessingError, String] = {
     val options: ParseOptions = new ParseOptions()
     options.setResolve(false)
 

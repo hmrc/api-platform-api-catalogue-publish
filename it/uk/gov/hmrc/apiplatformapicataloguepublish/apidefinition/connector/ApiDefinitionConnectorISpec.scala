@@ -48,7 +48,7 @@ class ApiDefinitionConnectorISpec
   }
 
   def buildResult(definition: ApiDefinition) = {
-    ApiDefinitionResult(getRamlUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName, getStatusOfLatestVersion(definition))
+    ApiDefinitionResult(getUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName, getStatusOfLatestVersion(definition))
   }
 
   "ApiDefinitionConnector" when {

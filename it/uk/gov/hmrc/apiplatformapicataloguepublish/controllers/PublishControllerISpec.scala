@@ -84,6 +84,10 @@ class PublishControllerISpec
 
     def absoluteRamlFilePath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "it/resources/test-ramlFile.raml"
 
+    def getRamlUri(apiDefinition: ApiDefinition) ={
+      getUri(apiDefinition) + ".raml"
+    }
+
   }
 
   "PublishController" when {
