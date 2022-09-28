@@ -21,10 +21,10 @@ import webapi.{Oas30, WebApiDocument}
 
 import javax.inject.{Inject, Singleton}
 import scala.compat.java8.FutureConverters
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
-class Oas30Wrapper @Inject()()(implicit ec: ExecutionContext) extends Logging {
+class Oas30Wrapper @Inject() () extends Logging {
 
   def ramlToOas(model: WebApiDocument): Future[String] = {
     FutureConverters.toScala({

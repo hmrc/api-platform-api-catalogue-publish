@@ -82,7 +82,4 @@ object ApiDefinitionConnector {
   case class NotFoundResult(message: String) extends ApiDefinitionFailedResult
   case class GeneralFailedResult(message: String) extends ApiDefinitionFailedResult
 
-
 }
-
-

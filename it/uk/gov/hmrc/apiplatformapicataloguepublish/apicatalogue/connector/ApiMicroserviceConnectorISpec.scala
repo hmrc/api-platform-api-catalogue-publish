@@ -2,16 +2,10 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector
 
 import org.scalatest.BeforeAndAfterEach
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
-import uk.gov.hmrc.apiplatformapicataloguepublish.support.{ApiCatalogueStub, ApiMicroserviceStub, MetricsTestSupport, ServerBaseISpec}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.ApiCatalogueAdminJsonFormatters
+import uk.gov.hmrc.apiplatformapicataloguepublish.support.{ApiMicroserviceStub, MetricsTestSupport, ServerBaseISpec}
 import uk.gov.hmrc.http.HeaderCarrier
-
-import java.nio.file.Paths
-import java.util.UUID
 
 class ApiMicroserviceConnectorISpec
   extends ServerBaseISpec

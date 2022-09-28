@@ -43,7 +43,7 @@ class PublishService @Inject() (
     catalogueConnector: ApiCatalogueAdminConnector,
     apiMicroserviceConnector: ApiMicroserviceConnector
   )(implicit val ec: ExecutionContext)
-    extends Logging{
+    extends Logging {
 
   val BATCH_AMOUNT = 5
 
@@ -90,7 +90,7 @@ class PublishService @Inject() (
     for {
       yamlResult <- getYaml(apiDefinitionResult)
       handledResult <- handleYamlResult(yamlResult)
-    }yield handledResult
+    } yield handledResult
 
   }
 
@@ -112,7 +112,7 @@ class PublishService @Inject() (
     ): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
     val startTime = System.currentTimeMillis()
     input.splitAt(BATCH_AMOUNT) match {
-      case (Nil, Nil)                                                           => successful(results)
+      case (Nil, Nil)                                                           => Future.successful(results)
       case (doNow: Seq[ApiDefinitionResult], doLater: Seq[ApiDefinitionResult]) =>
         Future.sequence(doNow.map(publishDefinitionResult(_).value)).flatMap(newResults => {
           logger.info(s"batchFutures - Done batch of items ${doNow.map(_.serviceName).mkString(" - ")}")
@@ -144,8 +144,6 @@ class PublishService @Inject() (
         logger.error(s"Api definition failed: ${e.message}")
         Left(PublishFailedResult(serviceName, e.message))
     }
-
-
 
 }
 

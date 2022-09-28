@@ -74,14 +74,6 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
       validateExpectedFileContents("noIntCatExtensions.yaml", "expectedWithIntCatExtensions.yaml")
     }
 
-    // "Return Right if contents to parse has invalid x-amf-userDocumentation content" in new Setup {
-    //   val contentsToParse = getFileContents("noIntCatExtensions-withInvalidXAmfDocumentation.yaml")
-    //   addOasSpecAttributes(ConvertedWebApiToOasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
-    //     case Right(oasString: String)                                   => succeed
-    //     case _ => fail()
-    //   }
-    // }
-
     "Return Right if contents to parse does not have x-amf-userDocumentation tag" in new Setup {
       validateExpectedFileContents("noIntCatExtensions-withNOxAmfDocumentation.yaml", "expectedWithIntCatExtensions-NOxAmfDocumentation.yaml")
     }
@@ -169,7 +161,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
 
     "Return Right with examples when input file contains x-amf-examples in the Request and Response" in new Setup {
       validateExpectedFileContents("with-x-amf-examples-in-request-and-response.yaml", "expected-with-examples-in-request-and-response.yaml")
-    }      
+    }
     
     "Return Right with examples when input file contains x-amf-examples containing description and value" in new Setup {
     validateExpectedFileContents("with-x-amf-examples-containing-description-and-value.yaml", "expected-with-examples-containing-description-and-value.yaml")

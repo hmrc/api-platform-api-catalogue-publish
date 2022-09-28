@@ -23,11 +23,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult, OpenApiProcessingError}
 import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiCataloguePublishResult, OpenApiEnhancementFailedResult}
-import webapi.{Raml10, WebApiDocument}
 
-import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.io.Source
 
 class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with OasStringUtils with ScalaFutures with BeforeAndAfterEach {
 
@@ -41,9 +38,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
     reset(mockDateTimeWrapper)
   }
   trait Setup {
-
     val objInTest = new OasParser(mockDateTimeWrapper)
-
   }
 
 

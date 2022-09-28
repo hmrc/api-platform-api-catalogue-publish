@@ -6,8 +6,6 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping
 trait ApiMicroserviceStub {
 
   def primeFetchResource(url: String, relativePath: String, status: Int): StubMapping = {
-
-
     primeGETWithBody(url, loadFileAsByteArray(relativePath),status)
   }
 

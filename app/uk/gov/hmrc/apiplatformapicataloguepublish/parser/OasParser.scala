@@ -40,6 +40,4 @@ class OasParser @Inject()(dateTimeWrapper: DateTimeWrapper)
     addOasSpecAttributes(convertedWebApiToOasResult, dateTimeWrapper.generateDateNowString())
   }
 
-
 }
-

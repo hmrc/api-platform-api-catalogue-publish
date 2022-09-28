@@ -60,7 +60,6 @@ class Raml2OasService @Inject()(oas30Wrapper: Oas30Wrapper, apiRamlParser: ApiRa
       }
   }
 
-
   protected[service] def parseWebApiDocument(model: WebApiDocument, apiName: String, accessType: ApiAccess): Future[OasResult] = {
     val startTime = System.currentTimeMillis()
     val result = oas30Wrapper.ramlToOas(model)
@@ -68,9 +67,5 @@ class Raml2OasService @Inject()(oas30Wrapper: Oas30Wrapper, apiRamlParser: ApiRa
     logger.info(s"ramlToOas completed for $apiName and took ${System.currentTimeMillis() - startTime} milliseconds")
     result
   }
-
-
-
-
 
 }
