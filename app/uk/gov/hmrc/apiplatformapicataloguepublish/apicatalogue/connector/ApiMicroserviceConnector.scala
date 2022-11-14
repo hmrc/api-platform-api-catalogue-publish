@@ -35,8 +35,7 @@ class ApiMicroserviceConnector @Inject()(ws: WSClient)(implicit val ec: Executio
     ws.url(url).withMethod("GET").stream().flatMap {
       streamedResponse =>
         streamedResponse.status match {
-          case OK =>
-            EitherT.liftF(convertStreamToYamlString(streamedResponse)).value
+          case OK => EitherT.liftF(convertStreamToYamlString(streamedResponse)).value
           case NOT_FOUND => Future.successful(Left(new NotFoundException(s"Resource not found - $url")))
           case _ => Future.successful(Left(new InternalServerException(s"Error downloading resource - $url")))
         }
@@ -54,7 +53,6 @@ class ApiMicroserviceConnector @Inject()(ws: WSClient)(implicit val ec: Executio
       case _ =>
         HttpEntity.Streamed(response.bodyAsSource, None, Some(contentType))
     }).consumeData
-      .map(byteString => byteString.decodeString("UTF-8")
-      )
+      .map(byteString => byteString.decodeString("UTF-8"))
   }
 }

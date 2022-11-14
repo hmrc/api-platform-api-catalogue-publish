@@ -40,15 +40,31 @@ class ApiMicroserviceConnectorISpec
 
   "ApiMicroserviceConnector" should {
     val filePath = "it/resources/test-yaml-file.yaml"
+    val largeFilePath = "it/resources/test-large-yaml-file.yaml"
     val path = "/api/1/resource.yaml"
     val microserviceUrl = s"http://$wireMockHost:$wireMockPort"+path
 
-    "returns a Right if call to microservice returns OK" in new Setup {
+    "returns a Right if call to microservice returns OK with a small file" in new Setup {
 
 
       primeFetchResource(
         path,
         filePath,
+        OK
+      )
+
+      val result = await(objInTest.fetchApiDocumentationResourceByUrl(microserviceUrl))
+      result match {
+        case Right(_: String) => succeed
+        case _ => fail
+      }
+    }
+
+    "returns a Right if call to microservice returns OK with a large file" in new Setup {
+
+      primeFetchResource(
+        path,
+        largeFilePath,
         OK
       )
 
