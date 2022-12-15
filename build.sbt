@@ -38,7 +38,6 @@ lazy val microservice = Project(appName, file("."))
     IntegrationTest / unmanagedSourceDirectories += baseDirectory(_ / "test-common").value,
     IntegrationTest / unmanagedResourceDirectories += baseDirectory(_ / "it" / "resources").value,
     IntegrationTest / managedClasspath += (Assets/packageBin).value
-//    (managedClasspath in IntegrationTest) += (packageBin in Assets).value
   )
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
 
@@ -51,6 +50,5 @@ lazy val scoverageSettings = {
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
     Test / parallelExecution := false
-//    parallelExecution in Test := false
   )
 }
