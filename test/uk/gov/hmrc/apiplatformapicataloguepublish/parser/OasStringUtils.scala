@@ -552,6 +552,7 @@ paths:
           type: string
       responses:
         "200":
+          description: ""
           content:
             application/json:
               schema:
@@ -652,6 +653,7 @@ paths:
           type: string
       responses:
         "200":
+          description: ""
           content:
             application/json:
               schema:
