@@ -65,7 +65,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
   }
 
   "addOasSpecAttributes " should {
-   /* "handle empty string" in new Setup {
+    "handle empty string" in new Setup {
       addOasSpecAttributes(OasResult("", "iamAnApi", "This is a public API."), validISODate) shouldBe Left(GeneralOpenApiProcessingError("iamAnApi", "Swagger Parse failure"))
 
     }
@@ -82,36 +82,27 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
       val contentsToParse = getFileContents("noIntCatExtensions-with-long-description.yaml")
       val expectedYaml = getFileContents("expectedWithIntCatExtensions-with-truncated-short-decription.yaml")
       val expectedShortDesc = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
-
-      println(s"***** EXPECTED OUTPUT *****\n$expectedShortDesc")
-
       addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc = getShortDescriptionFromOasString(oasString).getOrElse("")
-          println(s"***** ACTUAL OUTPUT *****\n$resultingShortDesc")
+
           resultingShortDesc shouldBe expectedShortDesc
         }
       }
     }
-*/
+
     "add accessType description to expected yaml file when description does not exist" in new Setup {
       val contentsToParse = getFileContents("noIntCatExtensions-no-description.yaml")
       val expectedYaml = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
       val expectedShortDesc = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
       val expectedDescription = getDescriptionFromOasString(expectedYaml).getOrElse("")
-
-      println(s"***** EXPECTED Short DESC OUTPUT *****\n$expectedShortDesc")
-      println(s"***** EXPECTED DESC OUTPUT *****\n$expectedDescription")
-
       addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc = getShortDescriptionFromOasString(oasString).getOrElse("")
           val resultingDescription = getDescriptionFromOasString(oasString).getOrElse("")
 
-          println(s"***** ACTUAL Short DESC OUTPUT *****\n$resultingShortDesc")
-          println(s"***** ACTUAL DESC OUTPUT *****\n$resultingDescription")
           resultingShortDesc shouldBe expectedShortDesc
           resultingDescription shouldBe expectedDescription
         }

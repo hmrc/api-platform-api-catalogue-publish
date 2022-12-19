@@ -21,9 +21,11 @@ info:
     platform: API_PLATFORM
     publisher-reference: iamAnApi
 externalDocs:
-  description: "This API enables your application to lookup the full address for a\
-    \ UK postcode.\nThe results can be narrowed down by providing an optional filter,\
-    \ e.g. \"21 High Street\".\n\nAddress data is provided by Ordnance Survey."
+  description: |-
+    This API enables your application to lookup the full address for a UK postcode.
+    The results can be narrowed down by providing an optional filter, e.g. "21 High Street".
+
+    Address data is provided by Ordnance Survey.
   x-amf-title: Overview
 servers:
 - url: https://api.service.hmrc.gov.uk/

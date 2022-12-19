@@ -24,7 +24,7 @@ paths:
           example: BB00+0BB
       - name: filter
         in: query
-        description: Refine the search results futher based on house number or street
+        description: Refine the search results further based on house number or street
           name
         required: false
         style: form
