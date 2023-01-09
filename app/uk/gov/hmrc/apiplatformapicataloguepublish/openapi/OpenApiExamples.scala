@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.openapi
 
-import io.swagger.v3.oas.models.OpenAPI
 import scala.collection.JavaConverters._
-import io.swagger.v3.oas.models.Operation
-import io.swagger.v3.oas.models.media.Content
+
 import io.swagger.v3.oas.models.examples.Example
-import io.swagger.v3.oas.models.media.MediaType
+import io.swagger.v3.oas.models.media.{Content, MediaType}
+import io.swagger.v3.oas.models.{OpenAPI, Operation}
 
 trait OpenApiExamples extends ExtensionKeys {
 

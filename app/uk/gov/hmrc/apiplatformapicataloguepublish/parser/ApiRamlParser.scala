@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
-import play.api.Logging
-import webapi.{Raml10, WebApiDocument}
-
 import javax.inject.{Inject, Singleton}
 import scala.compat.java8._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+
+import webapi.{Raml10, WebApiDocument}
+
+import play.api.Logging
 
 @Singleton
 class ApiRamlParser @Inject() ()(implicit ec: ExecutionContext) extends Logging {

@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
+
 import play.api.Logging
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.play.http.ws.WSGet
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters, ApiStatus}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 @Singleton
 class ApiDefinitionConnector @Inject() (

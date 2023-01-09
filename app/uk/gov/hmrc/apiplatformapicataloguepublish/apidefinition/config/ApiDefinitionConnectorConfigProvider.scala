@@ -16,10 +16,13 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import com.google.inject.Provider
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import javax.inject.{Inject, Singleton}
+
+import com.google.inject.Provider
+
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 
 @Singleton
 class ApiDefinitionConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApiDefinitionConnector.Config] {

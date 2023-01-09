@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.openapi
 
-import io.swagger.v3.oas.models.OpenAPI
-
 import java.util
 import scala.collection.JavaConverters._
+
+import io.swagger.v3.oas.models.OpenAPI
 
 trait OpenAPICommon extends ExtensionKeys {
 

@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import akka.stream.Materializer
 import cats.data.EitherT
+
 import play.api.Logging
 import play.api.http.HttpEntity
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.ws.{WSClient, WSResponse}
 import uk.gov.hmrc.http.{InternalServerException, NotFoundException}
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ApiMicroserviceConnector @Inject() (ws: WSClient)(implicit val ec: ExecutionContext, implicit val mat: Materializer) extends Logging {

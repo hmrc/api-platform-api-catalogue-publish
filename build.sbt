@@ -6,6 +6,17 @@ val appName = "api-platform-api-catalogue-publish"
 
 val silencerVersion = "1.7.0"
 
+ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+
+inThisBuild(
+  List(
+    scalaVersion := "2.12.15",
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision
+  )
+)
+
+
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .settings(
@@ -13,17 +24,6 @@ lazy val microservice = Project(appName, file("."))
     scalaVersion                     := "2.12.12",
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
     Test / unmanagedSourceDirectories += baseDirectory(_ / "test-common").value,
-    // ***************
-    // Use the silencer plugin to suppress warnings
-    scalacOptions ++= Seq(
-      "-P:silencer:pathFilters=routes",
-      "-Ypartial-unification"
-    ),
-    libraryDependencies ++= Seq(
-      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-    )
-    // ***************
   )
   .settings(publishingSettings,
     scoverageSettings)

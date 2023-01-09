@@ -17,10 +17,11 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models
 
 import java.util.UUID
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import play.api.libs.json.Format
-
 import scala.collection.immutable
+
+import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+
+import play.api.libs.json.Format
 
 case class IntegrationId(value: UUID) extends AnyVal
 

@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.openapi.headers
 
+import java.util
+import scala.collection.JavaConverters._
+
 import io.swagger.v3.oas.models.PathItem.HttpMethod
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.{OpenAPI, Operation, PathItem}
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ExtensionKeys
 
-import java.util
-import scala.collection.JavaConverters._
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ExtensionKeys
 
 trait OpenApiHeaders extends ExtensionKeys {
 

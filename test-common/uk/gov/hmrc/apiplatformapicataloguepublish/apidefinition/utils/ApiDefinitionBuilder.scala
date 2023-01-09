@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
 
+import cats.data.{NonEmptyList => NEL}
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus.STABLE
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
 import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models.ApplicationId
-import cats.data.{NonEmptyList => NEL}
 
 trait ApiDefinitionBuilder {
 

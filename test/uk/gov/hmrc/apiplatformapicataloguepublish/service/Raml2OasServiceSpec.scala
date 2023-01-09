@@ -16,26 +16,28 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
+import java.util.concurrent.TimeUnit
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.io.Source
+
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import webapi.{Raml10, WebApiDocument}
+
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.ApiDefinitionResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiStatus, PrivateApiAccess, PublicApiAccess}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.{ApiRamlParser, Oas30Wrapper, OasStringUtils}
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import webapi.{Raml10, WebApiDocument}
-
-import java.util.concurrent.TimeUnit
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.io.Source
 
 class Raml2OasServiceSpec
     extends AnyWordSpec

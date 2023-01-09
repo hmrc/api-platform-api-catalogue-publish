@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.openapi
 
+import scala.io.Source
+
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-
-import scala.io.Source
 
 class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnhancements {
 

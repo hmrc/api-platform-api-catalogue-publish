@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.config
 
+import javax.inject.{Inject, Singleton}
+
 import com.google.inject.Provider
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
+
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
 
 @Singleton
 class ApiCatalogueAdminConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApiCatalogueAdminConnector.Config] {

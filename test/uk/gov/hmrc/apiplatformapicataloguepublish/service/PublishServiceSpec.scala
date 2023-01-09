@@ -16,12 +16,23 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
+import java.util.UUID
+import scala.collection.JavaConverters._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.Future.successful
+
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import webapi.WebApiDocument
+
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
@@ -38,15 +49,6 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinit
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import webapi.WebApiDocument
-
-import java.util.UUID
-import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.concurrent.Future.successful
 
 class PublishServiceSpec
     extends AnyWordSpec

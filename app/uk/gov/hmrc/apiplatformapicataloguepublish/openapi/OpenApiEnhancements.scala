@@ -16,14 +16,16 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.openapi
 
+import java.util
+
 import io.swagger.v3.core.util.Yaml
 import io.swagger.v3.oas.models.{ExternalDocumentation, OpenAPI}
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
-import play.api.Logging
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.headers.OpenApiHeaders
 
-import java.util
+import play.api.Logging
+
+import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.headers.OpenApiHeaders
 
 trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon with OpenApiExamples with OpenApiHeaders {
 

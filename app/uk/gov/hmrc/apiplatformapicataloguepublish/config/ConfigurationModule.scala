@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.config
 
 import com.google.inject.AbstractModule
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.config.ApiCatalogueAdminConnectorConfigProvider
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config.ApiDefinitionConnectorConfigProvider

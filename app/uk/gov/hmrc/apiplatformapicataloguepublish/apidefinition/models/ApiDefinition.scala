@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models
 
+import scala.collection.immutable
+
 import cats.data.{NonEmptyList => NEL}
 import enumeratum._
-import play.api.libs.json.Json
-import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models.ApplicationId
 
-import scala.collection.immutable
+import play.api.libs.json.Json
+
+import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models.ApplicationId
 
 case class ApiContext(value: String) extends AnyVal
 

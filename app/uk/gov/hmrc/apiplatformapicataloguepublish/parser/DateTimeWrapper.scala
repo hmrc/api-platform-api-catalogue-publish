@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
-import java.time.format.DateTimeFormatter
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.{Inject, Singleton}
 
 @Singleton

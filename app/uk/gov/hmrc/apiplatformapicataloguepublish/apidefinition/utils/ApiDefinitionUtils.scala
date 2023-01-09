@@ -16,10 +16,7 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiStatus, PublicApiAccess}
 
 trait ApiDefinitionUtils {
 

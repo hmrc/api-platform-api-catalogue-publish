@@ -16,18 +16,20 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
+
 import cats.data.EitherT
+import webapi.WebApiDocument
+
 import play.api.Logging
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.ApiDefinitionResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess.apiAccessToDescription
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.{ApiRamlParser, Oas30Wrapper}
-import webapi.WebApiDocument
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
 
 @Singleton
 class Raml2OasService @Inject() (oas30Wrapper: Oas30Wrapper, apiRamlParser: ApiRamlParser)(implicit ec: ExecutionContext) extends Logging {

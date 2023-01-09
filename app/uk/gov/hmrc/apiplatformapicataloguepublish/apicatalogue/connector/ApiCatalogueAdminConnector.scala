@@ -16,18 +16,20 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector
 
+import java.util.Base64
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
 import akka.stream.scaladsl.Source
+
 import play.api.Logging
 import play.api.libs.Files
 import play.api.libs.json.{JsError, JsResult, JsSuccess}
 import play.api.libs.ws.WSClient
 import play.api.mvc.MultipartFormData
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector._
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, PublishResponse}
-
-import java.util.Base64
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ApiCatalogueAdminConnector @Inject() (val ws: WSClient, val config: Config, val fileCreator: Files.TemporaryFileCreator)(implicit val ec: ExecutionContext)

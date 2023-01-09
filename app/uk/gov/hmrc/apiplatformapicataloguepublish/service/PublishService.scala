@@ -16,9 +16,17 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future.successful
+import scala.concurrent.{ExecutionContext, Future}
+
 import cats.data.EitherT
 import cats.implicits._
+import webapi.WebApiDocument
+
 import play.api.Logging
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueFailedResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishResponse
@@ -28,12 +36,6 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
-import uk.gov.hmrc.http.HeaderCarrier
-import webapi.WebApiDocument
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future.successful
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton()
 class PublishService @Inject() (

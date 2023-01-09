@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
 
-import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
+import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 
 class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with ApiDefinitionUtils with Matchers {
 
