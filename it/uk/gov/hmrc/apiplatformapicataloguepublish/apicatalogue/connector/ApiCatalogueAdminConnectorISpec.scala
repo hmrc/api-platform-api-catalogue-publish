@@ -29,7 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.util.UUID
 
 class ApiCatalogueAdminConnectorISpec
-  extends ServerBaseISpec
+    extends ServerBaseISpec
     with ApiCatalogueStub
     with BeforeAndAfterEach
     with MetricsTestSupport
@@ -38,12 +38,12 @@ class ApiCatalogueAdminConnectorISpec
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
       .configure(
-        "metrics.enabled" -> false,
-        "auditing.enabled" -> false,
-        "auditing.consumer.baseUri.host" -> wireMockHost,
-        "auditing.consumer.baseUri.port" -> wireMockPort,
-        "microservice.services.api-definition.host" -> wireMockHost,
-        "microservice.services.api-definition.port" -> wireMockPort,
+        "metrics.enabled"                                            -> false,
+        "auditing.enabled"                                           -> false,
+        "auditing.consumer.baseUri.host"                             -> wireMockHost,
+        "auditing.consumer.baseUri.port"                             -> wireMockPort,
+        "microservice.services.api-definition.host"                  -> wireMockHost,
+        "microservice.services.api-definition.port"                  -> wireMockPort,
         "microservice.services.integration-catalogue-admin-api.host" -> wireMockHost,
         "microservice.services.integration-catalogue-admin-api.port" -> wireMockPort
       )
@@ -62,7 +62,7 @@ class ApiCatalogueAdminConnectorISpec
   "ApiCatalogueAdminConnector" should {
     "returns a Right with PublishResponse when successful" in new Setup {
       val response: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef", API_PLATFORM)
-      val jsonBody: String = Json.toJson(response).toString
+      val jsonBody: String          = Json.toJson(response).toString
 
       primeApiPublish(
         jsonBody,
@@ -71,7 +71,7 @@ class ApiCatalogueAdminConnectorISpec
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
         case Right(response: PublishResponse) => succeed
-        case _ => fail
+        case _                                => fail
       }
     }
 
@@ -83,7 +83,7 @@ class ApiCatalogueAdminConnectorISpec
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
         case Left(response: ApiCatalogueGeneralFailureResult) => succeed
-        case _ => fail
+        case _                                                => fail
       }
     }
 
@@ -96,7 +96,7 @@ class ApiCatalogueAdminConnectorISpec
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
         case Left(_: ApiCatalogueGeneralFailureResult) => succeed
-        case _ => fail
+        case _                                         => fail
       }
     }
 
@@ -109,7 +109,7 @@ class ApiCatalogueAdminConnectorISpec
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
         case Left(e: ApiCatalogueGeneralFailureResult) => e.message.startsWith("Js Parse Errors") mustBe true
-        case _ => fail
+        case _                                         => fail
       }
     }
   }

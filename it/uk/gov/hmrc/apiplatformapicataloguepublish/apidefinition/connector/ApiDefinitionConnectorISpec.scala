@@ -41,10 +41,10 @@ class ApiDefinitionConnectorISpec
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
       .configure(
-        "metrics.enabled" -> false,
-        "auditing.enabled" -> false,
-        "auditing.consumer.baseUri.host" -> wireMockHost,
-        "auditing.consumer.baseUri.port" -> wireMockPort,
+        "metrics.enabled"                           -> false,
+        "auditing.enabled"                          -> false,
+        "auditing.consumer.baseUri.host"            -> wireMockHost,
+        "auditing.consumer.baseUri.port"            -> wireMockPort,
         "microservice.services.api-definition.host" -> wireMockHost,
         "microservice.services.api-definition.port" -> wireMockPort
       )
@@ -128,18 +128,18 @@ class ApiDefinitionConnectorISpec
     "return right with empty list when no definitions returned" in new Setup {
       primeGetAll(OK, "[]")
       await(objInTest.getAllServices()) match {
-        case Right(x: List[ApiDefinitionResult])              => x mustBe List.empty
-        case x => fail
+        case Right(x: List[ApiDefinitionResult]) => x mustBe List.empty
+        case x                                   => fail
       }
     }
 
     "return left with error when error returned" in new Setup {
-       primeGetAll(INTERNAL_SERVER_ERROR, "[]")
-        await(objInTest.getAllServices()) match {
-          case Left(x: GeneralFailedResult) => 
-            x.message mustBe s"GET of 'http://localhost:$wireMockPort/api-definition?type=all' returned 500. Response body: '[]'"
-          case _ => fail
-        }
+      primeGetAll(INTERNAL_SERVER_ERROR, "[]")
+      await(objInTest.getAllServices()) match {
+        case Left(x: GeneralFailedResult) =>
+          x.message mustBe s"GET of 'http://localhost:$wireMockPort/api-definition?type=all' returned 500. Response body: '[]'"
+        case _                            => fail
+      }
     }
   }
 }

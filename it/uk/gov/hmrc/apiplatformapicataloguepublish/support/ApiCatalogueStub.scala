@@ -25,7 +25,7 @@ trait ApiCatalogueStub {
     primePOSTWithBody("/integration-catalogue-admin-api/services/apis/publish", body, status)
   }
 
- def primePOSTWithBody(expectedUrl: String, body: String, status: Int): StubMapping = {
+  def primePOSTWithBody(expectedUrl: String, body: String, status: Int): StubMapping = {
 
     stubFor(put(urlEqualTo(expectedUrl))
       .willReturn(
@@ -33,8 +33,7 @@ trait ApiCatalogueStub {
           .withStatus(status)
           .withHeader("Content-Type", "application/json")
           .withBody(body)
-      )
-    )
+      ))
   }
 
 }
