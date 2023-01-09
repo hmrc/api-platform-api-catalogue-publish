@@ -39,6 +39,7 @@ lazy val microservice = Project(appName, file("."))
     IntegrationTest / unmanagedResourceDirectories += baseDirectory(_ / "it" / "resources").value,
     IntegrationTest / managedClasspath += (Assets/packageBin).value
   )
+  .settings(headerSettings(IntegrationTest) ++ automateHeaderSettings(IntegrationTest))
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
 
 lazy val scoverageSettings = {
