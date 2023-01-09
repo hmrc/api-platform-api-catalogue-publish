@@ -22,7 +22,6 @@ import play.api.libs.json.Format
 
 import scala.collection.immutable
 
-
 case class IntegrationId(value: UUID) extends AnyVal
 
 object IntegrationId {

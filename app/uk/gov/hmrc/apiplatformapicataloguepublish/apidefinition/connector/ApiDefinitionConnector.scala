@@ -33,8 +33,8 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 class ApiDefinitionConnector @Inject() (
     val http: HttpClient with WSGet,
     val config: Config
-  )(implicit val ec: ExecutionContext)
-    extends Logging
+  )(implicit val ec: ExecutionContext
+  ) extends Logging
     with ApiDefinitionJsonFormatters
     with ApiDefinitionUtils {
 
@@ -61,13 +61,13 @@ class ApiDefinitionConnector @Inject() (
 
   def getAllServices()(implicit hc: HeaderCarrier): Future[Either[GeneralFailedResult, List[ApiDefinitionResult]]] = {
     http.GET[Seq[ApiDefinition]](fetchAllUrl, List(("type", "all")))
-    .map(definitions =>
-      Right(definitions.map(definitionToResult).toList.sortBy(_.serviceName))
-    ).recover {
-      case NonFatal(e) =>
-        logger.error(s"getAllServices Failed:", e)
-        Left(GeneralFailedResult(e.getMessage))
-    }
+      .map(definitions =>
+        Right(definitions.map(definitionToResult).toList.sortBy(_.serviceName))
+      ).recover {
+        case NonFatal(e) =>
+          logger.error(s"getAllServices Failed:", e)
+          Left(GeneralFailedResult(e.getMessage))
+      }
   }
 
 }
@@ -79,7 +79,7 @@ object ApiDefinitionConnector {
   sealed trait ApiDefinitionFailedResult {
     val message: String
   }
-  case class NotFoundResult(message: String) extends ApiDefinitionFailedResult
+  case class NotFoundResult(message: String)      extends ApiDefinitionFailedResult
   case class GeneralFailedResult(message: String) extends ApiDefinitionFailedResult
 
 }

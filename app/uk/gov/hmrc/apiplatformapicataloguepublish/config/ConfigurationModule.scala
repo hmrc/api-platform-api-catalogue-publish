@@ -23,6 +23,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config.ApiDefini
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 
 class ConfigurationModule extends AbstractModule {
+
   override def configure(): Unit = {
     bind(classOf[ApiCatalogueAdminConnector.Config])
       .toProvider(classOf[ApiCatalogueAdminConnectorConfigProvider])

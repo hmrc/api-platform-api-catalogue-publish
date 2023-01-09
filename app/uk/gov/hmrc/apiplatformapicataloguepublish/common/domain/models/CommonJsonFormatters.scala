@@ -18,11 +18,10 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models
 
 import play.api.libs.json._
 
-
 trait CommonJsonFormatters {
   implicit val formatFieldName = Json.valueFormat[FieldName]
 
-  implicit val keyReadsFieldName: KeyReads[FieldName] = key => JsSuccess(FieldName(key))
+  implicit val keyReadsFieldName: KeyReads[FieldName]   = key => JsSuccess(FieldName(key))
   implicit val keyWritesFieldName: KeyWrites[FieldName] = _.value
 
 }

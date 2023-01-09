@@ -25,24 +25,25 @@ import io.swagger.v3.oas.models.media.MediaType
 
 trait OpenApiExamples extends ExtensionKeys {
 
-
   def handleContent(content: Content): Unit = {
 
-    def handleLinkHashMap(a: java.util.LinkedHashMap[String, Object], mt: MediaType, exampleKey: String): MediaType ={
-                val example = new Example()
-                a.asScala.get("description").map(_.toString).foreach(example.setDescription)
-                a.asScala.get("value").fold(example.setValue(a))(x=> example.setValue(x))
-                mt.addExamples(exampleKey, example)
+    def handleLinkHashMap(a: java.util.LinkedHashMap[String, Object], mt: MediaType, exampleKey: String): MediaType = {
+      val example = new Example()
+      a.asScala.get("description").map(_.toString).foreach(example.setDescription)
+      a.asScala.get("value").fold(example.setValue(a))(x => example.setValue(x))
+      mt.addExamples(exampleKey, example)
     }
 
     content.values().asScala.map(mt => {
       val examples = Option(mt.getSchema).flatMap(x => Option(x.getExtensions).flatMap(extensions => Option(extensions.get(X_AMF_EXAMPLES))))
       examples match {
-        case Some(z: java.util.LinkedHashMap[String, Object]) => z.asScala.map(x => { x._2 match {
+        case Some(z: java.util.LinkedHashMap[String, Object]) => z.asScala.map(x => {
+            x._2 match {
               case a: java.util.LinkedHashMap[String, Object] => handleLinkHashMap(a, mt, x._1)
               case _                                          => ()
-            }})
-        case _                                             => ()
+            }
+          })
+        case _                                                => ()
       }
     })
     ()

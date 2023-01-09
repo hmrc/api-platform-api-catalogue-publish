@@ -25,22 +25,22 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class ApiRamlParser @Inject()()(implicit ec: ExecutionContext) extends Logging {
+class ApiRamlParser @Inject() ()(implicit ec: ExecutionContext) extends Logging {
 
   def getRaml(url: String): Future[WebApiDocument] = {
     val startTime = System.currentTimeMillis()
 
-     FutureConverters.toScala({
+    FutureConverters.toScala({
       Raml10.parse(url)
     }).map(x => {
-            logger.info(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds - have webapiDocument for $url")
-            x.asInstanceOf[WebApiDocument]
+      logger.info(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds - have webapiDocument for $url")
+      x.asInstanceOf[WebApiDocument]
     })
-   .recover {
-      case NonFatal(e) =>
-        logger.error(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds -Failed:", e)
-        throw e
-    }
+      .recover {
+        case NonFatal(e) =>
+          logger.error(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds -Failed:", e)
+          throw e
+      }
   }
 
 }

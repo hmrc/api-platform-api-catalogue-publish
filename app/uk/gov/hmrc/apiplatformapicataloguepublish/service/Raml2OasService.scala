@@ -30,13 +30,12 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class Raml2OasService @Inject()(oas30Wrapper: Oas30Wrapper, apiRamlParser: ApiRamlParser)
-                               (implicit ec: ExecutionContext) extends Logging  {
+class Raml2OasService @Inject() (oas30Wrapper: Oas30Wrapper, apiRamlParser: ApiRamlParser)(implicit ec: ExecutionContext) extends Logging {
 
   def getRamlAndConvert(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
     (for {
       ramlAndDefinition <- EitherT(getRamlForApiDefinition(apiDefinitionResult))
-      convertedOas <- EitherT(handleRamlToOas(ramlAndDefinition))
+      convertedOas      <- EitherT(handleRamlToOas(ramlAndDefinition))
     } yield convertedOas).value
   }
 
@@ -45,7 +44,8 @@ class Raml2OasService @Inject()(oas30Wrapper: Oas30Wrapper, apiRamlParser: ApiRa
     apiRamlParser.getRaml(apiDefinitionResult.url + ".raml")
       .map(x => Right(ResultHolder(apiDefinitionResult, x)))
       .recover {
-        case NonFatal(e: Throwable) => logger.error("getRamlForApiDefinition failed: ", e)
+        case NonFatal(e: Throwable) =>
+          logger.error("getRamlForApiDefinition failed: ", e)
           Left(PublishFailedResult(apiDefinitionResult.serviceName, s"getRamlForApiDefinition failed: ${e.getMessage}"))
       }
   }
@@ -55,14 +55,15 @@ class Raml2OasService @Inject()(oas30Wrapper: Oas30Wrapper, apiRamlParser: ApiRa
     parseWebApiDocument(resultHolder.document, resultHolder.apiDefinitionResult.serviceName, resultHolder.apiDefinitionResult.access)
       .map(Right(_))
       .recover {
-        case NonFatal(e: Throwable) => logger.error("handleRamlToOas failed: ", e)
+        case NonFatal(e: Throwable) =>
+          logger.error("handleRamlToOas failed: ", e)
           Left(PublishFailedResult(resultHolder.apiDefinitionResult.serviceName, s"handleRamlToOas failed: ${e.getMessage}"))
       }
   }
 
   protected[service] def parseWebApiDocument(model: WebApiDocument, apiName: String, accessType: ApiAccess): Future[OasResult] = {
     val startTime = System.currentTimeMillis()
-    val result = oas30Wrapper.ramlToOas(model)
+    val result    = oas30Wrapper.ramlToOas(model)
       .map(oasAsString => OasResult(oasAsString, apiName, apiAccessToDescription(accessType)))
     logger.info(s"ramlToOas completed for $apiName and took ${System.currentTimeMillis() - startTime} milliseconds")
     result

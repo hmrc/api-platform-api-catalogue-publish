@@ -55,7 +55,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
 
     def validateExpectedFileContents(inputFile: String, expectedFile: String) = {
       val contentsToParse = getFileContents(inputFile)
-      val expectedYaml = getFileContents(expectedFile)
+      val expectedYaml    = getFileContents(expectedFile)
       addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => oasString shouldBe expectedYaml
@@ -79,8 +79,8 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
     }
 
     "add integration catalogue extensions to expected yaml file when short-description DOES need to be truncated" in new Setup {
-      val contentsToParse = getFileContents("noIntCatExtensions-with-long-description.yaml")
-      val expectedYaml = getFileContents("expectedWithIntCatExtensions-with-truncated-short-decription.yaml")
+      val contentsToParse   = getFileContents("noIntCatExtensions-with-long-description.yaml")
+      val expectedYaml      = getFileContents("expectedWithIntCatExtensions-with-truncated-short-decription.yaml")
       val expectedShortDesc = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
       addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
@@ -93,14 +93,14 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
     }
 
     "add accessType description to expected yaml file when description does not exist" in new Setup {
-      val contentsToParse = getFileContents("noIntCatExtensions-no-description.yaml")
-      val expectedYaml = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
-      val expectedShortDesc = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
+      val contentsToParse     = getFileContents("noIntCatExtensions-no-description.yaml")
+      val expectedYaml        = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
+      val expectedShortDesc   = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
       val expectedDescription = getDescriptionFromOasString(expectedYaml).getOrElse("")
       addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
-          val resultingShortDesc = getShortDescriptionFromOasString(oasString).getOrElse("")
+          val resultingShortDesc   = getShortDescriptionFromOasString(oasString).getOrElse("")
           val resultingDescription = getDescriptionFromOasString(oasString).getOrElse("")
 
           resultingShortDesc shouldBe expectedShortDesc
@@ -111,14 +111,14 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
     }
 
     "add accessType description to expected yaml file when description is empty" in new Setup {
-      val contentsToParse = getFileContents("noIntCatExtensions-empty-description.yaml")
-      val expectedYaml = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
-      val expectedShortDesc = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
+      val contentsToParse     = getFileContents("noIntCatExtensions-empty-description.yaml")
+      val expectedYaml        = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
+      val expectedShortDesc   = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
       val expectedDescription = getDescriptionFromOasString(expectedYaml).getOrElse("")
       addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
-          val resultingShortDesc = getShortDescriptionFromOasString(oasString).getOrElse("")
+          val resultingShortDesc   = getShortDescriptionFromOasString(oasString).getOrElse("")
           val resultingDescription = getDescriptionFromOasString(oasString).getOrElse("")
 
           resultingDescription shouldBe expectedDescription
@@ -162,9 +162,9 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
     "Return Right with examples when input file contains x-amf-examples in the Request and Response" in new Setup {
       validateExpectedFileContents("with-x-amf-examples-in-request-and-response.yaml", "expected-with-examples-in-request-and-response.yaml")
     }
-    
+
     "Return Right with examples when input file contains x-amf-examples containing description and value" in new Setup {
-    validateExpectedFileContents("with-x-amf-examples-containing-description-and-value.yaml", "expected-with-examples-containing-description-and-value.yaml")
+      validateExpectedFileContents("with-x-amf-examples-containing-description-and-value.yaml", "expected-with-examples-containing-description-and-value.yaml")
     }
   }
 }

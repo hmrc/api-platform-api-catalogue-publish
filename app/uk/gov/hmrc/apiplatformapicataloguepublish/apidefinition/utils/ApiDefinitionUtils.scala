@@ -43,8 +43,7 @@ trait ApiDefinitionUtils {
       .headOption.map(apiVersionDefinition => apiVersionDefinition.access).getOrElse(PublicApiAccess())
   }
 
-
-    def getStatusOfLatestVersion(apiDefinition: ApiDefinition): ApiStatus = {
+  def getStatusOfLatestVersion(apiDefinition: ApiDefinition): ApiStatus = {
     apiDefinition.versions
       .sorted
       .headOption.map(apiVersionDefinition => apiVersionDefinition.status).getOrElse(ApiStatus.DEPRECATED)

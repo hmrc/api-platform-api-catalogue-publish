@@ -23,9 +23,9 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models._
 
 trait BasicApiDefinitionJsonFormatters extends CommonJsonFormatters {
-  implicit val formatApiContext: Format[ApiContext] = Json.valueFormat[ApiContext]
-  implicit val formatApiVersion: Format[ApiVersion] = Json.valueFormat[ApiVersion]
-  implicit val formatApiCategory: Format[ApiCategory] = Json.valueFormat[ApiCategory]
+  implicit val formatApiContext: Format[ApiContext]       = Json.valueFormat[ApiContext]
+  implicit val formatApiVersion: Format[ApiVersion]       = Json.valueFormat[ApiVersion]
+  implicit val formatApiCategory: Format[ApiCategory]     = Json.valueFormat[ApiCategory]
   implicit val formatApiIdentifier: Format[ApiIdentifier] = Json.format[ApiIdentifier]
 
 }
@@ -47,16 +47,17 @@ trait EndpointJsonFormatters extends NonEmptyListFormatters {
 }
 
 trait ApiDefinitionJsonFormatters extends EndpointJsonFormatters with BasicApiDefinitionJsonFormatters with CommonJsonFormatters {
-      import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models._
+  import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models._
 
-  implicit val apiAccessReads: Reads[ApiAccess] = (
-    (JsPath \ "type").read[ApiAccessType] and
-      ((JsPath \ "allowlistedApplicationIds").read[List[ApplicationId]] or Reads.pure(List.empty[ApplicationId])) and
-      ((JsPath \ "isTrial").read[Boolean] or Reads.pure(false)) tupled
-  ) map {
-    case (PUBLIC, _, _)                                => PublicApiAccess()
-    case (PRIVATE, allowlistedApplicationIds, isTrial) => PrivateApiAccess(allowlistedApplicationIds, isTrial)
-  }
+  implicit val apiAccessReads: Reads[ApiAccess] =
+    (
+      (JsPath \ "type").read[ApiAccessType] and
+        ((JsPath \ "allowlistedApplicationIds").read[List[ApplicationId]] or Reads.pure(List.empty[ApplicationId])) and
+        ((JsPath \ "isTrial").read[Boolean] or Reads.pure(false)) tupled
+    ) map {
+      case (PUBLIC, _, _)                                => PublicApiAccess()
+      case (PRIVATE, allowlistedApplicationIds, isTrial) => PrivateApiAccess(allowlistedApplicationIds, isTrial)
+    }
 
   implicit object apiAccessWrites extends Writes[ApiAccess] {
 
@@ -86,7 +87,7 @@ trait ApiDefinitionJsonFormatters extends EndpointJsonFormatters with BasicApiDe
 
   implicit val apiDefinitionReads: Reads[ApiDefinition] = (
     (JsPath \ "serviceBaseUrl").read[String] and
-    (JsPath \ "serviceName").read[String] and
+      (JsPath \ "serviceName").read[String] and
       (JsPath \ "name").read[String] and
       (JsPath \ "description").read[String] and
       (JsPath \ "context").read[ApiContext] and

@@ -24,8 +24,9 @@ import javax.inject.{Inject, Singleton}
 
 @Singleton
 class ApiCatalogueAdminConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApiCatalogueAdminConnector.Config] {
+
   override def get(): ApiCatalogueAdminConnector.Config = {
-    lazy val baseUrl = sc.baseUrl("integration-catalogue-admin-api")
+    lazy val baseUrl          = sc.baseUrl("integration-catalogue-admin-api")
     lazy val authorizationKey = sc.getString("publish.authKey.apiPlatform")
     ApiCatalogueAdminConnector.Config(baseUrl, authorizationKey)
   }

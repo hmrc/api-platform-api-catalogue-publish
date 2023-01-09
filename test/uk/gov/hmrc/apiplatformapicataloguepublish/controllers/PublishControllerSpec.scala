@@ -38,9 +38,9 @@ import scala.concurrent.Future
 
 class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAndAfterEach with Matchers with ApiDefinitionData with ApiCatalogueAdminJsonFormatters {
 
-  private val fakeRequest = FakeRequest("POST", "/")
+  private val fakeRequest        = FakeRequest("POST", "/")
   private val mockPublishService = mock[PublishService]
-  private val controller = new PublishController(mockPublishService, Helpers.stubControllerComponents())
+  private val controller         = new PublishController(mockPublishService, Helpers.stubControllerComponents())
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -52,7 +52,7 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAnd
       val serviceName = "service1"
       "return 200 and an api definition" in {
 
-        val publishResult = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
+        val publishResult          = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
         when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(publishResult)))
         val result: Future[Result] = controller.publish(serviceName)(fakeRequest)

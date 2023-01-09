@@ -48,39 +48,43 @@ trait OpenApiHeaders extends ExtensionKeys {
     addHeader("Accept", "Specifies the response format and the version of the API to be used. For example: `application/vnd.hmrc.1.0+json`", operation)
   }
 
-
   def addAuthorizationHeader(operation: Operation): Unit = {
     addHeader("Authorization", "An OAuth 2.0 Bearer Token. For example: Bearer `bb7fed3fe10dd235a2ccda3d50fb`", operation)
   }
 
   def handleTopLevelHeaders(pathItem: PathItem): Option[List[String]] = {
-    Option(pathItem.getExtensions).map(x => Option(x.get(X_AMF_IS)) match {
-      case Some(values: util.List[String]) =>
-        val amfIs = values.asScala.toList
-        val newList = if (amfIs.contains(ACCEPT_HEADER)) List(ACCEPT_HEADER) else List.empty[String]
-        if (amfIs.contains(CONTENTTYPE_HEADER)) newList ++ List(CONTENTTYPE_HEADER) else newList
-      case _ => List.empty[String]
-    })
+    Option(pathItem.getExtensions).map(x =>
+      Option(x.get(X_AMF_IS)) match {
+        case Some(values: util.List[String]) =>
+          val amfIs   = values.asScala.toList
+          val newList = if (amfIs.contains(ACCEPT_HEADER)) List(ACCEPT_HEADER) else List.empty[String]
+          if (amfIs.contains(CONTENTTYPE_HEADER)) newList ++ List(CONTENTTYPE_HEADER) else newList
+        case _                               => List.empty[String]
+      }
+    )
   }
 
   def addOperationLevelHeaders(openAPI: OpenAPI): OpenAPI = {
 
     def handlePathItem(pathItem: PathItem): OpenAPI = {
       def handleOperationsMap(operationsMap: util.Map[HttpMethod, Operation], topLevelHeaders: List[String]): OpenAPI = {
-        operationsMap.values.asScala.foreach { operation => {
-          if (topLevelHeaders.contains(ACCEPT_HEADER)) addAcceptHeader(operation)
-          if (topLevelHeaders.contains(CONTENTTYPE_HEADER)) addContentTypeHeader(operation)
-          Option(operation.getSecurity)
-            .map(_.asScala.map(sec => if (sec.keySet().contains(SEC_O_AUTH) || sec.keySet().contains(SEC_APPLICATION)) addAuthorizationHeader(operation)))
-          Option(operation.getExtensions).map(x => Option(x.get(X_AMF_IS)) match {
-            case Some(values: util.List[String]) => {
-              val amfIs = values.asScala.toList
-              if (amfIs.contains(ACCEPT_HEADER) && !topLevelHeaders.contains(ACCEPT_HEADER)) addAcceptHeader(operation)
-              if (amfIs.contains(CONTENTTYPE_HEADER) && !topLevelHeaders.contains(CONTENTTYPE_HEADER)) addContentTypeHeader(operation)
-            }
-            case _ => ()
-          })
-        }
+        operationsMap.values.asScala.foreach { operation =>
+          {
+            if (topLevelHeaders.contains(ACCEPT_HEADER)) addAcceptHeader(operation)
+            if (topLevelHeaders.contains(CONTENTTYPE_HEADER)) addContentTypeHeader(operation)
+            Option(operation.getSecurity)
+              .map(_.asScala.map(sec => if (sec.keySet().contains(SEC_O_AUTH) || sec.keySet().contains(SEC_APPLICATION)) addAuthorizationHeader(operation)))
+            Option(operation.getExtensions).map(x =>
+              Option(x.get(X_AMF_IS)) match {
+                case Some(values: util.List[String]) => {
+                  val amfIs = values.asScala.toList
+                  if (amfIs.contains(ACCEPT_HEADER) && !topLevelHeaders.contains(ACCEPT_HEADER)) addAcceptHeader(operation)
+                  if (amfIs.contains(CONTENTTYPE_HEADER) && !topLevelHeaders.contains(CONTENTTYPE_HEADER)) addContentTypeHeader(operation)
+                }
+                case _                               => ()
+              }
+            )
+          }
 
         }
         openAPI

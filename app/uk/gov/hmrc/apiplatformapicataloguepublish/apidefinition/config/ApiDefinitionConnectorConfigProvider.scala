@@ -17,13 +17,13 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config
 
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import com.google.inject.{ Provider}
+import com.google.inject.Provider
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import javax.inject.{Inject, Singleton}
 
-
 @Singleton
 class ApiDefinitionConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApiDefinitionConnector.Config] {
+
   override def get(): ApiDefinitionConnector.Config = {
     lazy val baseUrl = sc.baseUrl("api-definition")
     ApiDefinitionConnector.Config(baseUrl)

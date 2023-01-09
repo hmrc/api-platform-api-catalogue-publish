@@ -30,50 +30,46 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ApiCatalogueAdminConnector @Inject()(val ws: WSClient,
-                                            val config: Config,
-                                            val fileCreator: Files.TemporaryFileCreator
-                                          )(implicit val ec: ExecutionContext)
-  extends Logging with ApiCatalogueAdminJsonFormatters {
+class ApiCatalogueAdminConnector @Inject() (val ws: WSClient, val config: Config, val fileCreator: Files.TemporaryFileCreator)(implicit val ec: ExecutionContext)
+    extends Logging with ApiCatalogueAdminJsonFormatters {
 
   def publishApi(body: String): Future[Either[ApiCatalogueFailedResult, PublishResponse]] = {
     val startTime = System.currentTimeMillis()
     logger.info(s"publishApi called")
-    val authKey = new String(Base64.getEncoder.encode(config.authorizationKey.getBytes))
+    val authKey   = new String(Base64.getEncoder.encode(config.authorizationKey.getBytes))
 
-    val headers = Seq("x-platform-type" -> "API_PLATFORM",
-      "AUTHORIZATION" -> authKey,
-      "x-specification-type" -> "OAS_V3",
-      "ContentType" -> "multipart/form-data")
+    val headers = Seq("x-platform-type" -> "API_PLATFORM", "AUTHORIZATION" -> authKey, "x-specification-type" -> "OAS_V3", "ContentType" -> "multipart/form-data")
 
     ws.url(s"${config.baseUrl}/integration-catalogue-admin-api/services/apis/publish")
       .withHttpHeaders(headers: _*)
       .put(Source.single(MultipartFormData.DataPart("selectedFile", body)))
-      .map(response => response.status match {
-          case s: Int if(s ==200 || s==201) =>  
+      .map(response =>
+        response.status match {
+          case s: Int if (s == 200 || s == 201) =>
             logger.info(s"publishApi successful and took ${System.currentTimeMillis() - startTime} milliseconds")
             handleJsResult(response.json.validate[PublishResponse])
-          case _ => 
+          case _                                =>
             logger.info(s"publishApi failed and took ${System.currentTimeMillis() - startTime} milliseconds")
             Left(ApiCatalogueGeneralFailureResult("Publish failed"))
-        })
+        }
+      )
   }
 
-  def handleJsResult( result : JsResult[PublishResponse]): Either[ApiCatalogueFailedResult, PublishResponse] ={
-      result match {
-        case s: JsSuccess[PublishResponse] => Right(s.get)
-        case e: JsError => logger.error(s"Js Parse Errors:  ${JsError.toJson(e).toString()}")
+  def handleJsResult(result: JsResult[PublishResponse]): Either[ApiCatalogueFailedResult, PublishResponse] = {
+    result match {
+      case s: JsSuccess[PublishResponse] => Right(s.get)
+      case e: JsError                    =>
+        logger.error(s"Js Parse Errors:  ${JsError.toJson(e).toString()}")
         Left(ApiCatalogueGeneralFailureResult(s"Js Parse Errors:  ${JsError.toJson(e).toString()}"))
-      }
+    }
   }
 }
 
 object ApiCatalogueAdminConnector {
   case class Config(baseUrl: String, authorizationKey: String)
 
-
   sealed trait ApiCatalogueFailedResult {
     val message: String
   }
-  case class ApiCatalogueGeneralFailureResult(message: String) extends  ApiCatalogueFailedResult
+  case class ApiCatalogueGeneralFailureResult(message: String) extends ApiCatalogueFailedResult
 }

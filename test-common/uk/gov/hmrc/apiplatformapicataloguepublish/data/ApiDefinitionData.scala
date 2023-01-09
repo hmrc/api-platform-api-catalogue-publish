@@ -19,12 +19,32 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.data
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionBuilder
 
-
 trait ApiDefinitionData extends ApiDefinitionBuilder {
-      val categories = List(ApiCategory("category1"), ApiCategory("category2"))
-    val serviceName = "my-service"
-    val versions = List(apiVersion(version = ApiVersion("1.0")), apiVersion(version = (ApiVersion("2.0"))))
+  val categories  = List(ApiCategory("category1"), ApiCategory("category2"))
+  val serviceName = "my-service"
+  val versions    = List(apiVersion(version = ApiVersion("1.0")), apiVersion(version = (ApiVersion("2.0"))))
 
-    val apiDefinition1 = ApiDefinition("serviceBaseUrl", serviceName, s"$serviceName-name", s"$serviceName-description", ApiContext(s"$serviceName-context"), false, false, versions.toList, categories)
-     val apiDefinition2 = ApiDefinition("serviceBaseUrl2", s"$serviceName-2", s"$serviceName-name2", s"$serviceName-description2", ApiContext(s"$serviceName-context2"), false, false, versions.toList, categories)
+  val apiDefinition1 = ApiDefinition(
+    "serviceBaseUrl",
+    serviceName,
+    s"$serviceName-name",
+    s"$serviceName-description",
+    ApiContext(s"$serviceName-context"),
+    false,
+    false,
+    versions.toList,
+    categories
+  )
+
+  val apiDefinition2 = ApiDefinition(
+    "serviceBaseUrl2",
+    s"$serviceName-2",
+    s"$serviceName-name2",
+    s"$serviceName-description2",
+    ApiContext(s"$serviceName-context2"),
+    false,
+    false,
+    versions.toList,
+    categories
+  )
 }

@@ -27,38 +27,36 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton()
-class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)
-                                  (implicit val ec: ExecutionContext) extends BackendController(cc)
-                                   with ApiCatalogueAdminJsonFormatters with Logging{
+class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)(implicit val ec: ExecutionContext) extends BackendController(cc)
+    with ApiCatalogueAdminJsonFormatters with Logging {
 
   def publish(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
     publishService.publishByServiceName(serviceName).map {
-      case Right(oasString: PublishResponse) => Ok(Json.toJson(oasString))
+      case Right(oasString: PublishResponse)    => Ok(Json.toJson(oasString))
       case Left(e: ApiDefinitionNotFoundResult) => NotFound(s"api definition not found: ${e.message}")
-      case Left(e: PublishFailedResult) => InternalServerError(s"something went wrong: ${e.message}")
-      case _ =>  InternalServerError(s"something went wrong")
+      case Left(e: PublishFailedResult)         => InternalServerError(s"something went wrong: ${e.message}")
+      case _                                    => InternalServerError(s"something went wrong")
     }
   }
 
   def publishAll(): Action[AnyContent] = Action.async { implicit request =>
     implicit val formatPublishAllResponse = Json.format[PublishAllResponse]
-    val startTime = System.currentTimeMillis()
+    val startTime                         = System.currentTimeMillis()
     logger.info("publishAll endpoint called")
-    publishService.publishAll().map{
-     results: List[Either[ApiCataloguePublishResult, PublishResponse]] =>
+    publishService.publishAll().map {
+      results: List[Either[ApiCataloguePublishResult, PublishResponse]] =>
         val countSuccess = results.count(_.isRight)
-        val countFailed = results.count(_.isLeft)
+        val countFailed  = results.count(_.isLeft)
         results.foreach {
-          case Right(result: PublishResponse) => logger.info(result.toString)
+          case Right(result: PublishResponse)     => logger.info(result.toString)
           case Left(e: ApiCataloguePublishResult) => logger.error(e.toString)
         }
 
-      logger.info(s"publishAll about to return result -  success: $countSuccess, failed: $countFailed.took ${System.currentTimeMillis() - startTime} milliseconds ")
+        logger.info(s"publishAll about to return result -  success: $countSuccess, failed: $countFailed.took ${System.currentTimeMillis() - startTime} milliseconds ")
     }
-    val publishAllResponse = PublishAllResponse(message = "Publish all called and is working in the background, check application logs for progress")
+    val publishAllResponse                = PublishAllResponse(message = "Publish all called and is working in the background, check application logs for progress")
     Future.successful(Ok(Json.toJson(publishAllResponse)))
   }
 }
 
 case class PublishAllResponse(message: String)
-

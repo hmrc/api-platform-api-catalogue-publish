@@ -21,10 +21,11 @@ import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class DateTimeWrapper @Inject()(){
-    def generateDateNowString() = {
-         val dateFmt =   DateTimeFormatter.ISO_LOCAL_DATE_TIME
-         val  dateTime = LocalDateTime.now()
-       dateTime.format(dateFmt)
-    }
+class DateTimeWrapper @Inject() () {
+
+  def generateDateNowString() = {
+    val dateFmt  = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+    val dateTime = LocalDateTime.now()
+    dateTime.format(dateFmt)
+  }
 }

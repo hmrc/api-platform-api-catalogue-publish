@@ -25,7 +25,7 @@ class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with Api
 
   "getRamlUri" should {
     "return correct uri" in {
-        getUri(apiDefinition1)  shouldBe "serviceBaseUrl/api/conf/2.0/application"
+      getUri(apiDefinition1) shouldBe "serviceBaseUrl/api/conf/2.0/application"
     }
   }
 
@@ -44,7 +44,7 @@ class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with Api
       getAccessTypeOfLatestVersion(apiDefinition1) shouldBe PublicApiAccess()
     }
 
-     "return public when definition has no versions" in {
+    "return public when definition has no versions" in {
       getAccessTypeOfLatestVersion(apiDefinition1.copy(versions = List.empty)) shouldBe PublicApiAccess()
     }
   }
