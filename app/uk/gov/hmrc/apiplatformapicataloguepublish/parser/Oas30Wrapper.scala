@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
-import play.api.Logging
-import webapi.{Oas30, WebApiDocument}
-
 import javax.inject.{Inject, Singleton}
 import scala.compat.java8.FutureConverters
 import scala.concurrent.Future
+
+import webapi.{Oas30, WebApiDocument}
+
+import play.api.Logging
 
 @Singleton
 class Oas30Wrapper @Inject() () extends Logging {

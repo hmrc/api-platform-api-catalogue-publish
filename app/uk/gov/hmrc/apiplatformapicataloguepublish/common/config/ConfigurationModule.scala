@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,17 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.common.config
 
 import com.google.inject.AbstractModule
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.config.ApiCatalogueAdminConnectorConfigProvider
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config.ApiDefinitionConnectorConfigProvider
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 
-
 class ConfigurationModule extends AbstractModule {
 
   override def configure(): Unit = {
-             bind(classOf[ApiDefinitionConnector.Config]).toProvider(classOf[ApiDefinitionConnectorConfigProvider])
-             bind(classOf[ApiCatalogueAdminConnector.Config]).toProvider(classOf[ApiCatalogueAdminConnectorConfigProvider])
+    bind(classOf[ApiDefinitionConnector.Config]).toProvider(classOf[ApiDefinitionConnectorConfigProvider])
+    bind(classOf[ApiCatalogueAdminConnector.Config]).toProvider(classOf[ApiCatalogueAdminConnectorConfigProvider])
   }
 
 }

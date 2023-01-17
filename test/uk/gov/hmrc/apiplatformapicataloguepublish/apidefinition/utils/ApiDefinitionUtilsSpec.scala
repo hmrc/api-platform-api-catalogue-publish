@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
 
-import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
+import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 
 class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with ApiDefinitionUtils with Matchers {
 
   "getRamlUri" should {
     "return correct uri" in {
-        getUri(apiDefinition1)  shouldBe "serviceBaseUrl/api/conf/2.0/application"
+      getUri(apiDefinition1) shouldBe "serviceBaseUrl/api/conf/2.0/application"
     }
   }
 
@@ -44,7 +45,7 @@ class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with Api
       getAccessTypeOfLatestVersion(apiDefinition1) shouldBe PublicApiAccess()
     }
 
-     "return public when definition has no versions" in {
+    "return public when definition has no versions" in {
       getAccessTypeOfLatestVersion(apiDefinition1.copy(versions = List.empty)) shouldBe PublicApiAccess()
     }
   }

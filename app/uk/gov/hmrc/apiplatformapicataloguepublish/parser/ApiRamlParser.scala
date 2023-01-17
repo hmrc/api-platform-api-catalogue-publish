@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,31 +16,32 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
-import play.api.Logging
-import webapi.{Raml10, WebApiDocument}
-
 import javax.inject.{Inject, Singleton}
 import scala.compat.java8._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
+import webapi.{Raml10, WebApiDocument}
+
+import play.api.Logging
+
 @Singleton
-class ApiRamlParser @Inject()()(implicit ec: ExecutionContext) extends Logging {
+class ApiRamlParser @Inject() ()(implicit ec: ExecutionContext) extends Logging {
 
   def getRaml(url: String): Future[WebApiDocument] = {
     val startTime = System.currentTimeMillis()
 
-     FutureConverters.toScala({
+    FutureConverters.toScala({
       Raml10.parse(url)
     }).map(x => {
-            logger.info(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds - have webapiDocument for $url")
-            x.asInstanceOf[WebApiDocument]
+      logger.info(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds - have webapiDocument for $url")
+      x.asInstanceOf[WebApiDocument]
     })
-   .recover {
-      case NonFatal(e) =>
-        logger.error(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds -Failed:", e)
-        throw e
-    }
+      .recover {
+        case NonFatal(e) =>
+          logger.error(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds -Failed:", e)
+          throw e
+      }
   }
 
 }

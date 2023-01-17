@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,25 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
+
 import play.api.Logging
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.play.http.ws.WSGet
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters, ApiStatus}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 @Singleton
 class ApiDefinitionConnector @Inject() (
     val http: HttpClient with WSGet,
     val config: Config
-  )(implicit val ec: ExecutionContext)
-    extends Logging
+  )(implicit val ec: ExecutionContext
+  ) extends Logging
     with ApiDefinitionJsonFormatters
     with ApiDefinitionUtils {
 
@@ -61,13 +61,13 @@ class ApiDefinitionConnector @Inject() (
 
   def getAllServices()(implicit hc: HeaderCarrier): Future[Either[GeneralFailedResult, List[ApiDefinitionResult]]] = {
     http.GET[Seq[ApiDefinition]](fetchAllUrl, List(("type", "all")))
-    .map(definitions =>
-      Right(definitions.map(definitionToResult).toList.sortBy(_.serviceName))
-    ).recover {
-      case NonFatal(e) =>
-        logger.error(s"getAllServices Failed:", e)
-        Left(GeneralFailedResult(e.getMessage))
-    }
+      .map(definitions =>
+        Right(definitions.map(definitionToResult).toList.sortBy(_.serviceName))
+      ).recover {
+        case NonFatal(e) =>
+          logger.error(s"getAllServices Failed:", e)
+          Left(GeneralFailedResult(e.getMessage))
+      }
   }
 
 }
@@ -79,7 +79,7 @@ object ApiDefinitionConnector {
   sealed trait ApiDefinitionFailedResult {
     val message: String
   }
-  case class NotFoundResult(message: String) extends ApiDefinitionFailedResult
+  case class NotFoundResult(message: String)      extends ApiDefinitionFailedResult
   case class GeneralFailedResult(message: String) extends ApiDefinitionFailedResult
 
 }

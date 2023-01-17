@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,19 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.config
 
+import javax.inject.{Inject, Singleton}
+
 import com.google.inject.Provider
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
+
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
 
 @Singleton
 class ApiCatalogueAdminConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApiCatalogueAdminConnector.Config] {
+
   override def get(): ApiCatalogueAdminConnector.Config = {
-    lazy val baseUrl = sc.baseUrl("integration-catalogue-admin-api")
+    lazy val baseUrl          = sc.baseUrl("integration-catalogue-admin-api")
     lazy val authorizationKey = sc.getString("publish.authKey.apiPlatform")
     ApiCatalogueAdminConnector.Config(baseUrl, authorizationKey)
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 trait OasStringUtils {
-  
-  val oasStringWithDescription = 
+
+  val oasStringWithDescription =
     """openapi: 3.0.0
 info:
   title: Agent Authorisation
@@ -496,8 +496,8 @@ x-amf-uses:
   types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
 """
 
-val oasStringWithEnhancements = 
-"""openapi: 3.0.0
+  val oasStringWithEnhancements =
+    """openapi: 3.0.0
 info:
   title: Agent Authorisation
   description: "#  Overview\ndocs/overview.md\n#  Change Log\ndocs/change-log.md\n\

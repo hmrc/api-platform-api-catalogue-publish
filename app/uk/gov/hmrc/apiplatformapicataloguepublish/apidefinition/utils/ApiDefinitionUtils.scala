@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,7 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiStatus, PublicApiAccess}
 
 trait ApiDefinitionUtils {
 
@@ -43,8 +40,7 @@ trait ApiDefinitionUtils {
       .headOption.map(apiVersionDefinition => apiVersionDefinition.access).getOrElse(PublicApiAccess())
   }
 
-
-    def getStatusOfLatestVersion(apiDefinition: ApiDefinition): ApiStatus = {
+  def getStatusOfLatestVersion(apiDefinition: ApiDefinition): ApiStatus = {
     apiDefinition.versions
       .sorted
       .headOption.map(apiVersionDefinition => apiVersionDefinition.status).getOrElse(ApiStatus.DEPRECATED)

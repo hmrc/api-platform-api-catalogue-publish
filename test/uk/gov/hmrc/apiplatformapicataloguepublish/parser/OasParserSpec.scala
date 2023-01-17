@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import org.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult, OpenApiProcessingError}
 import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiCataloguePublishResult, OpenApiEnhancementFailedResult}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with OasStringUtils with ScalaFutures with BeforeAndAfterEach {
 
-
-  val mockOas30Wrapper = mock[Oas30Wrapper]
+  val mockOas30Wrapper    = mock[Oas30Wrapper]
   val mockDateTimeWrapper = mock[DateTimeWrapper]
 
   override protected def beforeEach(): Unit = {
@@ -37,22 +37,22 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
     reset(mockOas30Wrapper)
     reset(mockDateTimeWrapper)
   }
+
   trait Setup {
     val objInTest = new OasParser(mockDateTimeWrapper)
   }
 
-
   "handleEnhancingOasForCatalogue" should {
     "return right with enhanced OAS when successful" in new Setup {
       val convertedOasResult: OasResult = OasResult(oasStringWithDescription, "apiName", "PRIVATE")
-      val validISODate: String = "2021-12-25T12:00:00Z"
+      val validISODate: String          = "2021-12-25T12:00:00Z"
       when(mockDateTimeWrapper.generateDateNowString()).thenReturn(validISODate)
 
       val result: Either[ApiCataloguePublishResult, String] = objInTest.handleEnhancingOasForCatalogue(convertedOasResult)
 
       result match {
         case Right(convertedOas: String) => convertedOas shouldBe oasStringWithEnhancements
-        case Left(e) => fail
+        case Left(e)                     => fail
       }
     }
 
@@ -62,7 +62,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
       val result: Either[ApiCataloguePublishResult, String] = objInTest.handleEnhancingOasForCatalogue(convertedOasResult)
 
       result match {
-        case Right(convertedOas: String) => fail()
+        case Right(convertedOas: String)             => fail()
         case Left(e: OpenApiEnhancementFailedResult) => e.message shouldBe "handleEnhancingOasForCatalogue failed: Swagger Parse failure"
       }
     }
@@ -70,28 +70,27 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
   }
 
   "enhanceOas" should {
-   "return right with enhanced OAS when successful" in new Setup {
-     
+    "return right with enhanced OAS when successful" in new Setup {
+
       val convertedOasResult: OasResult = OasResult(oasStringWithDescription, "apiName", "PRIVATE")
-      val validISODate: String = "2021-12-25T12:00:00Z"
+      val validISODate: String          = "2021-12-25T12:00:00Z"
       when(mockDateTimeWrapper.generateDateNowString()).thenReturn(validISODate)
-     
-      val result: Either[OpenApiProcessingError,String] = objInTest.enhanceOas(convertedOasResult)
-      
-      result match{
+
+      val result: Either[OpenApiProcessingError, String] = objInTest.enhanceOas(convertedOasResult)
+
+      result match {
         case Right(convertedOas: String) => convertedOas shouldBe oasStringWithEnhancements
-        case Left(e) => fail
+        case Left(e)                     => fail
       }
     }
 
     "return Left when oas is invalid" in new Setup {
       val convertedOasResult: OasResult = OasResult("something invalid", "apiName", "PRIVATE")
 
+      val result: Either[OpenApiProcessingError, String] = objInTest.enhanceOas(convertedOasResult)
 
-      val result: Either[OpenApiProcessingError,String] = objInTest.enhanceOas(convertedOasResult)
-
-      result match{
-        case Right(convertedOas: String) => fail()
+      result match {
+        case Right(convertedOas: String)            => fail()
         case Left(e: GeneralOpenApiProcessingError) => e.message shouldBe "Swagger Parse failure"
       }
     }

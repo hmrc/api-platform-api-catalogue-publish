@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,31 +16,33 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
 
+import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
-import uk.gov.hmrc.http.HeaderCarrier
-
-import java.util.UUID
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAndAfterEach with Matchers with ApiDefinitionData with ApiCatalogueAdminJsonFormatters {
 
-  private val fakeRequest = FakeRequest("POST", "/")
+  private val fakeRequest        = FakeRequest("POST", "/")
   private val mockPublishService = mock[PublishService]
-  private val controller = new PublishController(mockPublishService, Helpers.stubControllerComponents())
+  private val controller         = new PublishController(mockPublishService, Helpers.stubControllerComponents())
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -52,7 +54,7 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAnd
       val serviceName = "service1"
       "return 200 and an api definition" in {
 
-        val publishResult = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
+        val publishResult          = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
         when(mockPublishService.publishByServiceName(any[String])(any[HeaderCarrier]))
           .thenReturn(Future.successful(Right(publishResult)))
         val result: Future[Result] = controller.publish(serviceName)(fakeRequest)

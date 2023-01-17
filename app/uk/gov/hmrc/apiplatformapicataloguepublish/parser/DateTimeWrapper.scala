@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
-import java.time.format.DateTimeFormatter
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class DateTimeWrapper @Inject()(){
-    def generateDateNowString() = {
-         val dateFmt =   DateTimeFormatter.ISO_LOCAL_DATE_TIME
-         val  dateTime = LocalDateTime.now()
-       dateTime.format(dateFmt)
-    }
+class DateTimeWrapper @Inject() () {
+
+  def generateDateNowString() = {
+    val dateFmt  = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+    val dateTime = LocalDateTime.now()
+    dateTime.format(dateFmt)
+  }
 }

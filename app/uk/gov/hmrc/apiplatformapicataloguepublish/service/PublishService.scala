@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,17 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future.successful
+import scala.concurrent.{ExecutionContext, Future}
+
 import cats.data.EitherT
 import cats.implicits._
+import webapi.WebApiDocument
+
 import play.api.Logging
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueFailedResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishResponse
@@ -28,12 +36,6 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
 import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
-import uk.gov.hmrc.http.HeaderCarrier
-import webapi.WebApiDocument
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future.successful
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton()
 class PublishService @Inject() (
@@ -42,15 +44,15 @@ class PublishService @Inject() (
     oasParser: OasParser,
     catalogueConnector: ApiCatalogueAdminConnector,
     apiMicroserviceConnector: ApiMicroserviceConnector
-  )(implicit val ec: ExecutionContext)
-    extends Logging {
+  )(implicit val ec: ExecutionContext
+  ) extends Logging {
 
   val BATCH_AMOUNT = 5
 
   def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
     (for {
       apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult(_, serviceName)))
-      result <- publishDefinitionResult(apiDefinitionResult)
+      result              <- publishDefinitionResult(apiDefinitionResult)
     } yield result).value
   }
 
@@ -61,9 +63,9 @@ class PublishService @Inject() (
       case ApiStatus.RETIRED =>
         EitherT.left(successful(ApiDefinitionInvalidStatusResult(apiDefinitionResult.serviceName, "definition record was RETIRED for this service")))
       case _                 => for {
-          oasValue <- EitherT(ramlOrYaml(apiDefinitionResult))
+          oasValue              <- EitherT(ramlOrYaml(apiDefinitionResult))
           oasDataWithExtensions <- EitherT(successful(oasParser.handleEnhancingOasForCatalogue(oasValue)))
-          result <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult(_, serviceName)))
+          result                <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult(_, serviceName)))
         } yield result
     }
 
@@ -71,24 +73,25 @@ class PublishService @Inject() (
 
   def ramlOrYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
 
-    def getYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[Throwable, String]] ={
+    def getYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[Throwable, String]] = {
       apiMicroserviceConnector.fetchApiDocumentationResourceByUrl(apiDefinitionResult.url + ".yaml")
     }
 
-    def handleYamlResult(result: Either[Throwable, String]): Future[Either[ApiCataloguePublishResult, OasResult]] ={
+    def handleYamlResult(result: Either[Throwable, String]): Future[Either[ApiCataloguePublishResult, OasResult]] = {
       // left means yaml not found so look for raml and convert to OAS
       // right mean we have Yaml / OAS so continue
       result match {
         case Right(oas: String) => successful(Right(OasResult(
-          oas,
-          apiDefinitionResult.serviceName,
-          apiAccessToDescription(apiDefinitionResult.access))))
-        case Left(_) =>  raml2OasService.getRamlAndConvert(apiDefinitionResult)
+            oas,
+            apiDefinitionResult.serviceName,
+            apiAccessToDescription(apiDefinitionResult.access)
+          )))
+        case Left(_)            => raml2OasService.getRamlAndConvert(apiDefinitionResult)
       }
     }
 
     for {
-      yamlResult <- getYaml(apiDefinitionResult)
+      yamlResult    <- getYaml(apiDefinitionResult)
       handledResult <- handleYamlResult(yamlResult)
     } yield handledResult
 
@@ -123,18 +126,17 @@ class PublishService @Inject() (
     }
   }
 
-  def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse],
-                                serviceName: String): Either[ApiCataloguePublishResult, PublishResponse] = {
+  def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse], serviceName: String): Either[ApiCataloguePublishResult, PublishResponse] = {
     logger.info(s"mapCataloguePublishResult called for $serviceName")
     result match {
       case Right(response: PublishResponse)  => Right(response)
-      case Left(e: ApiCatalogueFailedResult) => logger.error(s"publish to catalogue failed ${e.message}")
+      case Left(e: ApiCatalogueFailedResult) =>
+        logger.error(s"publish to catalogue failed ${e.message}")
         Left(ApiCataloguePublishFailedResult(serviceName, s"publish to catalogue failed ${e.message}"))
     }
   }
 
-  def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult],
-                             serviceName: String): Either[ApiCataloguePublishResult, ApiDefinitionResult] =
+  def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult], serviceName: String): Either[ApiCataloguePublishResult, ApiDefinitionResult] =
     result match {
       case Right(x: ApiDefinitionResult)                  => Right(x)
       case Left(e: ApiDefinitionConnector.NotFoundResult) =>
@@ -152,7 +154,7 @@ case class ResultHolder(apiDefinitionResult: ApiDefinitionResult, document: WebA
 sealed trait ApiCataloguePublishResult
 
 case class ApiDefinitionInvalidStatusResult(serviceName: String, message: String) extends ApiCataloguePublishResult
-case class ApiDefinitionNotFoundResult(serviceName: String, message: String) extends ApiCataloguePublishResult
-case class PublishFailedResult(serviceName: String, message: String) extends ApiCataloguePublishResult
-case class OpenApiEnhancementFailedResult(serviceName: String, message: String) extends ApiCataloguePublishResult
-case class ApiCataloguePublishFailedResult(serviceName: String, message: String) extends ApiCataloguePublishResult
+case class ApiDefinitionNotFoundResult(serviceName: String, message: String)      extends ApiCataloguePublishResult
+case class PublishFailedResult(serviceName: String, message: String)              extends ApiCataloguePublishResult
+case class OpenApiEnhancementFailedResult(serviceName: String, message: String)   extends ApiCataloguePublishResult
+case class ApiCataloguePublishFailedResult(serviceName: String, message: String)  extends ApiCataloguePublishResult

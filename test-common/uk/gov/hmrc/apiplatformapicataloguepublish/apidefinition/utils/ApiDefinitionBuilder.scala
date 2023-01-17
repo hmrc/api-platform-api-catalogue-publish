@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
 
+import cats.data.{NonEmptyList => NEL}
+
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus.STABLE
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
 import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models.ApplicationId
-import cats.data.{NonEmptyList => NEL}
 
 trait ApiDefinitionBuilder {
 
   def apiDefinition(name: String): ApiDefinition = apiDefinition(name, apiVersion(ApiVersion("1.0"), STABLE))
 
   def apiDefinition(
-                     name: String,
-                     versions: ApiVersionDefinition*
-                   ) = {
+      name: String,
+      versions: ApiVersionDefinition*
+    ) = {
     ApiDefinition(serviceBaseUrl = "service base url", name, name, name, ApiContext(name), false, false, versions.toList)
   }
 
@@ -141,18 +142,18 @@ trait ApiDefinitionBuilder {
 
     def asTrial: ApiVersionDefinition = inner.access match {
       case apiAccess: PrivateApiAccess => inner.copy(access = apiAccess.asTrial)
-      case _ => inner.copy(access = PrivateApiAccess(isTrial = true))
+      case _                           => inner.copy(access = PrivateApiAccess(isTrial = true))
     }
 
     def addAllowList(applicationId: ApplicationId) =
       inner.access match {
-        case p@PrivateApiAccess(_, _) => inner.copy(access = p.addAllowList(applicationId))
-        case _ => inner
+        case p @ PrivateApiAccess(_, _) => inner.copy(access = p.addAllowList(applicationId))
+        case _                          => inner
       }
 
     def notTrial: ApiVersionDefinition = inner.access match {
       case apiAccess: PrivateApiAccess => inner.copy(access = apiAccess.notTrial)
-      case _ => inner.copy(access = PrivateApiAccess())
+      case _                           => inner.copy(access = PrivateApiAccess())
     }
 
     def withAccess(altAccess: ApiAccess): ApiVersionDefinition =
