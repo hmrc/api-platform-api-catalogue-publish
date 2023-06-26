@@ -17,8 +17,8 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 import javax.inject.{Inject, Singleton}
-import scala.compat.java8.FutureConverters
 import scala.concurrent.Future
+import scala.jdk.FutureConverters._
 
 import webapi.{Oas30, WebApiDocument}
 
@@ -28,8 +28,6 @@ import play.api.Logging
 class Oas30Wrapper @Inject() () extends Logging {
 
   def ramlToOas(model: WebApiDocument): Future[String] = {
-    FutureConverters.toScala({
-      Oas30.generateYamlString(model)
-    })
+    Oas30.generateYamlString(model).asScala
   }
 }

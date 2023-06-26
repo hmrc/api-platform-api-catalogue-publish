@@ -1,3 +1,4 @@
+
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import bloop.integrations.sbt.BloopDefaults
@@ -6,22 +7,17 @@ val appName = "api-platform-api-catalogue-publish"
 
 val silencerVersion = "1.7.0"
 
+scalaVersion := "2.13.8"
+
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
-inThisBuild(
-  List(
-    scalaVersion := "2.12.15",
-    semanticdbEnabled := true,
-    semanticdbVersion := scalafixSemanticdb.revision
-  )
-)
-
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .settings(
     majorVersion                     := 0,
-    scalaVersion                     := "2.12.12",
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
     Test / unmanagedSourceDirectories += baseDirectory(_ / "test-common").value,
   )

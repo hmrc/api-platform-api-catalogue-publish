@@ -17,8 +17,8 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.parser
 
 import javax.inject.{Inject, Singleton}
-import scala.compat.java8._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.jdk.FutureConverters._
 import scala.util.control.NonFatal
 
 import webapi.{Raml10, WebApiDocument}
@@ -31,9 +31,7 @@ class ApiRamlParser @Inject() ()(implicit ec: ExecutionContext) extends Logging 
   def getRaml(url: String): Future[WebApiDocument] = {
     val startTime = System.currentTimeMillis()
 
-    FutureConverters.toScala({
-      Raml10.parse(url)
-    }).map(x => {
+    Raml10.parse(url).asScala.map(x => {
       logger.info(s"getRaml - took ${System.currentTimeMillis() - startTime} milliseconds - have webapiDocument for $url")
       x.asInstanceOf[WebApiDocument]
     })
@@ -43,5 +41,4 @@ class ApiRamlParser @Inject() ()(implicit ec: ExecutionContext) extends Logging 
           throw e
       }
   }
-
 }

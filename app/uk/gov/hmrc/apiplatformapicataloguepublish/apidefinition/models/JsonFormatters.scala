@@ -53,9 +53,11 @@ trait ApiDefinitionJsonFormatters extends EndpointJsonFormatters with BasicApiDe
 
   implicit val apiAccessReads: Reads[ApiAccess] =
     (
-      (JsPath \ "type").read[ApiAccessType] and
-        ((JsPath \ "allowlistedApplicationIds").read[List[ApplicationId]] or Reads.pure(List.empty[ApplicationId])) and
-        ((JsPath \ "isTrial").read[Boolean] or Reads.pure(false)) tupled
+      (
+        (JsPath \ "type").read[ApiAccessType] and
+          ((JsPath \ "allowlistedApplicationIds").read[List[ApplicationId]] or Reads.pure(List.empty[ApplicationId])) and
+          ((JsPath \ "isTrial").read[Boolean] or Reads.pure(false))
+      ).tupled
     ) map {
       case (PUBLIC, _, _)                                => PublicApiAccess()
       case (PRIVATE, allowlistedApplicationIds, isTrial) => PrivateApiAccess(allowlistedApplicationIds, isTrial)
@@ -76,11 +78,15 @@ trait ApiDefinitionJsonFormatters extends EndpointJsonFormatters with BasicApiDe
   }
 
   implicit val apiVersionReads: Reads[ApiVersionDefinition] =
-    ((JsPath \ "version").read[ApiVersion] and
-      (JsPath \ "status").read[ApiStatus] and
-      (JsPath \ "access").readNullable[ApiAccess] and
-      (JsPath \ "endpoints").read[NEL[Endpoint]] and
-      ((JsPath \ "endpointsEnabled").read[Boolean] or Reads.pure(false)) tupled) map {
+    (
+      (
+        (JsPath \ "version").read[ApiVersion] and
+          (JsPath \ "status").read[ApiStatus] and
+          (JsPath \ "access").readNullable[ApiAccess] and
+          (JsPath \ "endpoints").read[NEL[Endpoint]] and
+          ((JsPath \ "endpointsEnabled").read[Boolean] or Reads.pure(false))
+      ).tupled
+    ) map {
       case (version, status, None, endpoints, endpointsEnabled)         => ApiVersionDefinition(version, status, PublicApiAccess(), endpoints, endpointsEnabled)
       case (version, status, Some(access), endpoints, endpointsEnabled) => ApiVersionDefinition(version, status, access, endpoints, endpointsEnabled)
     }
