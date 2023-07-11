@@ -71,7 +71,7 @@ class ApiCatalogueAdminConnectorISpec
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
         case Right(response: PublishResponse) => succeed
-        case _                                => fail
+        case _                                => fail()
       }
     }
 
@@ -83,7 +83,7 @@ class ApiCatalogueAdminConnectorISpec
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
         case Left(response: ApiCatalogueGeneralFailureResult) => succeed
-        case _                                                => fail
+        case _                                                => fail()
       }
     }
 
@@ -96,7 +96,7 @@ class ApiCatalogueAdminConnectorISpec
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
         case Left(_: ApiCatalogueGeneralFailureResult) => succeed
-        case _                                         => fail
+        case _                                         => fail()
       }
     }
 
@@ -109,7 +109,7 @@ class ApiCatalogueAdminConnectorISpec
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
         case Left(e: ApiCatalogueGeneralFailureResult) => e.message.startsWith("Js Parse Errors") mustBe true
-        case _                                         => fail
+        case _                                         => fail()
       }
     }
   }

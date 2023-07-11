@@ -17,7 +17,7 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.openapi
 
 import java.util
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 import io.swagger.v3.oas.models.OpenAPI
 

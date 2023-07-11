@@ -3,11 +3,11 @@ import play.sbt.PlayImport._
 import sbt.Keys.libraryDependencies
 import sbt._
 
- 
+
 object AppDependencies {
 
   lazy val scalaCheckVersion = "1.14.0"
-  lazy val enumeratumVersion = "1.6.3"
+  lazy val enumeratumVersion = "1.7.0"
   lazy val jacksonVersion = "2.12.6"
   lazy val bootstrapVersion = "7.19.0"
 
@@ -16,12 +16,6 @@ object AppDependencies {
     "com.typesafe.play"                 %% "play-json"                      % "2.9.2",
     "com.typesafe.play"                 %% "play-json-joda"                 % "2.9.2",
     "com.beachape"                      %% "enumeratum-play-json"           % enumeratumVersion,
-    "org.raml"                          %  "webapi-parser"                  % "0.5.0"
-    excludeAll(
-        ExclusionRule("org.scala-lang.modules", "scala-xml_2.12"),
-        ExclusionRule("org.scala-lang.modules","scala-java8-compat_2.12")
-    )
-    ,
     "org.typelevel"                     %% "cats-core"                      % "2.4.2",
     "io.swagger.parser.v3"              %  "swagger-parser"                 % "2.1.9"
       excludeAll(

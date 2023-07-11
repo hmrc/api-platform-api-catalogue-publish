@@ -80,7 +80,7 @@ class ApiDefinitionConnectorISpec
         )
         await(objInTest.getDefinitionByServiceName(serviceName)) match {
           case Right(x: ApiDefinitionResult) => x mustBe definitionResult1
-          case _                             => fail
+          case _                             => fail()
 
         }
       }
@@ -93,7 +93,7 @@ class ApiDefinitionConnectorISpec
         )
         await(objInTest.getDefinitionByServiceName(serviceName)) match {
           case Left(_: NotFoundResult) => succeed
-          case _                       => fail
+          case _                       => fail()
 
         }
       }
@@ -105,7 +105,7 @@ class ApiDefinitionConnectorISpec
         )
         await(objInTest.getDefinitionByServiceName(serviceName)) match {
           case Left(_: GeneralFailedResult) => succeed
-          case _                            => fail
+          case _                            => fail()
 
         }
       }
@@ -118,7 +118,7 @@ class ApiDefinitionConnectorISpec
       val jsonBody = Json.toJson(List(apiDefinition1, apiDefinition2)).toString
       primeGetAll(OK, jsonBody)
       await(objInTest.getAllServices()) match {
-        case Left(_: GeneralFailedResult)              => fail
+        case Left(_: GeneralFailedResult)              => fail()
         case Right(results: List[ApiDefinitionResult]) =>
           results mustBe List(definitionResult1, definitionResult2)
 
@@ -129,7 +129,7 @@ class ApiDefinitionConnectorISpec
       primeGetAll(OK, "[]")
       await(objInTest.getAllServices()) match {
         case Right(x: List[ApiDefinitionResult]) => x mustBe List.empty
-        case x                                   => fail
+        case x                                   => fail()
       }
     }
 
@@ -138,7 +138,7 @@ class ApiDefinitionConnectorISpec
       await(objInTest.getAllServices()) match {
         case Left(x: GeneralFailedResult) =>
           x.message mustBe s"GET of 'http://localhost:$wireMockPort/api-definition?type=all' returned 500. Response body: '[]'"
-        case _                            => fail
+        case _                            => fail()
       }
     }
   }

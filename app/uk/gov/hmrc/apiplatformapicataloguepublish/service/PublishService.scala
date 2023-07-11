@@ -22,7 +22,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import cats.data.EitherT
 import cats.implicits._
-import webapi.WebApiDocument
 
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -40,7 +39,6 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
 @Singleton()
 class PublishService @Inject() (
     apiDefinitionConnector: ApiDefinitionConnector,
-    raml2OasService: Raml2OasService,
     oasParser: OasParser,
     catalogueConnector: ApiCatalogueAdminConnector,
     apiMicroserviceConnector: ApiMicroserviceConnector
@@ -63,7 +61,7 @@ class PublishService @Inject() (
       case ApiStatus.RETIRED =>
         EitherT.left(successful(ApiDefinitionInvalidStatusResult(apiDefinitionResult.serviceName, "definition record was RETIRED for this service")))
       case _                 => for {
-          oasValue              <- EitherT(ramlOrYaml(apiDefinitionResult))
+          oasValue              <- EitherT(yamlOrDeath(apiDefinitionResult))
           oasDataWithExtensions <- EitherT(successful(oasParser.handleEnhancingOasForCatalogue(oasValue)))
           result                <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult(_, serviceName)))
         } yield result
@@ -71,7 +69,7 @@ class PublishService @Inject() (
 
   }
 
-  def ramlOrYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
+  def yamlOrDeath(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
 
     def getYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[Throwable, String]] = {
       apiMicroserviceConnector.fetchApiDocumentationResourceByUrl(apiDefinitionResult.url + ".yaml")
@@ -86,7 +84,7 @@ class PublishService @Inject() (
             apiDefinitionResult.serviceName,
             apiAccessToDescription(apiDefinitionResult.access)
           )))
-        case Left(_)            => raml2OasService.getRamlAndConvert(apiDefinitionResult)
+        case Left(_)            => successful(Left(PublishFailedResult(apiDefinitionResult.serviceName, "RAML is no longer supported for publishing to the API Catalogue")))
       }
     }
 
@@ -98,7 +96,7 @@ class PublishService @Inject() (
   }
 
   def publishAll()(implicit hc: HeaderCarrier): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
-    apiDefinitionConnector.getAllServices
+    apiDefinitionConnector.getAllServices()
       .flatMap {
         case Right(definitionList: List[ApiDefinitionResult]) =>
           batchFutures(definitionList, List.empty)
@@ -148,8 +146,6 @@ class PublishService @Inject() (
     }
 
 }
-
-case class ResultHolder(apiDefinitionResult: ApiDefinitionResult, document: WebApiDocument)
 
 sealed trait ApiCataloguePublishResult
 

@@ -71,7 +71,7 @@ class ApiMicroserviceConnectorISpec
       val result = await(objInTest.fetchApiDocumentationResourceByUrl(microserviceUrl))
       result match {
         case Right(_: String) => succeed
-        case _                => fail
+        case _                => fail()
       }
     }
 
@@ -86,7 +86,7 @@ class ApiMicroserviceConnectorISpec
       val result = await(objInTest.fetchApiDocumentationResourceByUrl(microserviceUrl))
       result match {
         case Right(_: String) => succeed
-        case _                => fail
+        case _                => fail()
       }
     }
 
@@ -99,7 +99,7 @@ class ApiMicroserviceConnectorISpec
       val result = await(objInTest.fetchApiDocumentationResourceByUrl(microserviceUrl))
       result match {
         case Left(_) => succeed
-        case _       => fail
+        case _       => fail()
       }
     }
 
@@ -112,7 +112,7 @@ class ApiMicroserviceConnectorISpec
       val result = await(objInTest.fetchApiDocumentationResourceByUrl(microserviceUrl))
       result match {
         case Left(_) => succeed
-        case _       => fail
+        case _       => fail()
       }
     }
 
