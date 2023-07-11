@@ -61,7 +61,7 @@ class PublishService @Inject() (
       case ApiStatus.RETIRED =>
         EitherT.left(successful(ApiDefinitionInvalidStatusResult(apiDefinitionResult.serviceName, "definition record was RETIRED for this service")))
       case _                 => for {
-          oasValue              <- EitherT(yamlOrDeath(apiDefinitionResult))
+          oasValue              <- EitherT(getOasOrFail(apiDefinitionResult))
           oasDataWithExtensions <- EitherT(successful(oasParser.handleEnhancingOasForCatalogue(oasValue)))
           result                <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult(_, serviceName)))
         } yield result
@@ -69,7 +69,7 @@ class PublishService @Inject() (
 
   }
 
-  def yamlOrDeath(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
+  def getOasOrFail(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
 
     def getYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[Throwable, String]] = {
       apiMicroserviceConnector.fetchApiDocumentationResourceByUrl(apiDefinitionResult.url + ".yaml")

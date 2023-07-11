@@ -33,6 +33,14 @@ lazy val microservice = Project(appName, file("."))
     IntegrationTest / managedClasspath += (Assets / packageBin).value
   )
   .settings(headerSettings(IntegrationTest) ++ automateHeaderSettings(IntegrationTest))
+  .settings(
+    scalacOptions ++= Seq(
+      "-Wconf:cat=unused&src=views/.*\\.scala:s",
+      "-Wconf:cat=unused&src=.*RoutesPrefix\\.scala:s",
+      "-Wconf:cat=unused&src=.*Routes\\.scala:s",
+      "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s"
+    )
+  )
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
 
 lazy val scoverageSettings = {
