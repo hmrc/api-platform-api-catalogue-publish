@@ -27,7 +27,6 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalo
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apiplatformapicataloguepublish.support._
-import webapi.{Raml10, WebApiDocument}
 
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
@@ -92,16 +91,10 @@ class PublishControllerISpec
       callPostEndpoint(s"$url/publish-all", body = "", List.empty)
     }
 
-    def getWebApiDocument(filePath: String): WebApiDocument = {
-      val fileContents = Source.fromResource(filePath).mkString
-      Raml10.parse(fileContents)
-        .get(5, TimeUnit.SECONDS).asInstanceOf[WebApiDocument]
-    }
+    def absoluteYamlPath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "it/resources/test-yaml-file.yaml"
 
-    def absoluteRamlFilePath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "it/resources/test-ramlFile.raml"
-
-    def getRamlUri(apiDefinition: ApiDefinition) = {
-      getUri(apiDefinition) + ".raml"
+    def getYamlUri(apiDefinition: ApiDefinition) = {
+      getUri(apiDefinition) + ".yaml"
     }
 
   }
@@ -117,7 +110,7 @@ class PublishControllerISpec
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
-        primeGETWithFileContents("/" + getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
+        primeGETWithFileContents("/" + getYamlUri(apiDefinition1), absoluteYamlPath, OK)
         primeApiPublish(publishResponseAsJsonString, OK)
 
         val result: WSResponse = callPublishEndpoint(serviceName)
@@ -133,13 +126,13 @@ class PublishControllerISpec
         result.status mustBe NOT_FOUND
       }
 
-      "respond with 500 when getRaml fails" in new Setup {
+      "respond with 500 when getYaml fails" in new Setup {
         val serviceName                = "my-service"
         val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString      = Json.toJson(apiDefinition1withwiremock).toString
 
         primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
-        primeGETReturnsNotFound("/" + getRamlUri(apiDefinition1))
+        primeGETReturnsNotFound("/" + getYamlUri(apiDefinition1))
 
         val result: WSResponse = callPublishEndpoint(serviceName)
         result.status mustBe INTERNAL_SERVER_ERROR
@@ -153,7 +146,7 @@ class PublishControllerISpec
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
-        primeGETWithFileContents("/" + getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
+        primeGETWithFileContents("/" + getYamlUri(apiDefinition1), absoluteYamlPath, OK)
         primeApiPublish(publishResponseAsJsonString, BAD_REQUEST)
 
         val result: WSResponse = callPublishEndpoint(serviceName)
@@ -181,7 +174,7 @@ class PublishControllerISpec
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeGetAll(OK, apiDefinitionAsString)
-        primeGETWithFileContents("/" + getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
+        primeGETWithFileContents("/" + getYamlUri(apiDefinition1), absoluteYamlPath, OK)
         primeApiPublish(publishResponseAsJsonString, BAD_REQUEST)
 
         val result: WSResponse = callPublishAllEndpoint()
@@ -196,7 +189,7 @@ class PublishControllerISpec
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeGetAll(OK, apiDefinitionAsString)
-        primeGETWithFileContents("/" + getRamlUri(apiDefinition1), absoluteRamlFilePath, OK)
+        primeGETWithFileContents("/" + getYamlUri(apiDefinition1), absoluteYamlPath, OK)
         primeApiPublish(publishResponseAsJsonString, OK)
 
         val result: WSResponse = callPublishAllEndpoint()

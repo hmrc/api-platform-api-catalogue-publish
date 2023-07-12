@@ -19,12 +19,13 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.support
 import com.github.tomakehurst.wiremock.client.WireMock._
 
 import java.io._
+import scala.language.postfixOps
 
 trait ApiProducerTeamStub {
 
   def primeGETWithFileContents(expectedUrl: String, filePath: String, status: Int) = {
     val bis    = new BufferedInputStream(new FileInputStream(filePath))
-    val bArray = Stream.continually(bis.read).takeWhile(-1 !=).map(_.toByte).toArray
+    val bArray = LazyList.continually(bis.read).takeWhile(-1 !=).map(_.toByte).toArray
     stubFor(get(urlEqualTo(expectedUrl))
       .willReturn(
         aResponse()

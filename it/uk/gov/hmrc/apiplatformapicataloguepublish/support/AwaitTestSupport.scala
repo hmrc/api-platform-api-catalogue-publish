@@ -19,6 +19,7 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.support
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.language.postfixOps
 
 trait AwaitTestSupport {
   def await[A](future: Future[A], timeout: Duration = 5 seconds): A = Await.result(future, timeout)

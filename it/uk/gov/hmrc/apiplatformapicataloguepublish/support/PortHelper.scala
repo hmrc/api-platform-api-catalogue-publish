@@ -17,9 +17,9 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.support
 
 import java.net.ServerSocket
-
 import play.api.Logger
 
+import scala.language.postfixOps
 import scala.annotation.tailrec
 
 object PortHelper {

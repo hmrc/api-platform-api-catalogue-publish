@@ -17,17 +17,15 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.service
 
 import java.util.UUID
-import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.Future.successful
+import scala.jdk.CollectionConverters._
 
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import webapi.WebApiDocument
 
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
@@ -62,8 +60,6 @@ class PublishServiceSpec
   trait Setup {
     val mockConnector                = mock[ApiDefinitionConnector]
     val mockOasParser                = mock[OasParser]
-    val mockWebApiDocument           = mock[WebApiDocument]
-    val mockRaml2OasService          = mock[Raml2OasService]
     val mockCatalogueConnector       = mock[ApiCatalogueAdminConnector]
     val mockApiMicroserviceConnector = mock[ApiMicroserviceConnector]
 
@@ -83,8 +79,9 @@ class PublishServiceSpec
     val convertedWebApiToOasResult: OasResult     = OasResult(expectedEnhancedOasString, serviceName, expectedDescription)
     val yamlOasResult: OasResult                  = OasResult(yamlResponseString, serviceName, expectedDescription)
     val publishResponse: PublishResponse          = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
+    val ramlError: PublishFailedResult            = PublishFailedResult(serviceName, "RAML is no longer supported for publishing to the API Catalogue")
 
-    val objInTest = new PublishService(mockConnector, mockRaml2OasService, mockOasParser, mockCatalogueConnector, mockApiMicroserviceConnector)
+    val objInTest = new PublishService(mockConnector, mockOasParser, mockCatalogueConnector, mockApiMicroserviceConnector)
 
     def primeApiDefinitionSuccess() = {
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
@@ -119,20 +116,11 @@ class PublishServiceSpec
       when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
     }
 
-    def primeGetRamlAndConvertSuccess() = {
-      when(mockRaml2OasService.getRamlAndConvert(eqTo(apiDefinitionResult))).thenReturn(successful(Right(convertedWebApiToOasResult)))
-    }
-
-    def primeGetRamlAndConvertFailure() = {
-      when(mockRaml2OasService.getRamlAndConvert(eqTo(apiDefinitionResult))).thenReturn(successful(Left(PublishFailedResult(serviceName, "some error"))))
-    }
-
     def primeSuccessApartFromPublish(isYaml: Boolean) = {
       primeApiDefinitionSuccess()
       if (isYaml) primeApiMicroserviceConnectorSuccess()
       else {
         primeApiMicroserviceConnectorFailure()
-        primeGetRamlAndConvertSuccess()
       }
       primeOasEnhanceSuccess()
     }
@@ -162,7 +150,7 @@ class PublishServiceSpec
 
         result match {
           case Left(error: ApiDefinitionInvalidStatusResult) => error shouldBe expectedError
-          case _                                             => fail
+          case _                                             => fail()
         }
       }
 
@@ -174,7 +162,7 @@ class PublishServiceSpec
 
         result match {
           case Left(error: PublishFailedResult) => error shouldBe expectedError
-          case _                                => fail
+          case _                                => fail()
         }
 
       }
@@ -188,7 +176,7 @@ class PublishServiceSpec
 
         result match {
           case Left(error: ApiDefinitionNotFoundResult) => error shouldBe expectedError
-          case _                                        => fail
+          case _                                        => fail()
         }
 
       }
@@ -196,60 +184,16 @@ class PublishServiceSpec
 
     "publishByServiceName Raml flow" should {
 
-      "return Right with publish details when publish is successful" in new Setup {
+      "return Left with unsupported Error" in new Setup {
         primePublishSuccess(isYaml = false)
 
         val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
 
         result match {
-          case Right(value: PublishResponse) => value shouldBe publishResponse
-          case _                             => fail()
+          case Left(value: PublishFailedResult) => value shouldBe ramlError
+          case _                                => fail()
         }
 
-      }
-
-      "return Left when publish to api catalogue fails" in new Setup {
-
-        val expectedError = ApiCataloguePublishFailedResult(serviceName, "publish to catalogue failed some error")
-        primePublishFail(isYaml = false)
-
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
-
-        result match {
-          case Left(error: ApiCataloguePublishResult) => error shouldBe expectedError
-          case _                                      => fail
-        }
-      }
-
-      "return Left when get raml and convert fails" in new Setup {
-        val expectedError = PublishFailedResult(serviceName, "some error")
-
-        primeApiDefinitionSuccess()
-        primeApiMicroserviceConnectorFailure()
-        primeGetRamlAndConvertFailure()
-
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
-
-        result match {
-          case Left(error: PublishFailedResult) => error shouldBe expectedError
-          case _                                => fail
-        }
-      }
-
-      "return Left when enhance OAS fails" in new Setup {
-        val expectedError = OpenApiEnhancementFailedResult(serviceName, "some error")
-
-        primeApiDefinitionSuccess()
-        primeApiMicroserviceConnectorFailure()
-        primeGetRamlAndConvertSuccess()
-        primeOasEnhanceFailure(expectedError)
-
-        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
-
-        result match {
-          case Left(error: OpenApiEnhancementFailedResult) => error shouldBe expectedError
-          case _                                           => fail
-        }
       }
 
       "publishByServiceName Yaml flow" should {
@@ -273,7 +217,7 @@ class PublishServiceSpec
 
           result match {
             case Left(error: ApiCataloguePublishResult) => error shouldBe expectedError
-            case _                                      => fail
+            case _                                      => fail()
           }
         }
 
@@ -288,7 +232,7 @@ class PublishServiceSpec
 
           result match {
             case Left(error: OpenApiEnhancementFailedResult) => error shouldBe expectedError
-            case _                                           => fail
+            case _                                           => fail()
           }
         }
       }
@@ -301,7 +245,7 @@ class PublishServiceSpec
         when(mockConnector.getAllServices()).thenReturn(Future.successful(Left(GeneralFailedResult("error"))))
         val results = await(objInTest.publishAll())
         results match {
-          case List(Right(publishResponse))           => fail
+          case List(Right(publishResponse))           => fail()
           case List(Left(error: PublishFailedResult)) => error shouldBe PublishFailedResult("All Services", "something went wrong calling api definition")
         }
 
@@ -311,24 +255,22 @@ class PublishServiceSpec
       "return left when getRamlAndConvert fails" in new Setup {
         when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
         when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
-        when(mockRaml2OasService.getRamlAndConvert(any[ApiDefinitionResult])).thenReturn(successful(Left(PublishFailedResult(serviceName, "some error"))))
 
         val results = await(objInTest.publishAll())
         results shouldBe List(
-          Left(PublishFailedResult("my-service", "some error")),
-          Left(PublishFailedResult("my-service", "some error"))
+          Left(ramlError),
+          Left(ramlError.copy(serviceName = "my-service-2"))
         )
 
         verify(mockConnector).getAllServices()(any[HeaderCarrier])
-        verify(mockRaml2OasService, times(2)).getRamlAndConvert(any[ApiDefinitionResult])
 
       }
 
       "return results with Left when handleEnhancingOasForCatalogue fails" in new Setup {
 
         when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
-        when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
-        when(mockRaml2OasService.getRamlAndConvert(any[ApiDefinitionResult])).thenReturn(successful(Right(convertedWebApiToOasResult)))
+        primeApiMicroserviceConnectorSuccess()
+
         when(mockOasParser.handleEnhancingOasForCatalogue(any[OasResult])).thenReturn(Left(OpenApiEnhancementFailedResult(serviceName, "some error")))
 
         val results = await(objInTest.publishAll())
@@ -339,15 +281,14 @@ class PublishServiceSpec
 
         verify(mockConnector).getAllServices()(any[HeaderCarrier])
 
-        verify(mockRaml2OasService, times(2)).getRamlAndConvert(any[ApiDefinitionResult])
         verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(any[OasResult])
       }
 
       "return left when publish to catalogue fails" in new Setup {
 
         when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
-        when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
-        when(mockRaml2OasService.getRamlAndConvert(any[ApiDefinitionResult])).thenReturn(successful(Right(convertedWebApiToOasResult)))
+        primeApiMicroserviceConnectorSuccess()
+
         when(mockOasParser.handleEnhancingOasForCatalogue(any[OasResult])).thenReturn(Right("some valid oas yaml"))
         when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Left(ApiCatalogueGeneralFailureResult("some error"))))
 
@@ -358,7 +299,6 @@ class PublishServiceSpec
         )
 
         verify(mockConnector).getAllServices()(any[HeaderCarrier])
-        verify(mockRaml2OasService, times(2)).getRamlAndConvert(any[ApiDefinitionResult])
 
         verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(any[OasResult])
         verify(mockCatalogueConnector, times(2)).publishApi(any[String])
@@ -368,8 +308,7 @@ class PublishServiceSpec
       "return right with publish responses when all successful" in new Setup {
 
         when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
-        when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
-        when(mockRaml2OasService.getRamlAndConvert(any[ApiDefinitionResult])).thenReturn(successful(Right(convertedWebApiToOasResult)))
+        primeApiMicroserviceConnectorSuccess()
         when(mockOasParser.handleEnhancingOasForCatalogue(any[OasResult])).thenReturn(Right("some valid oas yaml"))
         when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Right(publishResponse)))
 
@@ -377,7 +316,7 @@ class PublishServiceSpec
         results shouldBe List(Right(publishResponse), Right(publishResponse))
 
         verify(mockConnector).getAllServices()(any[HeaderCarrier])
-        verify(mockRaml2OasService, times(2)).getRamlAndConvert(any[ApiDefinitionResult])
+
         verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(any[OasResult])
         verify(mockCatalogueConnector, times(2)).publishApi(any[String])
       }

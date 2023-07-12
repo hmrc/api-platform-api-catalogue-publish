@@ -29,12 +29,10 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiCataloguePublishRe
 
 class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with OasStringUtils with ScalaFutures with BeforeAndAfterEach {
 
-  val mockOas30Wrapper    = mock[Oas30Wrapper]
   val mockDateTimeWrapper = mock[DateTimeWrapper]
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockOas30Wrapper)
     reset(mockDateTimeWrapper)
   }
 
@@ -52,7 +50,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
 
       result match {
         case Right(convertedOas: String) => convertedOas shouldBe oasStringWithEnhancements
-        case Left(e)                     => fail
+        case Left(e)                     => fail()
       }
     }
 
@@ -80,7 +78,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
 
       result match {
         case Right(convertedOas: String) => convertedOas shouldBe oasStringWithEnhancements
-        case Left(e)                     => fail
+        case Left(e)                     => fail()
       }
     }
 
