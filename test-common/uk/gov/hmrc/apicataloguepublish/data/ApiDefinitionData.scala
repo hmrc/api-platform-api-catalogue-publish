@@ -22,7 +22,7 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinit
 trait ApiDefinitionData extends ApiDefinitionBuilder {
   val categories  = List(ApiCategory("category1"), ApiCategory("category2"))
   val serviceName = "my-service"
-  val versions    = List(apiVersion(version = ApiVersion("1.0")), apiVersion(version = (ApiVersion("2.0"))))
+  val versions    = List(apiVersion(version = ApiVersionNbr("1.0")), apiVersion(version = (ApiVersionNbr("2.0"))))
 
   val apiDefinition1 = ApiDefinition(
     "serviceBaseUrl",

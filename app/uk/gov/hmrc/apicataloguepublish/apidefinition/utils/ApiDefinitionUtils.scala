@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiStatus, PublicApiAccess}
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiStatus}
 
 trait ApiDefinitionUtils {
 
@@ -37,7 +37,7 @@ trait ApiDefinitionUtils {
   def getAccessTypeOfLatestVersion(apiDefinition: ApiDefinition): ApiAccess = {
     apiDefinition.versions
       .sorted
-      .headOption.map(apiVersionDefinition => apiVersionDefinition.access).getOrElse(PublicApiAccess())
+      .headOption.map(apiVersionDefinition => apiVersionDefinition.access).getOrElse(ApiAccess.PUBLIC)
   }
 
   def getStatusOfLatestVersion(apiDefinition: ApiDefinition): ApiStatus = {

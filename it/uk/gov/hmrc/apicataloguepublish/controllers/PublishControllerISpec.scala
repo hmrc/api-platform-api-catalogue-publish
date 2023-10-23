@@ -29,8 +29,6 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apiplatformapicataloguepublish.support._
 
 import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
-import scala.io.Source
 import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 import java.util.UUID

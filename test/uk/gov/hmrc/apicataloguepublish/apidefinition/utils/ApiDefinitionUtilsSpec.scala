@@ -19,8 +19,8 @@ package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.PublicApiAccess
 import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
+import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
 
 class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with ApiDefinitionUtils with Matchers {
 
@@ -42,11 +42,11 @@ class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with Api
 
   "getAccessTypeOfLatestVersion" should {
     "return access type of latest version" in {
-      getAccessTypeOfLatestVersion(apiDefinition1) shouldBe PublicApiAccess()
+      getAccessTypeOfLatestVersion(apiDefinition1) shouldBe ApiAccess.PUBLIC
     }
 
     "return public when definition has no versions" in {
-      getAccessTypeOfLatestVersion(apiDefinition1.copy(versions = List.empty)) shouldBe PublicApiAccess()
+      getAccessTypeOfLatestVersion(apiDefinition1.copy(versions = List.empty)) shouldBe ApiAccess.PUBLIC
     }
   }
 }
