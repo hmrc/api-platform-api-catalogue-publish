@@ -42,11 +42,11 @@ import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConn
   GeneralFailedResult,
   NotFoundResult
 }
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiStatus
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apicataloguepublish.parser.OasParser
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiStatus
 
 class PublishServiceSpec
     extends AnyWordSpec

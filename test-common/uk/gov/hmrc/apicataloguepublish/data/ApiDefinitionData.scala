@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.apicataloguepublish.data
 
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models._
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
+import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionBuilder
 
 trait ApiDefinitionData extends ApiDefinitionBuilder {

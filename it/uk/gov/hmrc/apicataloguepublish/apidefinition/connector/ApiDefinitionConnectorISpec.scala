@@ -26,7 +26,7 @@ import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.{ApiDefinitionBuilder
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.support.{ApiDefinitionStub, MetricsTestSupport, ServerBaseISpec}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiDefinition
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiDefinition
 
 class ApiDefinitionConnectorISpec
     extends ServerBaseISpec

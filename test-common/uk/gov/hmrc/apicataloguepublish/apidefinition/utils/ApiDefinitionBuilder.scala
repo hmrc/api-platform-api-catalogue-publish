@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.apicataloguepublish.apidefinition.utils
 
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiStatus.STABLE
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models._
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
+import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 
 trait ApiDefinitionBuilder {
 
-  def apiDefinition(name: String): ApiDefinition = apiDefinition(name, apiVersion(ApiVersionNbr("1.0"), STABLE))
+  def apiDefinition(name: String): ApiDefinition = apiDefinition(name, apiVersion(ApiVersionNbr("1.0"), ApiStatus.STABLE))
 
   def apiDefinition(
       name: String,
@@ -102,7 +102,7 @@ trait ApiDefinitionBuilder {
     def asApplicationRestricted: Endpoint = inner.copy(authType = AuthType.APPLICATION)
   }
 
-  def apiVersion(version: ApiVersionNbr = ApiVersionNbr("1.0"), status: ApiStatus = STABLE, access: ApiAccess = apiAccess()): ApiVersion = {
+  def apiVersion(version: ApiVersionNbr = ApiVersionNbr("1.0"), status: ApiStatus = ApiStatus.STABLE, access: ApiAccess = apiAccess()): ApiVersion = {
     ApiVersion(version, status, access, List(endpoint("Today's Date", "/today"), endpoint("Yesterday's Date", "/yesterday")))
   }
 

@@ -19,16 +19,12 @@ package uk.gov.hmrc.apicataloguepublish.apidefinition.models
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiAccessType.{PRIVATE, PUBLIC}
 import uk.gov.hmrc.apicataloguepublish.common.domain.models._
+import uk.gov.hmrc.apiplatform.modules.common.domain.models._
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
 
 trait BasicApiDefinitionJsonFormatters extends CommonJsonFormatters {
-  implicit val formatApiContext: Format[ApiContext]       = Json.valueFormat[ApiContext]
-  implicit val formatApiVersion: Format[ApiVersionNbr]    = Json.valueFormat[ApiVersionNbr]
-  implicit val formatApiIdentifier: Format[ApiIdentifier] = Json.format[ApiIdentifier]
-
   implicit val formatApiCategory: Format[ApiCategory] = Json.valueFormat[ApiCategory]
-
 }
 
 object BasicApiDefinitionJsonFormatters extends BasicApiDefinitionJsonFormatters
@@ -56,8 +52,8 @@ trait ApiDefinitionJsonFormatters extends EndpointJsonFormatters with BasicApiDe
           ((JsPath \ "isTrial").read[Boolean] or Reads.pure(false))
       ).tupled
     ) map {
-      case (PUBLIC, _)        => ApiAccess.PUBLIC
-      case (PRIVATE, isTrial) => ApiAccess.Private(isTrial)
+      case (ApiAccessType.PUBLIC, _)        => ApiAccess.PUBLIC
+      case (ApiAccessType.PRIVATE, isTrial) => ApiAccess.Private(isTrial)
     }
 
   implicit object apiAccessWrites extends Writes[ApiAccess] {
@@ -68,8 +64,8 @@ trait ApiDefinitionJsonFormatters extends EndpointJsonFormatters with BasicApiDe
     ).tupled
 
     override def writes(access: ApiAccess) = access match {
-      case ApiAccess.PUBLIC           => Json.obj("type" -> PUBLIC)
-      case ApiAccess.Private(isTrial) => privApiWrites.writes((PRIVATE, isTrial))
+      case ApiAccess.PUBLIC           => Json.obj("type" -> ApiAccessType.PUBLIC)
+      case ApiAccess.Private(isTrial) => privApiWrites.writes((ApiAccessType.PRIVATE, isTrial))
     }
   }
 

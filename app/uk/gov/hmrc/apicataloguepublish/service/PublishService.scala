@@ -31,10 +31,9 @@ import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.{ApiCatalogueAdmin
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PublishResponse
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiAccess.apiAccessToDescription
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiStatus
 import uk.gov.hmrc.apicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apicataloguepublish.parser.OasParser
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
 
 @Singleton()
 class PublishService @Inject() (
@@ -66,7 +65,6 @@ class PublishService @Inject() (
           result                <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult(_, serviceName)))
         } yield result
     }
-
   }
 
   def getOasOrFail(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
@@ -82,7 +80,7 @@ class PublishService @Inject() (
         case Right(oas: String) => successful(Right(OasResult(
             oas,
             apiDefinitionResult.serviceName,
-            apiAccessToDescription(apiDefinitionResult.access)
+            ApiAccess.apiAccessToDescription(apiDefinitionResult.access)
           )))
         case Left(_)            => successful(Left(PublishFailedResult(apiDefinitionResult.serviceName, "RAML is no longer supported for publishing to the API Catalogue")))
       }

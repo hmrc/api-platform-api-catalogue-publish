@@ -32,6 +32,7 @@ import java.nio.file.Paths
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 import java.util.UUID
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiDefinition
 
 class PublishControllerISpec
     extends ServerBaseISpec

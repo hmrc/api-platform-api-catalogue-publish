@@ -26,8 +26,9 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.play.http.ws.WSGet
 
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters, ApiStatus}
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiDefinitionJsonFormatters
 
 @Singleton
 class ApiDefinitionConnector @Inject() (
