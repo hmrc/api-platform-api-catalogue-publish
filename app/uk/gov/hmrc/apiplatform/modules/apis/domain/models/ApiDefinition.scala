@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models
+package uk.gov.hmrc.apicataloguepublish.apidefinition.models
 
 case class ApiDefinition(
     serviceBaseUrl: String,

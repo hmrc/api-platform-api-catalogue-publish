@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.common.config
+package uk.gov.hmrc.apicataloguepublish.common.config
 
 import com.google.inject.AbstractModule
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.config.ApiCatalogueAdminConnectorConfigProvider
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.config.ApiDefinitionConnectorConfigProvider
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.config.ApiCatalogueAdminConnectorConfigProvider
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
+import uk.gov.hmrc.apicataloguepublish.apidefinition.config.ApiDefinitionConnectorConfigProvider
+import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 
 class ConfigurationModule extends AbstractModule {
 

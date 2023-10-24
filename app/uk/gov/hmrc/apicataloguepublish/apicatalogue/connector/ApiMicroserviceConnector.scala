@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector
+package uk.gov.hmrc.apicataloguepublish.apicatalogue.connector
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}

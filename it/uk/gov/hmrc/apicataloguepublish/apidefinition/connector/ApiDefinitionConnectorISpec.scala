@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
+package uk.gov.hmrc.apicataloguepublish.apidefinition.connector
 
 import org.scalatest.BeforeAndAfterEach
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionResult, GeneralFailedResult, NotFoundResult}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinitionJsonFormatters
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.{ApiDefinitionBuilder, ApiDefinitionUtils}
-import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
-import uk.gov.hmrc.apiplatformapicataloguepublish.support.{ApiDefinitionStub, MetricsTestSupport, ServerBaseISpec}
+import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionResult, GeneralFailedResult, NotFoundResult}
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiDefinitionJsonFormatters
+import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.{ApiDefinitionBuilder, ApiDefinitionUtils}
+import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
+import uk.gov.hmrc.apicataloguepublish.support.{ApiDefinitionStub, MetricsTestSupport, ServerBaseISpec}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiDefinition
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiDefinition
 
 class ApiDefinitionConnectorISpec
     extends ServerBaseISpec

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.service
+package uk.gov.hmrc.apicataloguepublish.service
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,22 +31,22 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{IntegrationId, PublishResponse}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{IntegrationId, PublishResponse}
+import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
+import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{
   ApiDefinitionFailedResult,
   ApiDefinitionResult,
   GeneralFailedResult,
   NotFoundResult
 }
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
-import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.OasResult
-import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiStatus
+import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
+import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
+import uk.gov.hmrc.apicataloguepublish.openapi.OasResult
+import uk.gov.hmrc.apicataloguepublish.parser.OasParser
 
 class PublishServiceSpec
     extends AnyWordSpec

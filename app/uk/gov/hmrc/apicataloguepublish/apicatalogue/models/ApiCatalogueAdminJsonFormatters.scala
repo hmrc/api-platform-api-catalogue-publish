@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models
+package uk.gov.hmrc.apicataloguepublish.apicatalogue.models
 
 import play.api.libs.json.{Format, Json}
 

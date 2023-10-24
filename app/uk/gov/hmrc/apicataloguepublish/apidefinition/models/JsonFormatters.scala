@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models
+package uk.gov.hmrc.apicataloguepublish.apidefinition.models
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccessType.{PRIVATE, PUBLIC}
-import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models._
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiAccessType.{PRIVATE, PUBLIC}
+import uk.gov.hmrc.apicataloguepublish.common.domain.models._
 
 trait BasicApiDefinitionJsonFormatters extends CommonJsonFormatters {
   implicit val formatApiContext: Format[ApiContext]       = Json.valueFormat[ApiContext]

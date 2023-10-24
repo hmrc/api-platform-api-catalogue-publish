@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.openapi.headers
+package uk.gov.hmrc.apicataloguepublish.openapi.headers
 
 import java.util
 import scala.jdk.CollectionConverters._
@@ -24,7 +24,7 @@ import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.{OpenAPI, Operation, PathItem}
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.ExtensionKeys
+import uk.gov.hmrc.apicataloguepublish.openapi.ExtensionKeys
 
 trait OpenApiHeaders extends ExtensionKeys {
 

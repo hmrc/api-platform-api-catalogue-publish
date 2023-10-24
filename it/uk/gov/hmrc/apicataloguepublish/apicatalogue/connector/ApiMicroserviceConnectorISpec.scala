@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector
+package uk.gov.hmrc.apicataloguepublish.apicatalogue.connector
 
 import org.scalatest.BeforeAndAfterEach
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.ApiCatalogueAdminJsonFormatters
-import uk.gov.hmrc.apiplatformapicataloguepublish.support.{ApiMicroserviceStub, MetricsTestSupport, ServerBaseISpec}
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.ApiCatalogueAdminJsonFormatters
+import uk.gov.hmrc.apicataloguepublish.support.{ApiMicroserviceStub, MetricsTestSupport, ServerBaseISpec}
 import uk.gov.hmrc.http.HeaderCarrier
 
 class ApiMicroserviceConnectorISpec

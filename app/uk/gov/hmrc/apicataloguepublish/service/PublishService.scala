@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.service
+package uk.gov.hmrc.apicataloguepublish.service
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
@@ -26,15 +26,15 @@ import cats.implicits._
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueFailedResult
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PublishResponse
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess.apiAccessToDescription
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiStatus
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.OasResult
-import uk.gov.hmrc.apiplatformapicataloguepublish.parser.OasParser
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueFailedResult
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PublishResponse
+import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
+import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiAccess.apiAccessToDescription
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiStatus
+import uk.gov.hmrc.apicataloguepublish.openapi.OasResult
+import uk.gov.hmrc.apicataloguepublish.parser.OasParser
 
 @Singleton()
 class PublishService @Inject() (

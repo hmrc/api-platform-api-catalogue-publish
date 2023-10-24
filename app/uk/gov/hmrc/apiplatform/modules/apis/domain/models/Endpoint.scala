@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models
+package uk.gov.hmrc.apicataloguepublish.apidefinition.models
 
 case class Endpoint(endpointName: String, uriPattern: String, method: HttpMethod, authType: AuthType, queryParameters: List[QueryParameter] = List.empty)

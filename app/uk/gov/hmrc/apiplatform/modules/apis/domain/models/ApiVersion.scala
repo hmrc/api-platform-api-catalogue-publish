@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models
+package uk.gov.hmrc.apicataloguepublish.apidefinition.models
 
 case class ApiVersion(version: ApiVersionNbr, status: ApiStatus, access: ApiAccess, endpoints: List[Endpoint], endpointsEnabled: Boolean = false)
 

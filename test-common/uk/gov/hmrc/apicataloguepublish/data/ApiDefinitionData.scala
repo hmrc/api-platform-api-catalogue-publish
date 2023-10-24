@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.data
+package uk.gov.hmrc.apicataloguepublish.data
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionBuilder
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models._
+import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionBuilder
 
 trait ApiDefinitionData extends ApiDefinitionBuilder {
   val categories  = List(ApiCategory("category1"), ApiCategory("category2"))

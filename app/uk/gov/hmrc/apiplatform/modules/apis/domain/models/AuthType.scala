@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models
+package uk.gov.hmrc.apicataloguepublish.apidefinition.models
 
 import scala.collection.immutable
 

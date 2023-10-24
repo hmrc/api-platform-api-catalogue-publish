@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.support
+package uk.gov.hmrc.apicataloguepublish.support
 
 import java.net.URL
 

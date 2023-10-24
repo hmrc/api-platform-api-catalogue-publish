@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.parser
+package uk.gov.hmrc.apicataloguepublish.parser
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 import play.api.Logging
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult, OpenApiEnhancements, OpenApiProcessingError}
-import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiCataloguePublishResult, OpenApiEnhancementFailedResult}
+import uk.gov.hmrc.apicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult, OpenApiEnhancements, OpenApiProcessingError}
+import uk.gov.hmrc.apicataloguepublish.service.{ApiCataloguePublishResult, OpenApiEnhancementFailedResult}
 
 @Singleton
 class OasParser @Inject() (dateTimeWrapper: DateTimeWrapper)(implicit ec: ExecutionContext) extends OpenApiEnhancements with Logging {

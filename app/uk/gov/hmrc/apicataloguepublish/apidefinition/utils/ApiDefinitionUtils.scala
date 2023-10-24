@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
+package uk.gov.hmrc.apicataloguepublish.apidefinition.utils
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiStatus}
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiStatus}
 
 trait ApiDefinitionUtils {
 

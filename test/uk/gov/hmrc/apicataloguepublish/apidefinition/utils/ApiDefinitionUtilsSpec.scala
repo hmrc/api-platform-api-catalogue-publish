@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils
+package uk.gov.hmrc.apicataloguepublish.apidefinition.utils
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.ApiAccess
-import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiAccess
+import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 
 class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with ApiDefinitionUtils with Matchers {
 

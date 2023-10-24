@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.parser
+package uk.gov.hmrc.apicataloguepublish.parser
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

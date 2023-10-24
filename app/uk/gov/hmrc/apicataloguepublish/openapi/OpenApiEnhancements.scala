@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.openapi
+package uk.gov.hmrc.apicataloguepublish.openapi
 
 import java.util
 
@@ -25,7 +25,7 @@ import io.swagger.v3.parser.core.models.ParseOptions
 
 import play.api.Logging
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.openapi.headers.OpenApiHeaders
+import uk.gov.hmrc.apicataloguepublish.openapi.headers.OpenApiHeaders
 
 trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon with OpenApiExamples with OpenApiHeaders {
 

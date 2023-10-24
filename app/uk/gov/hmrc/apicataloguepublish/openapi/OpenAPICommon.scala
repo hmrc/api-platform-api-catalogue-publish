@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.openapi
+package uk.gov.hmrc.apicataloguepublish.openapi
 
 import java.util
 import scala.jdk.CollectionConverters._

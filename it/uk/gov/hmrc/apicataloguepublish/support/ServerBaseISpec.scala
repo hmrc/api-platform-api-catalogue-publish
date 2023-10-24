@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.support
+package uk.gov.hmrc.apicataloguepublish.support
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}

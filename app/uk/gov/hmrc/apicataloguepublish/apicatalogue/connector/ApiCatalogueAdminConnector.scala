@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector
+package uk.gov.hmrc.apicataloguepublish.apicatalogue.connector
 
 import java.util.Base64
 import javax.inject.{Inject, Singleton}
@@ -28,8 +28,8 @@ import play.api.libs.json.{JsError, JsResult, JsSuccess}
 import play.api.libs.ws.WSClient
 import play.api.mvc.MultipartFormData
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, PublishResponse}
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector._
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, PublishResponse}
 
 @Singleton
 class ApiCatalogueAdminConnector @Inject() (val ws: WSClient, val config: Config, val fileCreator: Files.TemporaryFileCreator)(implicit val ec: ExecutionContext)

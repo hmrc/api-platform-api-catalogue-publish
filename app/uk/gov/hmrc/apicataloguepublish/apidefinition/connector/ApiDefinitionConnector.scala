@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector
+package uk.gov.hmrc.apicataloguepublish.apidefinition.connector
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,9 +25,9 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.play.http.ws.WSGet
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters, ApiStatus}
-import uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.utils.ApiDefinitionUtils
+import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
+import uk.gov.hmrc.apicataloguepublish.apidefinition.models.{ApiAccess, ApiDefinition, ApiDefinitionJsonFormatters, ApiStatus}
+import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 @Singleton
 class ApiDefinitionConnector @Inject() (

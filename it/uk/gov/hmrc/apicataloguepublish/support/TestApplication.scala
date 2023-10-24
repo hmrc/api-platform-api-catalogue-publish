@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.support
+package uk.gov.hmrc.apicataloguepublish.support
 
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.controllers
+package uk.gov.hmrc.apicataloguepublish.controllers
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,10 +33,10 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
-import uk.gov.hmrc.apiplatformapicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
-import uk.gov.hmrc.apiplatformapicataloguepublish.data.ApiDefinitionData
-import uk.gov.hmrc.apiplatformapicataloguepublish.service.{ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
+import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
+import uk.gov.hmrc.apicataloguepublish.service.{ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
 
 class PublishControllerSpec extends AnyWordSpec with MockitoSugar with BeforeAndAfterEach with Matchers with ApiDefinitionData with ApiCatalogueAdminJsonFormatters {
 

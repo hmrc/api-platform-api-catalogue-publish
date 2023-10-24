@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models
+package uk.gov.hmrc.apicataloguepublish.common.domain.models
 
 case class FieldName(value: String) extends AnyVal
