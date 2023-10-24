@@ -30,12 +30,13 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
+import uk.gov.hmrc.http.HeaderCarrier
+
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.service.{ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
-import uk.gov.hmrc.http.HeaderCarrier
 
 class PublishControllerSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar with BeforeAndAfterEach with Matchers with ApiDefinitionData
     with ApiCatalogueAdminJsonFormatters {

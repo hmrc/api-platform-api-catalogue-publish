@@ -27,6 +27,10 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
+
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiStatus, ServiceName}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
@@ -37,9 +41,6 @@ import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apicataloguepublish.parser.OasParser
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiStatus, ServiceName}
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 class PublishServiceSpec
     extends AnyWordSpec

@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.apicataloguepublish.data
 
-import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionBuilder
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
 import uk.gov.hmrc.apiplatform.modules.common.domain.models._
+import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionBuilder
 
 trait ApiDefinitionData extends ApiDefinitionBuilder {
   val categories  = List(ApiCategory.AGENTS, ApiCategory.BUSINESS_RATES)

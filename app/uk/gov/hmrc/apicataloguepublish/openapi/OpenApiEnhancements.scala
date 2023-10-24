@@ -24,8 +24,9 @@ import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 
 import play.api.Logging
-import uk.gov.hmrc.apicataloguepublish.openapi.headers.OpenApiHeaders
+
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+import uk.gov.hmrc.apicataloguepublish.openapi.headers.OpenApiHeaders
 
 trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon with OpenApiExamples with OpenApiHeaders {
 

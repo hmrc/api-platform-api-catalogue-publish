@@ -21,12 +21,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 import play.api.Logging
-import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
-import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.play.http.ws.WSGet
+
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
+import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
+import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 @Singleton
 class ApiDefinitionConnector @Inject() (

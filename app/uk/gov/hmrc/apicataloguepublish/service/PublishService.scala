@@ -24,6 +24,9 @@ import cats.data.EitherT
 import cats.implicits._
 
 import play.api.Logging
+import uk.gov.hmrc.http.HeaderCarrier
+
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueFailedResult
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PublishResponse
@@ -31,8 +34,6 @@ import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConn
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
 import uk.gov.hmrc.apicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apicataloguepublish.parser.OasParser
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
-import uk.gov.hmrc.http.HeaderCarrier
 
 object PublishService {
 

@@ -20,8 +20,9 @@ import javax.inject.{Inject, Singleton}
 
 import com.google.inject.Provider
 
-import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 
 @Singleton
 class ApiDefinitionConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApiDefinitionConnector.Config] {
