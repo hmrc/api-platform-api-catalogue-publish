@@ -17,10 +17,10 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models
 
 import scala.collection.immutable
+
 import enumeratum._
 
 sealed trait ApiAccessType extends EnumEntry
-
 
 object ApiAccessType extends Enum[ApiAccessType] with PlayJsonEnum[ApiAccessType] {
 

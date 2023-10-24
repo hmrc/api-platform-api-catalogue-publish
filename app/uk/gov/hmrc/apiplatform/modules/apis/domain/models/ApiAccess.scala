@@ -25,7 +25,7 @@ object ApiAccess {
 
   def apiAccessToDescription(accessType: ApiAccess): String = {
     accessType match {
-      case ApiAccess.PUBLIC  => "This is a public API."
+      case ApiAccess.PUBLIC     => "This is a public API."
       case _: ApiAccess.Private => "This is a private API."
     }
   }

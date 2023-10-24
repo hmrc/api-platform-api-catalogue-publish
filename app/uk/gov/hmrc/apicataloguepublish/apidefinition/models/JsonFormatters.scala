@@ -24,10 +24,10 @@ import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models._
 
 trait BasicApiDefinitionJsonFormatters extends CommonJsonFormatters {
   implicit val formatApiContext: Format[ApiContext]       = Json.valueFormat[ApiContext]
-  implicit val formatApiVersion: Format[ApiVersionNbr]       = Json.valueFormat[ApiVersionNbr]
+  implicit val formatApiVersion: Format[ApiVersionNbr]    = Json.valueFormat[ApiVersionNbr]
   implicit val formatApiIdentifier: Format[ApiIdentifier] = Json.format[ApiIdentifier]
-  
-  implicit val formatApiCategory: Format[ApiCategory]     = Json.valueFormat[ApiCategory]
+
+  implicit val formatApiCategory: Format[ApiCategory] = Json.valueFormat[ApiCategory]
 
 }
 
@@ -48,7 +48,6 @@ trait EndpointJsonFormatters extends NonEmptyListFormatters {
 }
 
 trait ApiDefinitionJsonFormatters extends EndpointJsonFormatters with BasicApiDefinitionJsonFormatters with CommonJsonFormatters {
-  import uk.gov.hmrc.apiplatformapicataloguepublish.common.domain.models._
 
   implicit val apiAccessReads: Reads[ApiAccess] =
     (
@@ -57,13 +56,13 @@ trait ApiDefinitionJsonFormatters extends EndpointJsonFormatters with BasicApiDe
           ((JsPath \ "isTrial").read[Boolean] or Reads.pure(false))
       ).tupled
     ) map {
-      case (PUBLIC, _)     => ApiAccess.PUBLIC
+      case (PUBLIC, _)        => ApiAccess.PUBLIC
       case (PRIVATE, isTrial) => ApiAccess.Private(isTrial)
     }
 
   implicit object apiAccessWrites extends Writes[ApiAccess] {
 
-    private val privApiWrites: OWrites[(ApiAccessType,Boolean)] = (
+    private val privApiWrites: OWrites[(ApiAccessType, Boolean)] = (
       (JsPath \ "type").write[ApiAccessType] and
         (JsPath \ "isTrial").write[Boolean]
     ).tupled

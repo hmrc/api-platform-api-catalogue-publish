@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apiplatformapicataloguepublish.apidefinition.models
 
 import scala.collection.immutable
+
 import enumeratum._
 
 sealed trait HttpMethod extends EnumEntry

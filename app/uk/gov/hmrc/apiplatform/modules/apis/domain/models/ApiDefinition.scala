@@ -27,31 +27,3 @@ case class ApiDefinition(
     versions: List[ApiVersion],
     categories: List[ApiCategory] = List.empty
   )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

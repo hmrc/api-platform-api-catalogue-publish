@@ -57,7 +57,7 @@ lazy val scoverageSettings = {
 }
 
 commands ++= Seq(
-  Command.command("run-all-tests") { state => "test" :: "it:test" :: "acceptance:test" :: "sandbox:test" :: state },
+  Command.command("run-all-tests") { state => "test" :: "it:test" :: state },
 
   Command.command("clean-and-test") { state => "clean" :: "compile" :: "run-all-tests" :: state },
 
