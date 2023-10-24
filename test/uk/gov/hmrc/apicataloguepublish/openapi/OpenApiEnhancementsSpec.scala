@@ -23,6 +23,8 @@ import io.swagger.v3.parser.core.models.ParseOptions
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+
 class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnhancements {
 
   trait Setup {
@@ -56,7 +58,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
     def validateExpectedFileContents(inputFile: String, expectedFile: String) = {
       val contentsToParse = getFileContents(inputFile)
       val expectedYaml    = getFileContents(expectedFile)
-      addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => oasString shouldBe expectedYaml
       }
@@ -66,7 +68,10 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
 
   "addOasSpecAttributes " should {
     "handle empty string" in new Setup {
-      addOasSpecAttributes(OasResult("", "iamAnApi", "This is a public API."), validISODate) shouldBe Left(GeneralOpenApiProcessingError("iamAnApi", "Swagger Parse failure"))
+      addOasSpecAttributes(OasResult("", ServiceName("iamAnApi"), "This is a public API."), validISODate) shouldBe Left(GeneralOpenApiProcessingError(
+        ServiceName("iamAnApi"),
+        "Swagger Parse failure"
+      ))
 
     }
 
@@ -82,7 +87,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
       val contentsToParse   = getFileContents("noIntCatExtensions-with-long-description.yaml")
       val expectedYaml      = getFileContents("expectedWithIntCatExtensions-with-truncated-short-decription.yaml")
       val expectedShortDesc = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
-      addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc = getShortDescriptionFromOasString(oasString).getOrElse("")
@@ -97,7 +102,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
       val expectedYaml        = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
       val expectedShortDesc   = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
       val expectedDescription = getDescriptionFromOasString(expectedYaml).getOrElse("")
-      addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc   = getShortDescriptionFromOasString(oasString).getOrElse("")
@@ -115,7 +120,7 @@ class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnha
       val expectedYaml        = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
       val expectedShortDesc   = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
       val expectedDescription = getDescriptionFromOasString(expectedYaml).getOrElse("")
-      addOasSpecAttributes(OasResult(contentsToParse, "iamAnApi", "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is a private API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc   = getShortDescriptionFromOasString(oasString).getOrElse("")

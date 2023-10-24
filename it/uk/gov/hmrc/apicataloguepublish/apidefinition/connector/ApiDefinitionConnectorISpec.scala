@@ -21,7 +21,6 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionResult, GeneralFailedResult, NotFoundResult}
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiDefinitionJsonFormatters
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.{ApiDefinitionBuilder, ApiDefinitionUtils}
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.support.{ApiDefinitionStub, MetricsTestSupport, ServerBaseISpec}
@@ -32,7 +31,6 @@ class ApiDefinitionConnectorISpec
     extends ServerBaseISpec
     with ApiDefinitionStub
     with ApiDefinitionBuilder
-    with ApiDefinitionJsonFormatters
     with ApiDefinitionData
     with BeforeAndAfterEach
     with MetricsTestSupport

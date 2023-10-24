@@ -26,6 +26,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 import uk.gov.hmrc.apicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult, OpenApiProcessingError}
 import uk.gov.hmrc.apicataloguepublish.service.{ApiCataloguePublishResult, OpenApiEnhancementFailedResult}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
 class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with OasStringUtils with ScalaFutures with BeforeAndAfterEach {
 
@@ -42,7 +43,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
 
   "handleEnhancingOasForCatalogue" should {
     "return right with enhanced OAS when successful" in new Setup {
-      val convertedOasResult: OasResult = OasResult(oasStringWithDescription, "apiName", "PRIVATE")
+      val convertedOasResult: OasResult = OasResult(oasStringWithDescription, ServiceName("apiName"), "PRIVATE")
       val validISODate: String          = "2021-12-25T12:00:00Z"
       when(mockDateTimeWrapper.generateDateNowString()).thenReturn(validISODate)
 
@@ -55,7 +56,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
     }
 
     "return Left when oas is invalid" in new Setup {
-      val convertedOasResult: OasResult = OasResult("something invalid", "apiName", "PRIVATE")
+      val convertedOasResult: OasResult = OasResult("something invalid", ServiceName("apiName"), "PRIVATE")
 
       val result: Either[ApiCataloguePublishResult, String] = objInTest.handleEnhancingOasForCatalogue(convertedOasResult)
 
@@ -70,7 +71,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
   "enhanceOas" should {
     "return right with enhanced OAS when successful" in new Setup {
 
-      val convertedOasResult: OasResult = OasResult(oasStringWithDescription, "apiName", "PRIVATE")
+      val convertedOasResult: OasResult = OasResult(oasStringWithDescription, ServiceName("apiName"), "PRIVATE")
       val validISODate: String          = "2021-12-25T12:00:00Z"
       when(mockDateTimeWrapper.generateDateNowString()).thenReturn(validISODate)
 
@@ -83,7 +84,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
     }
 
     "return Left when oas is invalid" in new Setup {
-      val convertedOasResult: OasResult = OasResult("something invalid", "apiName", "PRIVATE")
+      val convertedOasResult: OasResult = OasResult("something invalid", ServiceName("apiName"), "PRIVATE")
 
       val result: Either[OpenApiProcessingError, String] = objInTest.enhanceOas(convertedOasResult)
 

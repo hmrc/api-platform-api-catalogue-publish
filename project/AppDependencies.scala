@@ -33,12 +33,13 @@ object AppDependencies {
     "com.fasterxml.jackson.dataformat"  % "jackson-dataformat-yaml"         % jacksonVersion,
     "com.fasterxml.jackson.datatype"    % "jackson-datatype-jsr310"         % jacksonVersion,
     "org.apache.httpcomponents"         % "httpclient"                      % "4.3.1",
-    "org.apache.httpcomponents"         % "httpmime"                        % "4.3.1"
+    "org.apache.httpcomponents"         % "httpmime"                        % "4.3.1",
+    "uk.gov.hmrc"                       %% "api-platform-api-domain"        % "0.7.0"
   )
 
   val test = Seq(
     "uk.gov.hmrc"                 %% "bootstrap-test-play-28"             % bootstrapVersion    % "test, it",
-    "org.mockito"                 %% "mockito-scala-scalatest"            % "1.7.1"             % "test, it",
+    "org.mockito"                 %% "mockito-scala-scalatest"            % "1.17.22"           % "test, it",
     "com.github.tomakehurst"      %  "wiremock-jre8-standalone"           % "2.27.1"            % "test, it"
   )
 }

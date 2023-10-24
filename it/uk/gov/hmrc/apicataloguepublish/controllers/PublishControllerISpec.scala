@@ -24,7 +24,6 @@ import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models._
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.support._
 
@@ -33,6 +32,7 @@ import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 import java.util.UUID
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiDefinition
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
 class PublishControllerISpec
     extends ServerBaseISpec
@@ -42,7 +42,6 @@ class PublishControllerISpec
     with ApiDefinitionStub
     with ApiProducerTeamStub
     with ApiDefinitionData
-    with ApiDefinitionJsonFormatters
     with ApiDefinitionUtils
     with ApiCatalogueStub
     with ApiCatalogueAdminJsonFormatters {
@@ -82,7 +81,7 @@ class PublishControllerISpec
 
   trait Setup {
 
-    def callPublishEndpoint(serviceName: String) = {
+    def callPublishEndpoint(serviceName: ServiceName) = {
       callPostEndpoint(s"$url/publish/$serviceName", body = "", List.empty)
     }
 
@@ -102,7 +101,7 @@ class PublishControllerISpec
 
     "POST /publish/[serviceName]" should {
       "respond with 200 when publish successful" in new Setup {
-        val serviceName                         = "my-service"
+        val serviceName                         = ServiceName("my-service")
         val apiDefinition1withwiremock          = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString               = Json.toJson(apiDefinition1withwiremock).toString
         val publishResponse: PublishResponse    = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef", API_PLATFORM)
@@ -117,7 +116,7 @@ class PublishControllerISpec
       }
 
       "respond with 404 when api definition not found" in new Setup {
-        val serviceName = "my-service"
+        val serviceName = ServiceName("my-service")
 
         primeGetByServiceName(NOT_FOUND, "{}}", serviceName)
 
@@ -126,7 +125,7 @@ class PublishControllerISpec
       }
 
       "respond with 500 when getYaml fails" in new Setup {
-        val serviceName                = "my-service"
+        val serviceName                = ServiceName("my-service")
         val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString      = Json.toJson(apiDefinition1withwiremock).toString
 
@@ -138,7 +137,7 @@ class PublishControllerISpec
       }
 
       "respond with 500 when publish fails" in new Setup {
-        val serviceName                         = "my-service"
+        val serviceName                         = ServiceName("my-service")
         val apiDefinition1withwiremock          = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString               = Json.toJson(apiDefinition1withwiremock).toString
         val publishResponse: PublishResponse    = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef", API_PLATFORM)

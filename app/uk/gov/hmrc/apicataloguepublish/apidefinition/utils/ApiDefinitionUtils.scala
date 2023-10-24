@@ -17,6 +17,7 @@
 package uk.gov.hmrc.apicataloguepublish.apidefinition.utils
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiVersionNbr
 
 trait ApiDefinitionUtils {
 
@@ -28,21 +29,23 @@ trait ApiDefinitionUtils {
     apiDefinition.serviceBaseUrl
   }
 
-  def getLatestVersion(apiDefinition: ApiDefinition): String = {
-    apiDefinition.versions
+  private val sortedVersionsHighestFirst: ApiDefinition => List[ApiVersion] = (defn) =>
+    defn.versionsAsList
       .sorted
-      .headOption.map(apiVersionDefinition => apiVersionDefinition.version.value).getOrElse("1.0")
+      .reverse
+
+  def getLatestVersion(apiDefinition: ApiDefinition): ApiVersionNbr = {
+    sortedVersionsHighestFirst(apiDefinition)
+      .headOption.map(apiVersionDefinition => apiVersionDefinition.versionNbr).getOrElse(ApiVersionNbr("1.0"))
   }
 
   def getAccessTypeOfLatestVersion(apiDefinition: ApiDefinition): ApiAccess = {
-    apiDefinition.versions
-      .sorted
+    sortedVersionsHighestFirst(apiDefinition)
       .headOption.map(apiVersionDefinition => apiVersionDefinition.access).getOrElse(ApiAccess.PUBLIC)
   }
 
   def getStatusOfLatestVersion(apiDefinition: ApiDefinition): ApiStatus = {
-    apiDefinition.versions
-      .sorted
+    sortedVersionsHighestFirst(apiDefinition)
       .headOption.map(apiVersionDefinition => apiVersionDefinition.status).getOrElse(ApiStatus.DEPRECATED)
   }
 }

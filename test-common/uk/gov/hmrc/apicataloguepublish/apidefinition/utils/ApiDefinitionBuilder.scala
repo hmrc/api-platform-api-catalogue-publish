@@ -27,7 +27,7 @@ trait ApiDefinitionBuilder {
       name: String,
       versions: ApiVersion*
     ) = {
-    ApiDefinition(serviceBaseUrl = "service base url", name, name, name, ApiContext(name), false, false, versions.toList)
+    ApiDefinition(ServiceName(name), serviceBaseUrl = "service base url", name, name, ApiContext(name), ApiVersions.fromList(versions.toList), false, false, None, List.empty)
   }
 
   def apiAccess() = {
@@ -41,9 +41,9 @@ trait ApiDefinitionBuilder {
     def requiresTrust(is: Boolean): ApiDefinition =
       inner.copy(requiresTrust = is)
 
-    def withClosedAccess: ApiDefinition = inner.copy(versions = inner.versions.map(_.withClosedAccess))
+    def withClosedAccess: ApiDefinition = inner.copy(versions = inner.versions.map { case (k, v) => k -> v.withClosedAccess })
 
-    def asPrivate: ApiDefinition = inner.copy(versions = inner.versions.map(_.asPrivate))
+    def asPrivate: ApiDefinition = inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asPrivate })
 
     def doesRequireTrust: ApiDefinition = requiresTrust(true)
 
@@ -53,28 +53,28 @@ trait ApiDefinitionBuilder {
 
     def withName(name: String): ApiDefinition = inner.copy(name = name)
 
-    def withVersions(versions: ApiVersion*): ApiDefinition = inner.copy(versions = versions.toList)
+    def withVersions(versions: ApiVersion*): ApiDefinition = inner.copy(versions = ApiVersions.fromList(versions.toList))
 
     def withCategories(categories: List[ApiCategory]): ApiDefinition = inner.copy(categories = categories)
 
     def asTrial: ApiDefinition = {
-      inner.copy(versions = inner.versions.map(_.asTrial))
+      inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asTrial })
     }
 
     def asAlpha: ApiDefinition =
-      inner.copy(versions = inner.versions.map(_.asAlpha))
+      inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asAlpha })
 
     def asBeta: ApiDefinition =
-      inner.copy(versions = inner.versions.map(_.asBeta))
+      inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asBeta })
 
     def asStable: ApiDefinition =
-      inner.copy(versions = inner.versions.map(_.asStable))
+      inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asStable })
 
     def asDeprecated: ApiDefinition =
-      inner.copy(versions = inner.versions.map(_.asDeprecated))
+      inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asDeprecated })
 
     def asRetired: ApiDefinition =
-      inner.copy(versions = inner.versions.map(_.asRetired))
+      inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asRetired })
 
   }
 
@@ -90,7 +90,7 @@ trait ApiDefinitionBuilder {
   }
 
   def endpoint(endpointName: String = "Hello World", url: String = "/world"): Endpoint = {
-    Endpoint(endpointName, url, HttpMethod.GET, AuthType.NONE, List.empty)
+    Endpoint(url, endpointName, HttpMethod.GET, AuthType.NONE, ResourceThrottlingTier.UNLIMITED, None, List.empty[QueryParameter])
   }
 
   implicit class EndpointModifier(val inner: Endpoint) {

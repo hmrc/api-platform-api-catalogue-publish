@@ -21,36 +21,30 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
 
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.mockito.MockitoSugar
+import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
-
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{IntegrationId, PublishResponse}
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{
-  ApiDefinitionFailedResult,
-  ApiDefinitionResult,
-  GeneralFailedResult,
-  NotFoundResult
-}
+import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionFailedResult, ApiDefinitionResult, GeneralFailedResult, NotFoundResult}
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apicataloguepublish.parser.OasParser
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiStatus
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiStatus, ServiceName}
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 class PublishServiceSpec
     extends AnyWordSpec
     with MockitoSugar
+    with ArgumentMatchersSugar
     with Matchers
     with HeaderCarrierConverter
     with ApiDefinitionData
@@ -101,19 +95,19 @@ class PublishServiceSpec
     }
 
     def primeOasEnhanceSuccess() = {
-      when(mockOasParser.handleEnhancingOasForCatalogue(any[OasResult])).thenReturn(Right(expectedEnhancedOasString))
+      when(mockOasParser.handleEnhancingOasForCatalogue(*[OasResult])).thenReturn(Right(expectedEnhancedOasString))
     }
 
     def primeOasEnhanceFailure(result: OpenApiEnhancementFailedResult) = {
-      when(mockOasParser.handleEnhancingOasForCatalogue(any[OasResult])).thenReturn(Left(result))
+      when(mockOasParser.handleEnhancingOasForCatalogue(*[OasResult])).thenReturn(Left(result))
     }
 
     def primeApiMicroserviceConnectorSuccess() = {
-      when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Right(yamlResponseString)))
+      when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(*[String])).thenReturn(Future.successful(Right(yamlResponseString)))
     }
 
     def primeApiMicroserviceConnectorFailure() = {
-      when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
+      when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(*[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
     }
 
     def primeSuccessApartFromPublish(isYaml: Boolean) = {
@@ -128,13 +122,13 @@ class PublishServiceSpec
     def primePublishFail(isYaml: Boolean) = {
       primeSuccessApartFromPublish(isYaml)
 
-      when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Left(ApiCatalogueGeneralFailureResult("some error"))))
+      when(mockCatalogueConnector.publishApi(*[String])).thenReturn(Future.successful(Left(ApiCatalogueGeneralFailureResult("some error"))))
     }
 
     def primePublishSuccess(isYaml: Boolean) = {
       primeSuccessApartFromPublish(isYaml)
 
-      when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Right(publishResponse)))
+      when(mockCatalogueConnector.publishApi(*[String])).thenReturn(Future.successful(Right(publishResponse)))
     }
 
   }
@@ -246,23 +240,23 @@ class PublishServiceSpec
         val results = await(objInTest.publishAll())
         results match {
           case List(Right(publishResponse))           => fail()
-          case List(Left(error: PublishFailedResult)) => error shouldBe PublishFailedResult("All Services", "something went wrong calling api definition")
+          case List(Left(error: PublishFailedResult)) => error shouldBe PublishFailedResult(ServiceName("All Services"), "something went wrong calling api definition")
         }
 
-        verify(mockConnector).getAllServices()(any[HeaderCarrier])
+        verify(mockConnector).getAllServices()(*[HeaderCarrier])
       }
 
       "return left when getRamlAndConvert fails" in new Setup {
         when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
-        when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(any[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
+        when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(*[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
 
         val results = await(objInTest.publishAll())
         results shouldBe List(
           Left(ramlError),
-          Left(ramlError.copy(serviceName = "my-service-2"))
+          Left(ramlError.copy(serviceName = ServiceName("my-service-2")))
         )
 
-        verify(mockConnector).getAllServices()(any[HeaderCarrier])
+        verify(mockConnector).getAllServices()(*[HeaderCarrier])
 
       }
 
@@ -271,17 +265,17 @@ class PublishServiceSpec
         when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
         primeApiMicroserviceConnectorSuccess()
 
-        when(mockOasParser.handleEnhancingOasForCatalogue(any[OasResult])).thenReturn(Left(OpenApiEnhancementFailedResult(serviceName, "some error")))
+        when(mockOasParser.handleEnhancingOasForCatalogue(*[OasResult])).thenReturn(Left(OpenApiEnhancementFailedResult(serviceName, "some error")))
 
         val results = await(objInTest.publishAll())
         results shouldBe List(
-          Left(OpenApiEnhancementFailedResult("my-service", "some error")),
-          Left(OpenApiEnhancementFailedResult("my-service", "some error"))
+          Left(OpenApiEnhancementFailedResult(ServiceName("my-service"), "some error")),
+          Left(OpenApiEnhancementFailedResult(ServiceName("my-service"), "some error"))
         )
 
-        verify(mockConnector).getAllServices()(any[HeaderCarrier])
+        verify(mockConnector).getAllServices()(*[HeaderCarrier])
 
-        verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(any[OasResult])
+        verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(*[OasResult])
       }
 
       "return left when publish to catalogue fails" in new Setup {
@@ -289,19 +283,19 @@ class PublishServiceSpec
         when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
         primeApiMicroserviceConnectorSuccess()
 
-        when(mockOasParser.handleEnhancingOasForCatalogue(any[OasResult])).thenReturn(Right("some valid oas yaml"))
-        when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Left(ApiCatalogueGeneralFailureResult("some error"))))
+        when(mockOasParser.handleEnhancingOasForCatalogue(*[OasResult])).thenReturn(Right("some valid oas yaml"))
+        when(mockCatalogueConnector.publishApi(*[String])).thenReturn(Future.successful(Left(ApiCatalogueGeneralFailureResult("some error"))))
 
         val results = await(objInTest.publishAll())
         results shouldBe List(
-          Left(ApiCataloguePublishFailedResult("my-service", "publish to catalogue failed some error")),
-          Left(ApiCataloguePublishFailedResult("my-service-2", "publish to catalogue failed some error"))
+          Left(ApiCataloguePublishFailedResult(ServiceName("my-service"), "publish to catalogue failed some error")),
+          Left(ApiCataloguePublishFailedResult(ServiceName("my-service-2"), "publish to catalogue failed some error"))
         )
 
-        verify(mockConnector).getAllServices()(any[HeaderCarrier])
+        verify(mockConnector).getAllServices()(*[HeaderCarrier])
 
-        verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(any[OasResult])
-        verify(mockCatalogueConnector, times(2)).publishApi(any[String])
+        verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(*[OasResult])
+        verify(mockCatalogueConnector, times(2)).publishApi(*[String])
 
       }
 
@@ -309,16 +303,16 @@ class PublishServiceSpec
 
         when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
         primeApiMicroserviceConnectorSuccess()
-        when(mockOasParser.handleEnhancingOasForCatalogue(any[OasResult])).thenReturn(Right("some valid oas yaml"))
-        when(mockCatalogueConnector.publishApi(any[String])).thenReturn(Future.successful(Right(publishResponse)))
+        when(mockOasParser.handleEnhancingOasForCatalogue(*[OasResult])).thenReturn(Right("some valid oas yaml"))
+        when(mockCatalogueConnector.publishApi(*[String])).thenReturn(Future.successful(Right(publishResponse)))
 
         val results = await(objInTest.publishAll())
         results shouldBe List(Right(publishResponse), Right(publishResponse))
 
-        verify(mockConnector).getAllServices()(any[HeaderCarrier])
+        verify(mockConnector).getAllServices()(*[HeaderCarrier])
 
-        verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(any[OasResult])
-        verify(mockCatalogueConnector, times(2)).publishApi(any[String])
+        verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(*[OasResult])
+        verify(mockCatalogueConnector, times(2)).publishApi(*[String])
       }
 
     }

@@ -22,16 +22,16 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, PublishResponse}
 import uk.gov.hmrc.apicataloguepublish.service.{ApiCataloguePublishResult, ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 @Singleton()
 class PublishController @Inject() (publishService: PublishService, cc: ControllerComponents)(implicit val ec: ExecutionContext) extends BackendController(cc)
     with ApiCatalogueAdminJsonFormatters with Logging {
 
-  def publish(serviceName: String): Action[AnyContent] = Action.async { implicit request =>
+  def publish(serviceName: ServiceName): Action[AnyContent] = Action.async { implicit request =>
     publishService.publishByServiceName(serviceName).map {
       case Right(oasString: PublishResponse)    => Ok(Json.toJson(oasString))
       case Left(e: ApiDefinitionNotFoundResult) => NotFound(s"api definition not found: ${e.message}")

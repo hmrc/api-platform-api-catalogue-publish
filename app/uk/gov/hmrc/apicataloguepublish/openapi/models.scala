@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.apicataloguepublish.openapi
 
-case class OasResult(oasAsString: String, apiName: String, accessTypeDescription: String)
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+
+case class OasResult(oasAsString: String, apiName: ServiceName, accessTypeDescription: String)
 
 sealed trait OpenApiProcessingError
 
-case class GeneralOpenApiProcessingError(apiName: String, message: String) extends OpenApiProcessingError
+case class GeneralOpenApiProcessingError(apiName: ServiceName, message: String) extends OpenApiProcessingError

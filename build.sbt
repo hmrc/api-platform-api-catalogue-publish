@@ -41,6 +41,11 @@ lazy val microservice = Project(appName, file("."))
       "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s"
     )
   )
+  .settings(
+      routesImport ++= Seq(
+        "uk.gov.hmrc.apicataloguepublish.controllers.binders._"
+      )
+  )
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
 
 lazy val scoverageSettings = {
@@ -55,6 +60,7 @@ lazy val scoverageSettings = {
     Test / parallelExecution                 := false
   )
 }
+
 
 commands ++= Seq(
   Command.command("run-all-tests") { state => "test" :: "it:test" :: state },

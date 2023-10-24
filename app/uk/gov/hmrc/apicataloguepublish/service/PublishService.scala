@@ -24,8 +24,6 @@ import cats.data.EitherT
 import cats.implicits._
 
 import play.api.Logging
-import uk.gov.hmrc.http.HeaderCarrier
-
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueFailedResult
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PublishResponse
@@ -34,6 +32,17 @@ import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConn
 import uk.gov.hmrc.apicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apicataloguepublish.parser.OasParser
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
+import uk.gov.hmrc.http.HeaderCarrier
+
+object PublishService {
+
+  def apiAccessToDescription(accessType: ApiAccess): String = {
+    accessType match {
+      case ApiAccess.PUBLIC     => "This is a public API."
+      case _: ApiAccess.Private => "This is a private API."
+    }
+  }
+}
 
 @Singleton()
 class PublishService @Inject() (
@@ -46,7 +55,7 @@ class PublishService @Inject() (
 
   val BATCH_AMOUNT = 5
 
-  def publishByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
+  def publishByServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
     (for {
       apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult(_, serviceName)))
       result              <- publishDefinitionResult(apiDefinitionResult)
@@ -80,7 +89,7 @@ class PublishService @Inject() (
         case Right(oas: String) => successful(Right(OasResult(
             oas,
             apiDefinitionResult.serviceName,
-            ApiAccess.apiAccessToDescription(apiDefinitionResult.access)
+            PublishService.apiAccessToDescription(apiDefinitionResult.access)
           )))
         case Left(_)            => successful(Left(PublishFailedResult(apiDefinitionResult.serviceName, "RAML is no longer supported for publishing to the API Catalogue")))
       }
@@ -99,7 +108,7 @@ class PublishService @Inject() (
         case Right(definitionList: List[ApiDefinitionResult]) =>
           batchFutures(definitionList, List.empty)
         case Left(_: GeneralFailedResult)                     =>
-          successful(List(Left(PublishFailedResult("All Services", "something went wrong calling api definition"))))
+          successful(List(Left(PublishFailedResult(ServiceName("All Services"), "something went wrong calling api definition"))))
       }
 
   }
@@ -122,7 +131,7 @@ class PublishService @Inject() (
     }
   }
 
-  def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse], serviceName: String): Either[ApiCataloguePublishResult, PublishResponse] = {
+  def mapCataloguePublishResult(result: Either[ApiCatalogueFailedResult, PublishResponse], serviceName: ServiceName): Either[ApiCataloguePublishResult, PublishResponse] = {
     logger.info(s"mapCataloguePublishResult called for $serviceName")
     result match {
       case Right(response: PublishResponse)  => Right(response)
@@ -132,7 +141,7 @@ class PublishService @Inject() (
     }
   }
 
-  def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult], serviceName: String): Either[ApiCataloguePublishResult, ApiDefinitionResult] =
+  def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult], serviceName: ServiceName): Either[ApiCataloguePublishResult, ApiDefinitionResult] =
     result match {
       case Right(x: ApiDefinitionResult)                  => Right(x)
       case Left(e: ApiDefinitionConnector.NotFoundResult) =>
@@ -147,8 +156,8 @@ class PublishService @Inject() (
 
 sealed trait ApiCataloguePublishResult
 
-case class ApiDefinitionInvalidStatusResult(serviceName: String, message: String) extends ApiCataloguePublishResult
-case class ApiDefinitionNotFoundResult(serviceName: String, message: String)      extends ApiCataloguePublishResult
-case class PublishFailedResult(serviceName: String, message: String)              extends ApiCataloguePublishResult
-case class OpenApiEnhancementFailedResult(serviceName: String, message: String)   extends ApiCataloguePublishResult
-case class ApiCataloguePublishFailedResult(serviceName: String, message: String)  extends ApiCataloguePublishResult
+case class ApiDefinitionInvalidStatusResult(serviceName: ServiceName, message: String) extends ApiCataloguePublishResult
+case class ApiDefinitionNotFoundResult(serviceName: ServiceName, message: String)      extends ApiCataloguePublishResult
+case class PublishFailedResult(serviceName: ServiceName, message: String)              extends ApiCataloguePublishResult
+case class OpenApiEnhancementFailedResult(serviceName: ServiceName, message: String)   extends ApiCataloguePublishResult
+case class ApiCataloguePublishFailedResult(serviceName: ServiceName, message: String)  extends ApiCataloguePublishResult

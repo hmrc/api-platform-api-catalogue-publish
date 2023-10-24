@@ -20,7 +20,6 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 import play.api.Logging
-
 import uk.gov.hmrc.apicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult, OpenApiEnhancements, OpenApiProcessingError}
 import uk.gov.hmrc.apicataloguepublish.service.{ApiCataloguePublishResult, OpenApiEnhancementFailedResult}
 
@@ -40,5 +39,4 @@ class OasParser @Inject() (dateTimeWrapper: DateTimeWrapper)(implicit ec: Execut
   protected[parser] def enhanceOas(convertedWebApiToOasResult: OasResult): Either[OpenApiProcessingError, String] = {
     addOasSpecAttributes(convertedWebApiToOasResult, dateTimeWrapper.generateDateNowString())
   }
-
 }

@@ -21,14 +21,12 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 import play.api.Logging
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-import uk.gov.hmrc.play.http.ws.WSGet
-
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
-import uk.gov.hmrc.apicataloguepublish.apidefinition.models.ApiDefinitionJsonFormatters
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.play.http.ws.WSGet
 
 @Singleton
 class ApiDefinitionConnector @Inject() (
@@ -36,15 +34,14 @@ class ApiDefinitionConnector @Inject() (
     val config: Config
   )(implicit val ec: ExecutionContext
   ) extends Logging
-    with ApiDefinitionJsonFormatters
     with ApiDefinitionUtils {
 
-  private def definitionUrl(serviceName: String) =
+  private def definitionUrl(serviceName: ServiceName) =
     s"${config.baseUrl}/api-definition/$serviceName"
 
   private val fetchAllUrl = s"${config.baseUrl}/api-definition"
 
-  def getDefinitionByServiceName(serviceName: String)(implicit hc: HeaderCarrier): Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]] = {
+  def getDefinitionByServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]] = {
     logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition")
     http.GET[Option[ApiDefinition]](definitionUrl(serviceName)).map {
       case Some(x) => Right(definitionToResult(x))
@@ -75,7 +72,7 @@ class ApiDefinitionConnector @Inject() (
 
 object ApiDefinitionConnector {
   case class Config(baseUrl: String)
-  case class ApiDefinitionResult(url: String, access: ApiAccess, serviceName: String, status: ApiStatus)
+  case class ApiDefinitionResult(url: String, access: ApiAccess, serviceName: ServiceName, status: ApiStatus)
 
   sealed trait ApiDefinitionFailedResult {
     val message: String

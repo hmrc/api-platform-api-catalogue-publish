@@ -24,8 +24,8 @@ import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 
 import play.api.Logging
-
 import uk.gov.hmrc.apicataloguepublish.openapi.headers.OpenApiHeaders
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
 trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon with OpenApiExamples with OpenApiHeaders {
 
@@ -52,7 +52,7 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon 
     }
   }
 
-  def addCommonHeaders(apiName: String, openApi: OpenAPI): OpenAPI = {
+  def addCommonHeaders(apiName: ServiceName, openApi: OpenAPI): OpenAPI = {
     addOperationLevelHeaders(openApi)
     openApi
   }
@@ -111,14 +111,14 @@ trait OpenApiEnhancements extends ExtensionKeys with Logging with OpenAPICommon 
 
   }
 
-  private def addExtensions(openApi: OpenAPI, apiName: String, reviewedDate: String): Option[OpenAPI] = {
+  private def addExtensions(openApi: OpenAPI, apiName: ServiceName, reviewedDate: String): Option[OpenAPI] = {
     val subLevelExtensions = new util.HashMap[String, AnyRef]()
 
     Option(openApi.getInfo)
       .map(info => {
 
         subLevelExtensions.put(PLATFORM_EXTENSION_KEY, "API_PLATFORM")
-        subLevelExtensions.put(PUBLISHER_REF_EXTENSION_KEY, apiName)
+        subLevelExtensions.put(PUBLISHER_REF_EXTENSION_KEY, apiName.value)
         subLevelExtensions.put(REVIEWED_DATE_EXTENSION_KEY, reviewedDate)
 
         Option(info.getDescription).map(description => {

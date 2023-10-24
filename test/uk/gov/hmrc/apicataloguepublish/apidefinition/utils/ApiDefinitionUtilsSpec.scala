@@ -21,6 +21,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccess
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiVersionNbr
 
 class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with ApiDefinitionUtils with Matchers {
 
@@ -32,11 +33,11 @@ class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with Api
 
   "getLatestVersion" should {
     "return latest version" in {
-      getLatestVersion(apiDefinition1) shouldBe "2.0"
+      getLatestVersion(apiDefinition1) shouldBe ApiVersionNbr("2.0")
     }
 
     "return 1.0 when definition has no versions" in {
-      getLatestVersion(apiDefinition1.copy(versions = List.empty)) shouldBe "1.0"
+      getLatestVersion(apiDefinition1.copy(versions = Map.empty)) shouldBe ApiVersionNbr("1.0")
     }
   }
 
@@ -46,7 +47,7 @@ class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with Api
     }
 
     "return public when definition has no versions" in {
-      getAccessTypeOfLatestVersion(apiDefinition1.copy(versions = List.empty)) shouldBe ApiAccess.PUBLIC
+      getAccessTypeOfLatestVersion(apiDefinition1.copy(versions = Map.empty)) shouldBe ApiAccess.PUBLIC
     }
   }
 }

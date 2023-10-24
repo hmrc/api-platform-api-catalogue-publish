@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apiplatform.modules.apis.domain.models
+package uk.gov.hmrc.apicataloguepublish.controllers
 
-import scala.collection.immutable
+import play.api.mvc.PathBindable
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
-import enumeratum._
+package object binders {
 
-sealed trait HttpMethod extends EnumEntry
+  implicit def serviceNamePathBinder(implicit textBinder: PathBindable[String]): PathBindable[ServiceName] = new PathBindable[ServiceName] {
 
-object HttpMethod extends Enum[HttpMethod] with PlayJsonEnum[HttpMethod] {
+    override def bind(key: String, value: String): Either[String, ServiceName] = {
+      textBinder.bind(key, value).map(ServiceName(_))
+    }
 
-  val values: immutable.IndexedSeq[HttpMethod] = findValues
-
-  case object GET     extends HttpMethod
-  case object POST    extends HttpMethod
-  case object PUT     extends HttpMethod
-  case object PATCH   extends HttpMethod
-  case object DELETE  extends HttpMethod
-  case object OPTIONS extends HttpMethod
+    override def unbind(key: String, serviceName: ServiceName): String = {
+      serviceName.value
+    }
+  }
 }
