@@ -25,7 +25,6 @@ object AppDependencies {
       ExclusionRule("com.fasterxml.jackson.dataformat", "jackson-dataformat-yaml"),
       ExclusionRule("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310")
     ),
-//    "org.scala-lang.modules"            % "scala-xml_2.13"                  % "1.3.0",
     "com.fasterxml.jackson.module"      %% "jackson-module-scala"           % jacksonVersion,
     "com.fasterxml.jackson.core"        % "jackson-annotations"             % jacksonVersion,
     "com.fasterxml.jackson.core"        % "jackson-databind"                % jacksonVersion,
