@@ -21,6 +21,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
 
+import org.mockito.stubbing.ScalaOngoingStubbing
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -33,7 +34,6 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiStatus, ServiceName}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
-import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{IntegrationId, PublishResponse}
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionFailedResult, ApiDefinitionResult, GeneralFailedResult, NotFoundResult}
@@ -73,45 +73,45 @@ class PublishServiceSpec
     val expectedDescription                       = "A description."
     val convertedWebApiToOasResult: OasResult     = OasResult(expectedEnhancedOasString, serviceName, expectedDescription)
     val yamlOasResult: OasResult                  = OasResult(yamlResponseString, serviceName, expectedDescription)
-    val publishResponse: PublishResponse          = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
+    val publishResponse: PublishResponse          = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef")
     val ramlError: PublishFailedResult            = PublishFailedResult(serviceName, "RAML is no longer supported for publishing to the API Catalogue")
 
     val objInTest = new PublishService(mockConnector, mockOasParser, mockCatalogueConnector, mockApiMicroserviceConnector)
 
-    def primeApiDefinitionSuccess() = {
+    def primeApiDefinitionSuccess(): ScalaOngoingStubbing[Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]]] = {
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
         .thenReturn(Future.successful(Right(apiDefinitionResult)))
     }
 
-    def primeApiDefinitionSuccessWithRetiredApi() = {
+    def primeApiDefinitionSuccessWithRetiredApi(): ScalaOngoingStubbing[Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]]] = {
       val apiDefinitionResultRetired = ApiDefinitionResult(getUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.RETIRED)
 
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
         .thenReturn(Future.successful(Right(apiDefinitionResultRetired)))
     }
 
-    def primeApiDefinitionFailure(result: ApiDefinitionFailedResult) = {
+    def primeApiDefinitionFailure(result: ApiDefinitionFailedResult): ScalaOngoingStubbing[Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]]] = {
       when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
         .thenReturn(Future.successful(Left(result)))
     }
 
-    def primeOasEnhanceSuccess() = {
+    def primeOasEnhanceSuccess(): ScalaOngoingStubbing[Either[ApiCataloguePublishResult, String]] = {
       when(mockOasParser.handleEnhancingOasForCatalogue(*[OasResult])).thenReturn(Right(expectedEnhancedOasString))
     }
 
-    def primeOasEnhanceFailure(result: OpenApiEnhancementFailedResult) = {
+    def primeOasEnhanceFailure(result: OpenApiEnhancementFailedResult): ScalaOngoingStubbing[Either[ApiCataloguePublishResult, String]] = {
       when(mockOasParser.handleEnhancingOasForCatalogue(*[OasResult])).thenReturn(Left(result))
     }
 
-    def primeApiMicroserviceConnectorSuccess() = {
+    def primeApiMicroserviceConnectorSuccess(): ScalaOngoingStubbing[Future[Either[Throwable, String]]] = {
       when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(*[String])).thenReturn(Future.successful(Right(yamlResponseString)))
     }
 
-    def primeApiMicroserviceConnectorFailure() = {
+    def primeApiMicroserviceConnectorFailure(): ScalaOngoingStubbing[Future[Either[Throwable, String]]] = {
       when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(*[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
     }
 
-    def primeSuccessApartFromPublish(isYaml: Boolean) = {
+    def primeSuccessApartFromPublish(isYaml: Boolean): ScalaOngoingStubbing[Either[ApiCataloguePublishResult, String]] = {
       primeApiDefinitionSuccess()
       if (isYaml) primeApiMicroserviceConnectorSuccess()
       else {
@@ -120,13 +120,13 @@ class PublishServiceSpec
       primeOasEnhanceSuccess()
     }
 
-    def primePublishFail(isYaml: Boolean) = {
+    def primePublishFail(isYaml: Boolean): ScalaOngoingStubbing[Future[Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse]]] = {
       primeSuccessApartFromPublish(isYaml)
 
       when(mockCatalogueConnector.publishApi(*[String])).thenReturn(Future.successful(Left(ApiCatalogueGeneralFailureResult("some error"))))
     }
 
-    def primePublishSuccess(isYaml: Boolean) = {
+    def primePublishSuccess(isYaml: Boolean): ScalaOngoingStubbing[Future[Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse]]] = {
       primeSuccessApartFromPublish(isYaml)
 
       when(mockCatalogueConnector.publishApi(*[String])).thenReturn(Future.successful(Right(publishResponse)))

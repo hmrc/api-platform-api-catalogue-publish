@@ -16,14 +16,12 @@
 
 package uk.gov.hmrc.apicataloguepublish.apidefinition.utils
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccess
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiVersionNbr
+import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 
-class ApiDefinitionUtilsSpec extends AnyWordSpec with ApiDefinitionData with ApiDefinitionUtils with Matchers {
+class ApiDefinitionUtilsSpec extends HmrcSpec with ApiDefinitionData with ApiDefinitionUtils {
 
   "getRamlUri" should {
     "return correct uri" in {

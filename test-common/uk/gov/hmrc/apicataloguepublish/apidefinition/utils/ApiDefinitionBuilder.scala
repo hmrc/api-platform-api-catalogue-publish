@@ -26,11 +26,11 @@ trait ApiDefinitionBuilder {
   def apiDefinition(
       name: String,
       versions: ApiVersion*
-    ) = {
-    ApiDefinition(ServiceName(name), serviceBaseUrl = "service base url", name, name, ApiContext(name), ApiVersions.fromList(versions.toList), false, false, None, List.empty)
+    ): ApiDefinition = {
+    ApiDefinition(ServiceName(name), serviceBaseUrl = "service base url", name, name, ApiContext(name), ApiVersions.fromList(versions.toList), false, None, List.empty)
   }
 
-  def apiAccess() = {
+  def apiAccess(): ApiAccess = {
     ApiAccess.PUBLIC
   }
 
@@ -38,18 +38,9 @@ trait ApiDefinitionBuilder {
 
     def isTestSupport(): ApiDefinition = inner.copy(isTestSupport = true)
 
-    def requiresTrust(is: Boolean): ApiDefinition =
-      inner.copy(requiresTrust = is)
-
     def withClosedAccess: ApiDefinition = inner.copy(versions = inner.versions.map { case (k, v) => k -> v.withClosedAccess })
 
     def asPrivate: ApiDefinition = inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asPrivate })
-
-    def doesRequireTrust: ApiDefinition = requiresTrust(true)
-
-    def doesNotRequireTrust: ApiDefinition = requiresTrust(false)
-
-    def trustNotSpecified: ApiDefinition = requiresTrust(false)
 
     def withName(name: String): ApiDefinition = inner.copy(name = name)
 

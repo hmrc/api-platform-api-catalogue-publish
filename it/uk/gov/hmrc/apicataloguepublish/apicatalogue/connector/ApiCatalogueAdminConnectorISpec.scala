@@ -21,7 +21,6 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
-import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
 import uk.gov.hmrc.apicataloguepublish.support.{ApiCatalogueStub, MetricsTestSupport, ServerBaseISpec}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -61,7 +60,7 @@ class ApiCatalogueAdminConnectorISpec
 
   "ApiCatalogueAdminConnector" should {
     "returns a Right with PublishResponse when successful" in new Setup {
-      val response: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef", API_PLATFORM)
+      val response: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef")
       val jsonBody: String          = Json.toJson(response).toString
 
       primeApiPublish(

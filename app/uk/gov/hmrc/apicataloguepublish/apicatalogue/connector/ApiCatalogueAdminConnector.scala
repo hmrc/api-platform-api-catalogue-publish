@@ -23,7 +23,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import akka.stream.scaladsl.Source
 
 import play.api.Logging
-import play.api.libs.Files
 import play.api.libs.json.{JsError, JsResult, JsSuccess}
 import play.api.libs.ws.WSClient
 import play.api.mvc.MultipartFormData
@@ -32,7 +31,7 @@ import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminC
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, PublishResponse}
 
 @Singleton
-class ApiCatalogueAdminConnector @Inject() (val ws: WSClient, val config: Config, val fileCreator: Files.TemporaryFileCreator)(implicit val ec: ExecutionContext)
+class ApiCatalogueAdminConnector @Inject() (val ws: WSClient, val config: Config)(implicit val ec: ExecutionContext)
     extends Logging with ApiCatalogueAdminJsonFormatters {
 
   def publishApi(body: String): Future[Either[ApiCatalogueFailedResult, PublishResponse]] = {
