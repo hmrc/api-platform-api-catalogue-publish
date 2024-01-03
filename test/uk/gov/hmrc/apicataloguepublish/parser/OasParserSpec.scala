@@ -18,17 +18,14 @@ package uk.gov.hmrc.apicataloguepublish.parser
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import org.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 import uk.gov.hmrc.apicataloguepublish.openapi.{GeneralOpenApiProcessingError, OasResult, OpenApiProcessingError}
 import uk.gov.hmrc.apicataloguepublish.service.{ApiCataloguePublishResult, OpenApiEnhancementFailedResult}
 
-class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with OasStringUtils with ScalaFutures with BeforeAndAfterEach {
+class OasParserSpec extends HmrcSpec with OasStringUtils with BeforeAndAfterEach {
 
   val mockDateTimeWrapper = mock[DateTimeWrapper]
 
@@ -51,7 +48,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
 
       result match {
         case Right(convertedOas: String) => convertedOas shouldBe oasStringWithEnhancements
-        case Left(e)                     => fail()
+        case Left(_)                     => fail()
       }
     }
 
@@ -61,7 +58,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
       val result: Either[ApiCataloguePublishResult, String] = objInTest.handleEnhancingOasForCatalogue(convertedOasResult)
 
       result match {
-        case Right(convertedOas: String)             => fail()
+        case Right(_)                                => fail()
         case Left(e: OpenApiEnhancementFailedResult) => e.message shouldBe "handleEnhancingOasForCatalogue failed: Swagger Parse failure"
       }
     }
@@ -79,7 +76,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
 
       result match {
         case Right(convertedOas: String) => convertedOas shouldBe oasStringWithEnhancements
-        case Left(e)                     => fail()
+        case Left(_)                     => fail()
       }
     }
 
@@ -89,7 +86,7 @@ class OasParserSpec extends AnyWordSpec with MockitoSugar with Matchers with Oas
       val result: Either[OpenApiProcessingError, String] = objInTest.enhanceOas(convertedOasResult)
 
       result match {
-        case Right(convertedOas: String)            => fail()
+        case Right(_)                               => fail()
         case Left(e: GeneralOpenApiProcessingError) => e.message shouldBe "Swagger Parse failure"
       }
     }

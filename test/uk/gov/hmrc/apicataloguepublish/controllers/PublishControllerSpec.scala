@@ -20,10 +20,8 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
 import play.api.http.Status
 import play.api.libs.json.Json
@@ -33,12 +31,12 @@ import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
-import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PlatformType.API_PLATFORM
+import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.service.{ApiDefinitionNotFoundResult, PublishFailedResult, PublishService}
 
-class PublishControllerSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar with BeforeAndAfterEach with Matchers with ApiDefinitionData
+class PublishControllerSpec extends HmrcSpec with BeforeAndAfterEach with Matchers with ApiDefinitionData
     with ApiCatalogueAdminJsonFormatters {
 
   private val fakeRequest        = FakeRequest("POST", "/")
@@ -55,7 +53,7 @@ class PublishControllerSpec extends AnyWordSpec with MockitoSugar with ArgumentM
       val serviceName = ServiceName("service1")
       "return 200 and an api definition" in {
 
-        val publishResult          = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef", API_PLATFORM)
+        val publishResult          = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef")
         when(mockPublishService.publishByServiceName(*[ServiceName])(*[HeaderCarrier]))
           .thenReturn(Future.successful(Right(publishResult)))
         val result: Future[Result] = controller.publish(serviceName)(fakeRequest)

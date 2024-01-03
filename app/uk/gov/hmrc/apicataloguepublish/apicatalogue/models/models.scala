@@ -17,9 +17,6 @@
 package uk.gov.hmrc.apicataloguepublish.apicatalogue.models
 
 import java.util.UUID
-import scala.collection.immutable
-
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 
 import play.api.libs.json.Format
 
@@ -32,26 +29,6 @@ object IntegrationId {
   implicit val apiIdFormat: Format[IntegrationId] = Json.valueFormat[IntegrationId]
 }
 
-sealed trait PlatformType extends EnumEntry
-
-object PlatformType extends Enum[PlatformType] with PlayJsonEnum[PlatformType] {
-
-  val values: immutable.IndexedSeq[PlatformType] = findValues
-
-  case object DES extends PlatformType
-
-  case object CMA extends PlatformType
-
-  case object CORE_IF extends PlatformType
-
-  case object API_PLATFORM extends PlatformType
-
-  case object CDS_CLASSIC extends PlatformType
-
-  case object TRANSACTION_ENGINE extends PlatformType
-
-}
-
-case class ApiPublishRequest(publisherReference: Option[String], platformType: PlatformType, specificationType: String = "OAS_V3", contents: String)
-
-case class PublishResponse(id: IntegrationId, publisherReference: String, platformType: PlatformType)
+//NOTE this model also has platformType returned but we dont care as we know it is API_PLATFORM so no reason to map it.
+// We set API_PLATFORM in the connector call so we set tell catalogue what platform we are.
+case class PublishResponse(id: IntegrationId, publisherReference: String)

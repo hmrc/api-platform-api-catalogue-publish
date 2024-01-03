@@ -20,12 +20,11 @@ import scala.io.Source
 
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 
-class OpenApiEnhancementsSpec extends AnyWordSpec with Matchers with OpenApiEnhancements {
+class OpenApiEnhancementsSpec extends HmrcSpec with OpenApiEnhancements {
 
   trait Setup {
 

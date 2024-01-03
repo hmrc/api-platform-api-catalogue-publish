@@ -21,32 +21,30 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models._
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionBuilder
 
 trait ApiDefinitionData extends ApiDefinitionBuilder {
-  val categories  = List(ApiCategory.AGENTS, ApiCategory.BUSINESS_RATES)
-  val serviceName = ServiceName("my-service")
-  val versions    = List(apiVersion(version = ApiVersionNbr("1.0")), apiVersion(version = (ApiVersionNbr("2.0"))))
+  val categories: List[ApiCategory] = List(ApiCategory.AGENTS, ApiCategory.BUSINESS_RATES)
+  val serviceName: ServiceName      = ServiceName("my-service")
+  val versions: List[ApiVersion]    = List(apiVersion(version = ApiVersionNbr("1.0")), apiVersion(version = ApiVersionNbr("2.0")))
 
-  val apiDefinition1 = ApiDefinition(
+  val apiDefinition1: ApiDefinition = ApiDefinition(
     serviceName,
     "serviceBaseUrl",
     s"$serviceName-name",
     s"$serviceName-description",
     ApiContext(s"$serviceName-context"),
-    versions = ApiVersions.fromList(versions.toList),
-    false,
-    false,
+    versions = ApiVersions.fromList(versions),
+    isTestSupport = false,
     None,
     categories
   )
 
-  val apiDefinition2 = ApiDefinition(
+  val apiDefinition2: ApiDefinition = ApiDefinition(
     ServiceName(s"$serviceName-2"),
     "serviceBaseUrl2",
     s"$serviceName-name2",
     s"$serviceName-description2",
     ApiContext(s"$serviceName-context2"),
-    ApiVersions.fromList(versions.toList),
-    false,
-    false,
+    ApiVersions.fromList(versions),
+    isTestSupport = false,
     None,
     categories
   )

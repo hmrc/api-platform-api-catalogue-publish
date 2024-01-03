@@ -5,21 +5,21 @@ val appName = "api-platform-api-catalogue-publish"
 
 val silencerVersion = "1.7.0"
 
-scalaVersion := "2.13.8"
+scalaVersion := "2.13.12"
 
-ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
+  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .settings(
     majorVersion := 0,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     Test / unmanagedSourceDirectories += baseDirectory(_ / "test-common").value
   )
-  .settings(scoverageSettings)
+  .settings(ScoverageSettings())
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(inConfig(IntegrationTest)(BloopDefaults.configSettings))
@@ -47,20 +47,6 @@ lazy val microservice = Project(appName, file("."))
       )
   )
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
-
-lazy val scoverageSettings = {
-  import scoverage.ScoverageKeys
-  Seq(
-    // Semicolon-separated list of regexs matching classes to exclude
-    ScoverageKeys.coverageExcludedPackages   := ";.*\\.apidefinition\\.models\\..*;.*\\.domain\\.models\\..*;uk\\.gov\\.hmrc\\.BuildInfo;.*\\.Routes;.*\\.RoutesPrefix;;.*ConfigurationModule;GraphiteStartUp;.*\\.Reverse[^.]*",
-    ScoverageKeys.coverageMinimumStmtTotal   := 96,
-    ScoverageKeys.coverageMinimumBranchTotal := 95,
-    ScoverageKeys.coverageFailOnMinimum      := true,
-    ScoverageKeys.coverageHighlighting       := true,
-    Test / parallelExecution                 := false
-  )
-}
-
 
 commands ++= Seq(
   Command.command("run-all-tests") { state => "test" :: "it:test" :: state },
