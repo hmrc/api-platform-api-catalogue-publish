@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.apicataloguepublish.parser
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 import org.scalatest.BeforeAndAfterEach
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName

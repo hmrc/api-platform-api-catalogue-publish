@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.apicataloguepublish.support
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 
 trait AwaitTestSupport {

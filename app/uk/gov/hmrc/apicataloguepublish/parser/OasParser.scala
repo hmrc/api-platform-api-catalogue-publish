@@ -17,7 +17,6 @@
 package uk.gov.hmrc.apicataloguepublish.parser
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
 
 import play.api.Logging
 
@@ -25,7 +24,7 @@ import uk.gov.hmrc.apicataloguepublish.openapi.{GeneralOpenApiProcessingError, O
 import uk.gov.hmrc.apicataloguepublish.service.{ApiCataloguePublishResult, OpenApiEnhancementFailedResult}
 
 @Singleton
-class OasParser @Inject() (dateTimeWrapper: DateTimeWrapper)(implicit ec: ExecutionContext) extends OpenApiEnhancements with Logging {
+class OasParser @Inject() (dateTimeWrapper: DateTimeWrapper) extends OpenApiEnhancements with Logging {
 
   def handleEnhancingOasForCatalogue(oasResult: OasResult): Either[ApiCataloguePublishResult, String] = {
     logger.info(s"handleEnhancingOasForCatalogue called for ${oasResult.apiName}")

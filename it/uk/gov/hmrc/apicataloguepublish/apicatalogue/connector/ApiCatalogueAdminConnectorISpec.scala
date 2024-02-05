@@ -16,16 +16,18 @@
 
 package uk.gov.hmrc.apicataloguepublish.apicatalogue.connector
 
+import java.util.UUID
+
 import org.scalatest.BeforeAndAfterEach
+
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
 import uk.gov.hmrc.apicataloguepublish.support.{ApiCatalogueStub, MetricsTestSupport, ServerBaseISpec}
-import uk.gov.hmrc.http.HeaderCarrier
-
-import java.util.UUID
 
 class ApiCatalogueAdminConnectorISpec
     extends ServerBaseISpec

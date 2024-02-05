@@ -13,15 +13,18 @@ ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
+  .enablePlugins(PlayScala, SbtDistributablesPlugin)
+  .disablePlugins(JUnitXmlReportPlugin)
   .settings(
     majorVersion := 0,
-    libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    Test / unmanagedSourceDirectories += baseDirectory(_ / "test-common").value
+    libraryDependencies ++= AppDependencies(),
+    Test / unmanagedSourceDirectories += baseDirectory(_ / "test-common").value,
+    scalacOptions += "-Wconf:src=routes/.*:s"
   )
   .settings(ScoverageSettings())
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
+  .settings(scalafixConfigSettings(IntegrationTest))
   .settings(inConfig(IntegrationTest)(BloopDefaults.configSettings))
   .settings(
     Defaults.itSettings,
@@ -46,7 +49,6 @@ lazy val microservice = Project(appName, file("."))
         "uk.gov.hmrc.apicataloguepublish.controllers.binders._"
       )
   )
-  .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
 
 commands ++= Seq(
   Command.command("run-all-tests") { state => "test" :: "it:test" :: state },
@@ -54,5 +56,5 @@ commands ++= Seq(
   Command.command("clean-and-test") { state => "clean" :: "compile" :: "run-all-tests" :: state },
 
   // Coverage does not need compile !
-  Command.command("pre-commit") { state => "scalafmtAll" :: "scalafixAll" :: "clean" :: "coverage" :: "run-all-tests" :: "coverageReport" :: state }
+  Command.command("pre-commit") { state => "clean" :: "scalafmtAll" :: "scalafixAll" :: "coverage" :: "run-all-tests" :: "coverageOff" :: "coverageAggregate" :: state }
 )

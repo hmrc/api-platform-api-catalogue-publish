@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.apicataloguepublish.support
 
-import com.kenshoo.play.metrics.Metrics
-import org.scalatest.Suite
-import play.api.Application
-
 import scala.jdk.CollectionConverters._
+
+import org.scalatest.Suite
+
+import play.api.Application
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 trait MetricsTestSupport {
   self: Suite =>

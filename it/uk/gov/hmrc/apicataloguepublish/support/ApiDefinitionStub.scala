@@ -19,6 +19,7 @@ package uk.gov.hmrc.apicataloguepublish.support
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
 trait ApiDefinitionStub {
