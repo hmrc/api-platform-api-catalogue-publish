@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.apicataloguepublish.support
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import org.scalatest.OptionValues
 import org.scalatestplus.play.{PlaySpec, WsScalaTestClient}
+
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest

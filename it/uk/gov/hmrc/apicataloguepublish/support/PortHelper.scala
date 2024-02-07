@@ -17,10 +17,10 @@
 package uk.gov.hmrc.apicataloguepublish.support
 
 import java.net.ServerSocket
-import play.api.Logger
-
-import scala.language.postfixOps
 import scala.annotation.tailrec
+import scala.language.postfixOps
+
+import play.api.Logger
 
 object PortHelper {
   val rnd            = new scala.util.Random

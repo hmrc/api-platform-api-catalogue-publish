@@ -20,7 +20,7 @@ import java.util.Base64
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-import akka.stream.scaladsl.Source
+import org.apache.pekko.stream.scaladsl.Source
 
 import play.api.Logging
 import play.api.libs.json.{JsError, JsResult, JsSuccess}

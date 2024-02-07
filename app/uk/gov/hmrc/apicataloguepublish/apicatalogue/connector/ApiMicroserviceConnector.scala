@@ -19,8 +19,8 @@ package uk.gov.hmrc.apicataloguepublish.apicatalogue.connector
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-import akka.stream.Materializer
 import cats.data.EitherT
+import org.apache.pekko.stream.Materializer
 
 import play.api.Logging
 import play.api.http.HttpEntity
@@ -44,7 +44,7 @@ class ApiMicroserviceConnector @Inject() (ws: WSClient)(implicit val ec: Executi
 
   }
 
-  private def convertStreamToYamlString(response: WSResponse)(implicit mat: Materializer): Future[String] = {
+  private def convertStreamToYamlString(response: WSResponse): Future[String] = {
     val contentType = response.headers.get("Content-Type").flatMap(_.headOption)
       .getOrElse("application/octet-stream")
 

@@ -28,8 +28,10 @@ package object binders {
       textBinder.bind(key, value).map(ServiceName(_))
     }
 
+    // $COVERAGE-OFF$
     override def unbind(key: String, serviceName: ServiceName): String = {
       serviceName.value
     }
+    // $COVERAGE-ON$
   }
 }

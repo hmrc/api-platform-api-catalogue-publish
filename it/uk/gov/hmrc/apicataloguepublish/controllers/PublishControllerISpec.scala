@@ -16,22 +16,22 @@
 
 package uk.gov.hmrc.apicataloguepublish.controllers
 
+import java.nio.file.Paths
+import java.util.UUID
+
 import org.scalatest.BeforeAndAfterEach
+
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
+
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiDefinition, ServiceName}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
+import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.support._
-
-import java.nio.file.Paths
-import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
-
-import java.util.UUID
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiDefinition
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
 class PublishControllerISpec
     extends ServerBaseISpec

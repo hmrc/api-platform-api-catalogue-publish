@@ -17,11 +17,13 @@
 package uk.gov.hmrc.apicataloguepublish.apicatalogue.connector
 
 import org.scalatest.BeforeAndAfterEach
+
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
+import uk.gov.hmrc.http.HeaderCarrier
+
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.ApiCatalogueAdminJsonFormatters
 import uk.gov.hmrc.apicataloguepublish.support.{ApiMicroserviceStub, MetricsTestSupport, ServerBaseISpec}
-import uk.gov.hmrc.http.HeaderCarrier
 
 class ApiMicroserviceConnectorISpec
     extends ServerBaseISpec

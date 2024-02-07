@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.apicataloguepublish.support
 
-import com.github.tomakehurst.wiremock.client.WireMock._
-
 import java.io._
 import scala.language.postfixOps
+
+import com.github.tomakehurst.wiremock.client.WireMock._
 
 trait ApiProducerTeamStub {
 
