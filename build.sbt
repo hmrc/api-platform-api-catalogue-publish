@@ -1,4 +1,6 @@
 import bloop.integrations.sbt.BloopDefaults
+import uk.gov.hmrc.DefaultBuildSettings
+import uk.gov.hmrc.DefaultBuildSettings._
 
 val appName = "api-platform-api-catalogue-publish"
 
@@ -38,6 +40,7 @@ lazy val microservice = Project(appName, file("."))
 lazy val it = (project in file("it"))
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test")
+  .settings(DefaultBuildSettings.itSettings())
   .settings(
     name := "integration-tests",
     headerSettings(Test) ++ automateHeaderSettings(Test)
