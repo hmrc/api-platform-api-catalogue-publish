@@ -88,7 +88,7 @@ class PublishControllerISpec
       callPostEndpoint(s"$url/publish-all", body = "", List.empty)
     }
 
-    def absoluteYamlPath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "it/resources/test-yaml-file.yaml"
+    def absoluteYamlPath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "resources/test-yaml-file.yaml"
 
     def getYamlUri(apiDefinition: ApiDefinition) = {
       getUri(apiDefinition) + ".yaml"
