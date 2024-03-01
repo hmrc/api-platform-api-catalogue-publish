@@ -57,8 +57,8 @@ class ApiMicroserviceConnectorISpec
   }
 
   "ApiMicroserviceConnector" should {
-    val filePath        = "resources/test-yaml-file.yaml"
-    val largeFilePath   = "resources/test-large-yaml-file.yaml"
+    val filePath        = "it/resources/test-yaml-file.yaml"
+    val largeFilePath   = "it/resources/test-large-yaml-file.yaml"
     val path            = "/api/1/resource.yaml"
     val microserviceUrl = s"http://$wireMockHost:$wireMockPort" + path
 

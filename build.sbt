@@ -1,4 +1,5 @@
 import bloop.integrations.sbt.BloopDefaults
+import uk.gov.hmrc.DefaultBuildSettings
 
 val appName = "api-platform-api-catalogue-publish"
 
@@ -38,10 +39,15 @@ lazy val microservice = Project(appName, file("."))
 lazy val it = (project in file("it"))
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test")
+  .settings(DefaultBuildSettings.itSettings())
   .settings(
     name := "integration-tests",
     headerSettings(Test) ++ automateHeaderSettings(Test)
   )
+
+Global / bloopAggregateSourceDependencies := true
+Global / bloopExportJarClassifiers := Some(Set("sources"))
+
 
 commands ++= Seq(
   Command.command("cleanAll") { state => "clean" :: "it/clean" :: state},
