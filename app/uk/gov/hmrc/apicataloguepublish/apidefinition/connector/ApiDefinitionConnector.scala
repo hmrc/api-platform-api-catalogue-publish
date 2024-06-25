@@ -43,10 +43,14 @@ class ApiDefinitionConnector @Inject() (
   private val fetchAllUrl = s"${config.baseUrl}/api-definition"
 
   def getDefinitionByServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]] = {
-    logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition")
+    logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition $serviceName")
     http.GET[Option[ApiDefinition]](definitionUrl(serviceName)).map {
-      case Some(x) => Right(definitionToResult(x))
-      case _       => Left(NotFoundResult(s"unable to fetch definition: $serviceName"))
+      case Some(x) =>
+        logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition $serviceName Successful")
+        Right(definitionToResult(x))
+      case _       =>
+        logger.warn(s"${this.getClass.getSimpleName} - fetchApiDefinition $serviceName Failed")
+        Left(NotFoundResult(s"unable to fetch definition: $serviceName"))
     }.recover {
       case NonFatal(e) =>
         logger.error(s"Failed to getDefinitionByServiceName: $serviceName ", e)

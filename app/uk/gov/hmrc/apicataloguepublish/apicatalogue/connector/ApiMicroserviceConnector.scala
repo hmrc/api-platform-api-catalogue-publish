@@ -32,13 +32,17 @@ import uk.gov.hmrc.http.{InternalServerException, NotFoundException}
 class ApiMicroserviceConnector @Inject() (ws: WSClient)(implicit val ec: ExecutionContext, implicit val mat: Materializer) extends Logging {
 
   def fetchApiDocumentationResourceByUrl(url: String): Future[Either[Throwable, String]] = {
-    logger.info(s"Calling local microservice to fetch resource by URL: $url")
+    logger.warn(s"Calling local microservice to fetch resource by URL: $url")
     ws.url(url).withMethod("GET").stream().flatMap {
       streamedResponse =>
         streamedResponse.status match {
-          case OK        => EitherT.liftF(convertStreamToYamlString(streamedResponse)).value
-          case NOT_FOUND => Future.successful(Left(new NotFoundException(s"Resource not found - $url")))
-          case _         => Future.successful(Left(new InternalServerException(s"Error downloading resource - $url")))
+          case OK          => EitherT.liftF(convertStreamToYamlString(streamedResponse)).value
+          case NOT_FOUND   =>
+            logger.error(s"local microservice resource by URL: $url not found")
+            Future.successful(Left(new NotFoundException(s"Resource not found - $url")))
+          case status: Int =>
+            logger.error(s"Error downloading resource - $url status returned : $status")
+            Future.successful(Left(new InternalServerException(s"Error downloading resource - $url")))
         }
     }
 
