@@ -92,7 +92,9 @@ class PublishService @Inject() (
             apiDefinitionResult.serviceName,
             PublishService.apiAccessToDescription(apiDefinitionResult.access)
           )))
-        case Left(_)            => successful(Left(PublishFailedResult(apiDefinitionResult.serviceName, "RAML is no longer supported for publishing to the API Catalogue")))
+        case Left(_)            =>
+          logger.warn(s"handleYamlResult for ${apiDefinitionResult.serviceName} failed Yaml not found & RAML is no longer supported")
+          successful(Left(PublishFailedResult(apiDefinitionResult.serviceName, "RAML is no longer supported for publishing to the API Catalogue")))
       }
     }
 
@@ -109,6 +111,7 @@ class PublishService @Inject() (
         case Right(definitionList: List[ApiDefinitionResult]) =>
           batchFutures(definitionList, List.empty)
         case Left(_: GeneralFailedResult)                     =>
+          logger.warn(s"publish All failed - something went wrong calling api definition")
           successful(List(Left(PublishFailedResult(ServiceName("All Services"), "something went wrong calling api definition"))))
       }
 
@@ -155,7 +158,9 @@ class PublishService @Inject() (
 
 }
 
-sealed trait ApiCataloguePublishResult
+sealed trait ApiCataloguePublishResult {
+  val message: String
+}
 
 case class ApiDefinitionInvalidStatusResult(serviceName: ServiceName, message: String) extends ApiCataloguePublishResult
 case class ApiDefinitionNotFoundResult(serviceName: ServiceName, message: String)      extends ApiCataloguePublishResult

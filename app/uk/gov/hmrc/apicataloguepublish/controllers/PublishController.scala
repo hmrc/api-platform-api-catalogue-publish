@@ -36,8 +36,12 @@ class PublishController @Inject() (publishService: PublishService, cc: Controlle
     publishService.publishByServiceName(serviceName).map {
       case Right(oasString: PublishResponse)    => Ok(Json.toJson(oasString))
       case Left(e: ApiDefinitionNotFoundResult) => NotFound(s"api definition not found: ${e.message}")
-      case Left(e: PublishFailedResult)         => InternalServerError(s"something went wrong: ${e.message}")
-      case _                                    => InternalServerError(s"something went wrong")
+      case Left(e: PublishFailedResult)         =>
+        logger.warn(s"publish $serviceName something went wrong, error message: ${e.message}")
+        InternalServerError(s"something went wrong: ${e.message}")
+      case Left(e: ApiCataloguePublishResult)   =>
+        logger.warn(s"publish $serviceName failed message:  ${e.message}")
+        InternalServerError(s"something went wrong")
     }
   }
 
