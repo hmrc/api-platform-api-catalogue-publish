@@ -22,8 +22,8 @@ import scala.util.control.NonFatal
 
 import play.api.Logging
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-import uk.gov.hmrc.play.http.ws.WSGet
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
@@ -31,7 +31,7 @@ import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 
 @Singleton
 class ApiDefinitionConnector @Inject() (
-    val http: HttpClient with WSGet,
+    val http: HttpClientV2,
     val config: Config
   )(implicit val ec: ExecutionContext
   ) extends Logging
@@ -44,18 +44,20 @@ class ApiDefinitionConnector @Inject() (
 
   def getDefinitionByServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]] = {
     logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition $serviceName")
-    http.GET[Option[ApiDefinition]](definitionUrl(serviceName)).map {
-      case Some(x) =>
-        logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition $serviceName Successful")
-        Right(definitionToResult(x))
-      case _       =>
-        logger.warn(s"${this.getClass.getSimpleName} - fetchApiDefinition $serviceName Failed")
-        Left(NotFoundResult(s"unable to fetch definition: $serviceName"))
-    }.recover {
-      case NonFatal(e) =>
-        logger.error(s"Failed to getDefinitionByServiceName: $serviceName ", e)
-        Left(GeneralFailedResult(e.getMessage))
-    }
+    http.get(url"${definitionUrl(serviceName)}")
+      .execute[Option[ApiDefinition]]
+      .map {
+        case Some(x) =>
+          logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition $serviceName Successful")
+          Right(definitionToResult(x))
+        case _       =>
+          logger.warn(s"${this.getClass.getSimpleName} - fetchApiDefinition $serviceName Failed")
+          Left(NotFoundResult(s"unable to fetch definition: $serviceName"))
+      }.recover {
+        case NonFatal(e) =>
+          logger.error(s"Failed to getDefinitionByServiceName: $serviceName ", e)
+          Left(GeneralFailedResult(e.getMessage))
+      }
   }
 
   private def definitionToResult(definition: ApiDefinition): ApiDefinitionResult = {
@@ -63,7 +65,8 @@ class ApiDefinitionConnector @Inject() (
   }
 
   def getAllServices()(implicit hc: HeaderCarrier): Future[Either[GeneralFailedResult, List[ApiDefinitionResult]]] = {
-    http.GET[Seq[ApiDefinition]](fetchAllUrl, List(("type", "all")))
+    http.get(url"$fetchAllUrl?type=all")
+      .execute[Seq[ApiDefinition]]
       .map(definitions =>
         Right(definitions.map(definitionToResult).toList.sortBy(_.serviceName))
       ).recover {
