@@ -489,11 +489,6 @@ components:
                   value:
                     code: RELATIONSHIP_NOT_FOUND
                     message: Relationship is inactive. Agent is not authorised to act for this client.
-x-amf-uses:
-  sec: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/securitySchemes.raml
-  headers: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/headers.raml
-  annotations: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/annotations.raml
-  types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
 """
 
   val oasStringWithEnhancements =
@@ -1090,10 +1085,5 @@ x-amf-userDocumentation:
     \ guide](/api-documentation/docs/reference-guide#errors) for more on errors.\n\
     \n"
   title: Errors
-x-amf-uses:
-  sec: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/securitySchemes.raml
-  headers: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/headers.raml
-  annotations: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/annotations.raml
-  types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
 """
 }

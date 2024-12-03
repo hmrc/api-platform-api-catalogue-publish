@@ -74,7 +74,7 @@ class PublishServiceSpec
     val convertedWebApiToOasResult: OasResult     = OasResult(expectedEnhancedOasString, serviceName, expectedDescription)
     val yamlOasResult: OasResult                  = OasResult(yamlResponseString, serviceName, expectedDescription)
     val publishResponse: PublishResponse          = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef")
-    val ramlError: PublishFailedResult            = PublishFailedResult(serviceName, "RAML is no longer supported for publishing to the API Catalogue")
+    val ramlError: PublishFailedResult            = PublishFailedResult(serviceName, "YAML not found & RAML is no longer supported")
 
     val objInTest = new PublishService(mockConnector, mockOasParser, mockCatalogueConnector, mockApiMicroserviceConnector)
 

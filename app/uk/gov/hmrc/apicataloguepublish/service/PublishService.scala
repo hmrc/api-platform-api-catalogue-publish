@@ -84,8 +84,6 @@ class PublishService @Inject() (
     }
 
     def handleYamlResult(result: Either[Throwable, String]): Future[Either[ApiCataloguePublishResult, OasResult]] = {
-      // left means yaml not found so look for raml and convert to OAS
-      // right mean we have Yaml / OAS so continue
       result match {
         case Right(oas: String) => successful(Right(OasResult(
             oas,
@@ -93,8 +91,8 @@ class PublishService @Inject() (
             PublishService.apiAccessToDescription(apiDefinitionResult.access)
           )))
         case Left(_)            =>
-          logger.warn(s"handleYamlResult for ${apiDefinitionResult.serviceName} failed Yaml not found & RAML is no longer supported")
-          successful(Left(PublishFailedResult(apiDefinitionResult.serviceName, "RAML is no longer supported for publishing to the API Catalogue")))
+          logger.warn(s"handleYamlResult for ${apiDefinitionResult.serviceName} failed YAML not found & RAML is no longer supported")
+          successful(Left(PublishFailedResult(apiDefinitionResult.serviceName, "YAML not found & RAML is no longer supported")))
       }
     }
 
