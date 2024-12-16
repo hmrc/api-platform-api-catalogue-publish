@@ -23,7 +23,7 @@ import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 
 class ApiDefinitionUtilsSpec extends HmrcSpec with ApiDefinitionData with ApiDefinitionUtils {
 
-  "getRamlUri" should {
+  "getUri" should {
     "return correct uri" in {
       getUri(apiDefinition1) shouldBe "serviceBaseUrl/api/conf/2.0/application"
     }
