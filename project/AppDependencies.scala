@@ -13,6 +13,7 @@ object AppDependencies {
     "uk.gov.hmrc"                       %% "bootstrap-backend-play-30"      % bootstrapVersion,
     "org.typelevel"                     %% "cats-core"                      % "2.10.0",
     "io.swagger.parser.v3"              %  "swagger-parser"                 % "2.1.14",
+    "commons-io"                        % "commons-io"                      % "2.14.0", // to fix CVE-2024-47554 until swagger-parser can be upgraded above 2.1.14
     "uk.gov.hmrc"                       %% "api-platform-api-domain"        % apiDomainVersion
   )
 
