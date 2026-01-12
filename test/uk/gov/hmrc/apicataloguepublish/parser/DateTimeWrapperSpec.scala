@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,17 @@
 
 package uk.gov.hmrc.apicataloguepublish.parser
 
-import java.time.Clock
-import java.time.temporal.ChronoUnit
-import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.apiplatform.modules.common.utils.{FixedClock, HmrcSpec}
 
-import uk.gov.hmrc.apiplatform.modules.common.services.ClockNow
+class DateTimeWrapperSpec extends HmrcSpec with FixedClock {
 
-@Singleton
-class DateTimeWrapper @Inject() (val clock: Clock) extends ClockNow {
+  val dateTimeWrapper = new DateTimeWrapper(clock)
 
-  def generateDateNowString(): String = instant().truncatedTo(ChronoUnit.SECONDS).toString
+  "generateDateNowString" should {
+    "format the date without milliseconds" in {
+      val result = dateTimeWrapper.generateDateNowString()
+
+      result shouldBe "2020-01-02T03:04:05Z"
+    }
+  }
 }

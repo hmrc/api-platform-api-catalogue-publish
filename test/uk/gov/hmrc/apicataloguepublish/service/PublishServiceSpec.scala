@@ -223,7 +223,7 @@ class PublishServiceSpec
       when(mockConnector.getAllServices()).thenReturn(Future.successful(Left(GeneralFailedResult("error"))))
       val results = await(objInTest.publishAll())
       results match {
-        case List(Right(publishResponse))           => fail()
+        case List(Right(_))                         => fail()
         case List(Left(error: PublishFailedResult)) => error shouldBe PublishFailedResult(ServiceName("All Services"), "something went wrong calling api definition")
       }
 

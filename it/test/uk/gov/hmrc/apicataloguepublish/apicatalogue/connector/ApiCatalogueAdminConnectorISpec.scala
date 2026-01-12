@@ -71,8 +71,8 @@ class ApiCatalogueAdminConnectorISpec
       )
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
-        case Right(response: PublishResponse) => succeed
-        case _                                => fail()
+        case Right(_: PublishResponse) => succeed
+        case _                         => fail()
       }
     }
 
@@ -83,8 +83,8 @@ class ApiCatalogueAdminConnectorISpec
       )
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
-        case Left(response: ApiCatalogueGeneralFailureResult) => succeed
-        case _                                                => fail()
+        case Left(_: ApiCatalogueGeneralFailureResult) => succeed
+        case _                                         => fail()
       }
     }
 

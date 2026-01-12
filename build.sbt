@@ -5,7 +5,7 @@ val appName = "api-platform-api-catalogue-publish"
 Global / bloopAggregateSourceDependencies := true
 Global / bloopExportJarClassifiers := Some(Set("sources"))
 
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalaVersion := "2.13.16"
 ThisBuild / majorVersion := 0
 
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
@@ -23,9 +23,9 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(ScoverageSettings())
   .settings(
-      routesImport ++= Seq(
-        "uk.gov.hmrc.apicataloguepublish.controllers.binders._"
-      )
+    routesImport ++= Seq(
+      "uk.gov.hmrc.apicataloguepublish.controllers.binders._"
+    )
   )
 
 lazy val it = (project in file("it"))
