@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apicataloguepublish.parser
+package uk.gov.hmrc.apicataloguepublish.apicatalogue.config
 
 import java.time.Clock
-import java.time.temporal.ChronoUnit
-import javax.inject.{Inject, Singleton}
 
-import uk.gov.hmrc.apiplatform.modules.common.services.ClockNow
+import com.google.inject.AbstractModule
 
-@Singleton
-class DateTimeWrapper @Inject() (val clock: Clock) extends ClockNow {
+class ClockModule extends AbstractModule {
 
-  def generateDateNowString(): String = instant().truncatedTo(ChronoUnit.SECONDS).toString
+  override def configure(): Unit = {
+    bind(classOf[Clock]).toInstance(Clock.systemUTC())
+  }
 }
