@@ -5,9 +5,10 @@ object AppDependencies {
 
   def apply(): Seq[ModuleID] = compile ++ test
 
-  lazy val bootstrapVersion = "10.7.0"
-  val apiDomainVersion = "0.22.0"
+  val bootstrapVersion    = "10.7.0"
+  val apiDomainVersion    = "1.0.0"
   val commonDomainVersion = "1.0.0"
+  val mockitoScalaVersion = "2.0.0"
 
   val compile = Seq(
     "uk.gov.hmrc"                       %% "bootstrap-backend-play-30"      % bootstrapVersion,
@@ -19,7 +20,7 @@ object AppDependencies {
 
   val test = Seq(
     "uk.gov.hmrc"                 %% "bootstrap-test-play-30"                % bootstrapVersion,
-    "org.mockito"                 %% "mockito-scala-scalatest"               % "2.0.0",
+    "org.mockito"                 %% "mockito-scala-scalatest"               % mockitoScalaVersion,
     "uk.gov.hmrc"                 %% "api-platform-common-domain-fixtures"   % commonDomainVersion,
   ).map(_ % "test")
 }
