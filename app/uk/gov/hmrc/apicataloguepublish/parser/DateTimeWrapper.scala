@@ -25,5 +25,5 @@ import uk.gov.hmrc.apiplatform.modules.common.services.ClockNow
 @Singleton
 class DateTimeWrapper @Inject() (val clock: Clock) extends ClockNow {
 
-  def generateDateNowString(): String = instant().truncatedTo(ChronoUnit.SECONDS).toString
+  def generateDateNowString(): String = instant.truncatedTo(ChronoUnit.SECONDS).toString
 }
