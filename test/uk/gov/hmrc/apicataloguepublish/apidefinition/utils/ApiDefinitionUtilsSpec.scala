@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.apicataloguepublish.apidefinition.utils
 
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccess
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiAccessType
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiVersionNbr
 import uk.gov.hmrc.apiplatform.modules.common.utils.HmrcSpec
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
@@ -41,11 +41,11 @@ class ApiDefinitionUtilsSpec extends HmrcSpec with ApiDefinitionData with ApiDef
 
   "getAccessTypeOfLatestVersion" should {
     "return access type of latest version" in {
-      getAccessTypeOfLatestVersion(apiDefinition1) shouldBe ApiAccess.PUBLIC
+      getAccessTypeOfLatestVersion(apiDefinition1) shouldBe ApiAccessType.PUBLIC
     }
 
     "return public when definition has no versions" in {
-      getAccessTypeOfLatestVersion(apiDefinition1.copy(versions = Map.empty)) shouldBe ApiAccess.PUBLIC
+      getAccessTypeOfLatestVersion(apiDefinition1.copy(versions = Map.empty)) shouldBe ApiAccessType.PUBLIC
     }
   }
 }

@@ -38,7 +38,7 @@ class OasParserSpec extends HmrcSpec with OasStringUtils with BeforeAndAfterEach
 
   "handleEnhancingOasForCatalogue" should {
     "return right with enhanced OAS when successful" in new Setup {
-      val convertedOasResult: OasResult = OasResult(oasStringWithDescription, ServiceName("apiName"), "PRIVATE")
+      val convertedOasResult: OasResult = OasResult(oasStringWithDescription, ServiceName("apiName"), "INTERNAL")
       val validISODate: String          = "2021-12-25T12:00:00Z"
       when(mockDateTimeWrapper.generateDateNowString()).thenReturn(validISODate)
 
@@ -51,7 +51,7 @@ class OasParserSpec extends HmrcSpec with OasStringUtils with BeforeAndAfterEach
     }
 
     "return Left when oas is invalid" in new Setup {
-      val convertedOasResult: OasResult = OasResult("something invalid", ServiceName("apiName"), "PRIVATE")
+      val convertedOasResult: OasResult = OasResult("something invalid", ServiceName("apiName"), "INTERNAL")
 
       val result: Either[ApiCataloguePublishResult, String] = objInTest.handleEnhancingOasForCatalogue(convertedOasResult)
 
@@ -66,7 +66,7 @@ class OasParserSpec extends HmrcSpec with OasStringUtils with BeforeAndAfterEach
   "enhanceOas" should {
     "return right with enhanced OAS when successful" in new Setup {
 
-      val convertedOasResult: OasResult = OasResult(oasStringWithDescription, ServiceName("apiName"), "PRIVATE")
+      val convertedOasResult: OasResult = OasResult(oasStringWithDescription, ServiceName("apiName"), "CONTROLLED")
       val validISODate: String          = "2021-12-25T12:00:00Z"
       when(mockDateTimeWrapper.generateDateNowString()).thenReturn(validISODate)
 
@@ -79,7 +79,7 @@ class OasParserSpec extends HmrcSpec with OasStringUtils with BeforeAndAfterEach
     }
 
     "return Left when oas is invalid" in new Setup {
-      val convertedOasResult: OasResult = OasResult("something invalid", ServiceName("apiName"), "PRIVATE")
+      val convertedOasResult: OasResult = OasResult("something invalid", ServiceName("apiName"), "CONTROLLED")
 
       val result: Either[OpenApiProcessingError, String] = objInTest.enhanceOas(convertedOasResult)
 

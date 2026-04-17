@@ -30,17 +30,13 @@ trait ApiDefinitionBuilder {
     ApiDefinition(ServiceName(name), serviceBaseUrl = "service base url", name, name, ApiContext(name), ApiVersions.fromList(versions.toList), false, None, List.empty)
   }
 
-  def apiAccess(): ApiAccess = {
-    ApiAccess.PUBLIC
-  }
-
   implicit class ApiDefintionModifier(val inner: ApiDefinition) {
 
     def isTestSupport(): ApiDefinition = inner.copy(isTestSupport = true)
 
     def withClosedAccess: ApiDefinition = inner.copy(versions = inner.versions.map { case (k, v) => k -> v.withClosedAccess })
 
-    def asPrivate: ApiDefinition = inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asPrivate })
+    def asInternal: ApiDefinition = inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asInternal })
 
     def withName(name: String): ApiDefinition = inner.copy(name = name)
 
@@ -48,8 +44,8 @@ trait ApiDefinitionBuilder {
 
     def withCategories(categories: List[ApiCategory]): ApiDefinition = inner.copy(categories = categories)
 
-    def asTrial: ApiDefinition = {
-      inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asTrial })
+    def asControlled: ApiDefinition = {
+      inner.copy(versions = inner.versions.map { case (k, v) => k -> v.asControlled })
     }
 
     def asAlpha: ApiDefinition =
@@ -69,17 +65,6 @@ trait ApiDefinitionBuilder {
 
   }
 
-  implicit class PrivateApiAccessModifier(val inner: ApiAccess.Private) {
-
-    def asTrial: ApiAccess = {
-      inner.copy(isTrial = true)
-    }
-
-    def notTrial: ApiAccess = {
-      inner.copy(isTrial = false)
-    }
-  }
-
   def endpoint(endpointName: String = "Hello World", url: String = "/world"): Endpoint = {
     Endpoint(url, endpointName, HttpMethod.GET, AuthType.NONE, ResourceThrottlingTier.UNLIMITED, None, List.empty[QueryParameter])
   }
@@ -93,7 +78,7 @@ trait ApiDefinitionBuilder {
     def asApplicationRestricted: Endpoint = inner.copy(authType = AuthType.APPLICATION)
   }
 
-  def apiVersion(version: ApiVersionNbr = ApiVersionNbr("1.0"), status: ApiStatus = ApiStatus.STABLE, access: ApiAccess = apiAccess()): ApiVersion = {
+  def apiVersion(version: ApiVersionNbr = ApiVersionNbr("1.0"), status: ApiStatus = ApiStatus.STABLE, access: ApiAccessType = ApiAccessType.PUBLIC): ApiVersion = {
     ApiVersion(version, status, access, List(endpoint("Today's Date", "/today"), endpoint("Yesterday's Date", "/yesterday")))
   }
 
@@ -115,16 +100,15 @@ trait ApiDefinitionBuilder {
       inner.copy(status = ApiStatus.RETIRED)
 
     def asPublic: ApiVersion =
-      inner.copy(access = ApiAccess.PUBLIC)
+      inner.copy(access = ApiAccessType.PUBLIC)
 
-    def asPrivate: ApiVersion =
-      inner.copy(access = ApiAccess.Private())
+    def asInternal: ApiVersion =
+      inner.copy(access = ApiAccessType.INTERNAL)
 
-    def asTrial: ApiVersion = inner.copy(access = ApiAccess.Private(true))
+    def asControlled: ApiVersion =
+      inner.copy(access = ApiAccessType.CONTROLLED)
 
-    def notTrial: ApiVersion = inner.copy(access = ApiAccess.Private(false))
-
-    def withAccess(altAccess: ApiAccess): ApiVersion =
+    def withAccess(altAccess: ApiAccessType): ApiVersion =
       inner.copy(access = altAccess)
 
     def withClosedAccess: ApiVersion = inner.copy(endpoints = inner.endpoints.head.asApplicationRestricted :: inner.endpoints.tail)

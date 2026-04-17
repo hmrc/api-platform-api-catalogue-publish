@@ -6,7 +6,7 @@ object AppDependencies {
   def apply(): Seq[ModuleID] = compile ++ test
 
   val bootstrapVersion    = "10.7.0"
-  val apiDomainVersion    = "1.0.0"
+  val apiDomainVersion    = "1.2.0"
   val commonDomainVersion = "1.0.0"
   val mockitoScalaVersion = "2.0.0"
 

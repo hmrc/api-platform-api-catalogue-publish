@@ -80,7 +80,7 @@ class ApiDefinitionConnector @Inject() (
 
 object ApiDefinitionConnector {
   case class Config(baseUrl: String)
-  case class ApiDefinitionResult(url: String, access: ApiAccess, serviceName: ServiceName, status: ApiStatus)
+  case class ApiDefinitionResult(url: String, access: ApiAccessType, serviceName: ServiceName, status: ApiStatus)
 
   sealed trait ApiDefinitionFailedResult {
     val message: String
