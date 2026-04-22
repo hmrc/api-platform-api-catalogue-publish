@@ -37,10 +37,10 @@ import uk.gov.hmrc.apicataloguepublish.parser.OasParser
 
 object PublishService {
 
-  def apiAccessToDescription(accessType: ApiAccess): String = {
+  def apiAccessToDescription(accessType: ApiAccessType): String = {
     accessType match {
-      case ApiAccess.PUBLIC     => "This is a public API."
-      case _: ApiAccess.Private => "This is a private API."
+      case ApiAccessType.PUBLIC                              => "This is a public API."
+      case ApiAccessType.INTERNAL | ApiAccessType.CONTROLLED => "This is a private API."
     }
   }
 }

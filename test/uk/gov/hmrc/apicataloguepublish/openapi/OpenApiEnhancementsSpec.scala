@@ -57,7 +57,7 @@ class OpenApiEnhancementsSpec extends HmrcSpec with OpenApiEnhancements {
     def validateExpectedFileContents(inputFile: String, expectedFile: String) = {
       val contentsToParse = getFileContents(inputFile)
       val expectedYaml    = getFileContents(expectedFile)
-      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is an internal API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => oasString shouldBe expectedYaml
       }
@@ -86,7 +86,7 @@ class OpenApiEnhancementsSpec extends HmrcSpec with OpenApiEnhancements {
       val contentsToParse   = getFileContents("noIntCatExtensions-with-long-description.yaml")
       val expectedYaml      = getFileContents("expectedWithIntCatExtensions-with-truncated-short-decription.yaml")
       val expectedShortDesc = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
-      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is an internal API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc = getShortDescriptionFromOasString(oasString).getOrElse("")
@@ -101,7 +101,7 @@ class OpenApiEnhancementsSpec extends HmrcSpec with OpenApiEnhancements {
       val expectedYaml        = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
       val expectedShortDesc   = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
       val expectedDescription = getDescriptionFromOasString(expectedYaml).getOrElse("")
-      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is an internal API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc   = getShortDescriptionFromOasString(oasString).getOrElse("")
@@ -119,7 +119,7 @@ class OpenApiEnhancementsSpec extends HmrcSpec with OpenApiEnhancements {
       val expectedYaml        = getFileContents("expectedWithIntCatExtensions-with-accessType-description.yaml")
       val expectedShortDesc   = getShortDescriptionFromOasString(expectedYaml).getOrElse("")
       val expectedDescription = getDescriptionFromOasString(expectedYaml).getOrElse("")
-      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is a private API."), validISODate) match {
+      addOasSpecAttributes(OasResult(contentsToParse, ServiceName("iamAnApi"), "This is an internal API."), validISODate) match {
         case Left(_)          => fail()
         case Right(oasString) => {
           val resultingShortDesc   = getShortDescriptionFromOasString(oasString).getOrElse("")

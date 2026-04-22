@@ -39,9 +39,9 @@ trait ApiDefinitionUtils {
       .headOption.map(apiVersionDefinition => apiVersionDefinition.versionNbr).getOrElse(ApiVersionNbr("1.0"))
   }
 
-  def getAccessTypeOfLatestVersion(apiDefinition: ApiDefinition): ApiAccess = {
+  def getAccessTypeOfLatestVersion(apiDefinition: ApiDefinition): ApiAccessType = {
     sortedVersionsHighestFirst(apiDefinition)
-      .headOption.map(apiVersionDefinition => apiVersionDefinition.access).getOrElse(ApiAccess.PUBLIC)
+      .headOption.map(apiVersionDefinition => apiVersionDefinition.access).getOrElse(ApiAccessType.PUBLIC)
   }
 
   def getStatusOfLatestVersion(apiDefinition: ApiDefinition): ApiStatus = {
