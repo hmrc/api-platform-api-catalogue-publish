@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apicataloguepublish.apicatalogue.connector
+package uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector
 
 import org.scalatest.BeforeAndAfterEach
 
@@ -22,28 +22,25 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 
-import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.ApiCatalogueAdminJsonFormatters
-import uk.gov.hmrc.apicataloguepublish.support.{ApiMicroserviceStub, MetricsTestSupport, ServerBaseISpec}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{ApiVersionNbr, Environment}
+import uk.gov.hmrc.apicataloguepublish.support.{ApiPlatformMicroserviceStub, MetricsTestSupport, ServerBaseISpec}
 
-// TODO: DELETE
-class ApiMicroserviceConnectorISpec
+class ApiPlatformMicroserviceConnectorISpec
     extends ServerBaseISpec
-    with ApiMicroserviceStub
+    with ApiPlatformMicroserviceStub
     with BeforeAndAfterEach
-    with MetricsTestSupport
-    with ApiCatalogueAdminJsonFormatters {
+    with MetricsTestSupport {
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
       .configure(
-        "metrics.enabled"                                            -> false,
-        "auditing.enabled"                                           -> false,
-        "auditing.consumer.baseUri.host"                             -> wireMockHost,
-        "auditing.consumer.baseUri.port"                             -> wireMockPort,
-        "microservice.services.api-definition.host"                  -> wireMockHost,
-        "microservice.services.api-definition.port"                  -> wireMockPort,
-        "microservice.services.integration-catalogue-admin-api.host" -> wireMockHost,
-        "microservice.services.integration-catalogue-admin-api.port" -> wireMockPort
+        "metrics.enabled"                                      -> false,
+        "auditing.enabled"                                     -> false,
+        "auditing.consumer.baseUri.host"                       -> wireMockHost,
+        "auditing.consumer.baseUri.port"                       -> wireMockPort,
+        "microservice.services.api-platform-microservice.host" -> wireMockHost,
+        "microservice.services.api-platform-microservice.port" -> wireMockPort
       )
 
   override def beforeEach(): Unit = {
@@ -54,14 +51,20 @@ class ApiMicroserviceConnectorISpec
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   trait Setup {
-    val objInTest: ApiMicroserviceConnector = app.injector.instanceOf[ApiMicroserviceConnector]
-  }
+    val environment = Environment.PRODUCTION
+    val serviceName = ServiceName("api")
+    val version     = ApiVersionNbr("1.0")
+    val resource    = "resource.yaml"
 
-  "ApiMicroserviceConnector" should {
     val filePath        = "it/resources/test-yaml-file.yaml"
     val largeFilePath   = "it/resources/test-large-yaml-file.yaml"
-    val path            = "/api/1/resource.yaml"
+    val path            = s"/environment/$environment/$serviceName/$version/documentation/$resource"
     val microserviceUrl = s"http://$wireMockHost:$wireMockPort" + path
+
+    val objInTest: ApiPlatformMicroserviceConnector = app.injector.instanceOf[ApiPlatformMicroserviceConnector]
+  }
+
+  "fetchApiDocumentationResource" should {
 
     "returns a Right if call to microservice returns OK with a small file" in new Setup {
 
@@ -71,7 +74,7 @@ class ApiMicroserviceConnectorISpec
         OK
       )
 
-      val result = await(objInTest.fetchApiDocumentationResourceByUrl(microserviceUrl))
+      val result = await(objInTest.fetchApiDocumentationResource(environment, serviceName, version, resource))
       result match {
         case Right(_: String) => succeed
         case _                => fail()
@@ -86,7 +89,7 @@ class ApiMicroserviceConnectorISpec
         OK
       )
 
-      val result = await(objInTest.fetchApiDocumentationResourceByUrl(microserviceUrl))
+      val result = await(objInTest.fetchApiDocumentationResource(environment, serviceName, version, resource))
       result match {
         case Right(_: String) => succeed
         case _                => fail()
@@ -99,7 +102,7 @@ class ApiMicroserviceConnectorISpec
         filePath,
         NOT_FOUND
       )
-      val result = await(objInTest.fetchApiDocumentationResourceByUrl(microserviceUrl))
+      val result = await(objInTest.fetchApiDocumentationResource(environment, serviceName, version, resource))
       result match {
         case Left(_) => succeed
         case _       => fail()
@@ -112,7 +115,7 @@ class ApiMicroserviceConnectorISpec
         filePath,
         INTERNAL_SERVER_ERROR
       )
-      val result = await(objInTest.fetchApiDocumentationResourceByUrl(microserviceUrl))
+      val result = await(objInTest.fetchApiDocumentationResource(environment, serviceName, version, resource))
       result match {
         case Left(_) => succeed
         case _       => fail()

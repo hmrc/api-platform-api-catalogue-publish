@@ -19,8 +19,7 @@ package uk.gov.hmrc.apicataloguepublish.support
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
-// TODO: DELETE
-trait ApiMicroserviceStub {
+trait ApiPlatformMicroserviceStub {
 
   def primeFetchResource(url: String, relativePath: String, status: Int): StubMapping = {
     primeGETWithBody(url, loadFileAsByteArray(relativePath), status)
