@@ -19,18 +19,20 @@ package uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector
 import org.scalatest.BeforeAndAfterEach
 
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.{Json, OFormat}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiDefinition, Locator, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{ApiVersionNbr, Environment}
-import uk.gov.hmrc.apicataloguepublish.support.{ApiPlatformMicroserviceStub, MetricsTestSupport, ServerBaseISpec}
+import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
+import uk.gov.hmrc.apicataloguepublish.support.{ApiPlatformMicroserviceStub, ServerBaseISpec}
 
 class ApiPlatformMicroserviceConnectorISpec
     extends ServerBaseISpec
     with ApiPlatformMicroserviceStub
-    with BeforeAndAfterEach
-    with MetricsTestSupport {
+    with ApiDefinitionData
+    with BeforeAndAfterEach {
 
   protected override def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -51,24 +53,44 @@ class ApiPlatformMicroserviceConnectorISpec
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   trait Setup {
+    implicit val locatorFormatter: OFormat[Locator[ApiDefinition]] = Locator.buildLocatorFormatter[ApiDefinition]
+
+    val objInTest: ApiPlatformMicroserviceConnector = app.injector.instanceOf[ApiPlatformMicroserviceConnector]
+  }
+
+  "fetchApiForServiceName" should {
+
+    "returns an API definition locator" in new Setup {
+
+      val locator: Locator[ApiDefinition] = Locator.Sandbox(apiDefinition1)
+      val jsonBody: String                = Json.toJson(locator).toString
+      primeFetchApiForServiceName(
+        OK,
+        jsonBody,
+        serviceName
+      )
+
+      val result = await(objInTest.fetchApiForServiceName(serviceName))
+
+      result shouldBe locator
+    }
+
+  }
+
+  "fetchApiDocumentationResource" should {
+
     val environment = Environment.PRODUCTION
     val serviceName = ServiceName("api")
     val version     = ApiVersionNbr("1.0")
     val resource    = "resource.yaml"
 
-    val filePath        = "it/resources/test-yaml-file.yaml"
-    val largeFilePath   = "it/resources/test-large-yaml-file.yaml"
-    val path            = s"/environment/$environment/$serviceName/$version/documentation/$resource"
-    val microserviceUrl = s"http://$wireMockHost:$wireMockPort" + path
-
-    val objInTest: ApiPlatformMicroserviceConnector = app.injector.instanceOf[ApiPlatformMicroserviceConnector]
-  }
-
-  "fetchApiDocumentationResource" should {
+    val filePath      = "it/resources/test-yaml-file.yaml"
+    val largeFilePath = "it/resources/test-large-yaml-file.yaml"
+    val path          = s"/environment/$environment/$serviceName/$version/documentation/$resource"
 
     "returns a Right if call to microservice returns OK with a small file" in new Setup {
 
-      primeFetchResource(
+      primeFetchApiDocumentationResource(
         path,
         filePath,
         OK
@@ -83,7 +105,7 @@ class ApiPlatformMicroserviceConnectorISpec
 
     "returns a Right if call to microservice returns OK with a large file" in new Setup {
 
-      primeFetchResource(
+      primeFetchApiDocumentationResource(
         path,
         largeFilePath,
         OK
@@ -97,7 +119,7 @@ class ApiPlatformMicroserviceConnectorISpec
     }
 
     "returns a Left with NotFoundException when 404 returned from microservice" in new Setup {
-      primeFetchResource(
+      primeFetchApiDocumentationResource(
         path,
         filePath,
         NOT_FOUND
@@ -110,7 +132,7 @@ class ApiPlatformMicroserviceConnectorISpec
     }
 
     "returns a Left with InternalServerException when 500 returned from microservice" in new Setup {
-      primeFetchResource(
+      primeFetchApiDocumentationResource(
         path,
         filePath,
         INTERNAL_SERVER_ERROR

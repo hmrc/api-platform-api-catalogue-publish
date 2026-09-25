@@ -19,19 +19,26 @@ package uk.gov.hmrc.apicataloguepublish.support
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
+
 trait ApiPlatformMicroserviceStub {
 
-  def primeFetchResource(url: String, relativePath: String, status: Int): StubMapping = {
-    primeGETWithBody(url, loadFileAsByteArray(relativePath), status)
+  def primeFetchApiForServiceName(status: Int, responseBody: String, serviceName: ServiceName): StubMapping = {
+    stubFor(get(urlEqualTo(s"/api-definitions/service-name/$serviceName"))
+      .willReturn(
+        aResponse()
+          .withStatus(status)
+          .withHeader("Content-Type", "application/json")
+          .withBody(responseBody)
+      ))
   }
 
-  def primeGETWithBody(expectedUrl: String, body: Array[Byte], status: Int): StubMapping = {
-
+  def primeFetchApiDocumentationResource(expectedUrl: String, relativePath: String, status: Int): StubMapping = {
     stubFor(get(urlEqualTo(expectedUrl))
       .willReturn(
         aResponse()
           .withStatus(status)
-          .withBody(body)
+          .withBody(loadFileAsByteArray(relativePath))
       ))
   }
 

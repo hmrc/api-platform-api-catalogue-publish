@@ -24,9 +24,10 @@ import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
 trait ApiDefinitionStub {
 
-  def getDefinitionByNamedUrl(serviceName: ServiceName) = s"/api-definition/$serviceName"
+  def getDefinitionByNamedUrl(serviceName: ServiceName) = s"/api-definition/$serviceName" // TODO: DELETE
   val getAllDefinitionsUrl                              = s"/api-definition?type=all"
 
+  // TODO: DELETE
   def primeGetByServiceName(status: Int, responseBody: String, serviceName: ServiceName): StubMapping = {
     primeGETWithBody(status, responseBody, getDefinitionByNamedUrl(serviceName))
   }

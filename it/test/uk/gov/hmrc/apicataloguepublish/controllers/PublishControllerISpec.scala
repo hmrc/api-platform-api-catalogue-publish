@@ -111,7 +111,7 @@ class PublishControllerISpec
         primeApiPublish(publishResponseAsJsonString, OK)
 
         val result: WSResponse = callPublishEndpoint(serviceName)
-        result.status mustBe OK
+        result.status shouldBe OK
       }
 
       "respond with 404 when api definition not found" in new Setup {
@@ -120,7 +120,7 @@ class PublishControllerISpec
         primeGetByServiceName(NOT_FOUND, "{}}", serviceName)
 
         val result: WSResponse = callPublishEndpoint(serviceName)
-        result.status mustBe NOT_FOUND
+        result.status shouldBe NOT_FOUND
       }
 
       "respond with 500 when getYaml fails" in new Setup {
@@ -132,7 +132,7 @@ class PublishControllerISpec
         primeGETReturnsNotFound("/" + getYamlUri(apiDefinition1))
 
         val result: WSResponse = callPublishEndpoint(serviceName)
-        result.status mustBe INTERNAL_SERVER_ERROR
+        result.status shouldBe INTERNAL_SERVER_ERROR
       }
 
       "respond with 500 when publish fails" in new Setup {
@@ -147,7 +147,7 @@ class PublishControllerISpec
         primeApiPublish(publishResponseAsJsonString, BAD_REQUEST)
 
         val result: WSResponse = callPublishEndpoint(serviceName)
-        result.status mustBe INTERNAL_SERVER_ERROR
+        result.status shouldBe INTERNAL_SERVER_ERROR
       }
 
     }
@@ -160,8 +160,8 @@ class PublishControllerISpec
         primeGetAll(NOT_FOUND, apiDefinitionAsString)
 
         val result: WSResponse = callPublishAllEndpoint()
-        result.status mustBe OK
-        result.body mustBe """{"message":"Publish all called and is working in the background, check application logs for progress"}"""
+        result.status shouldBe OK
+        result.body shouldBe """{"message":"Publish all called and is working in the background, check application logs for progress"}"""
       }
 
       "respond with 200 when publish fails" in new Setup {
@@ -175,8 +175,8 @@ class PublishControllerISpec
         primeApiPublish(publishResponseAsJsonString, BAD_REQUEST)
 
         val result: WSResponse = callPublishAllEndpoint()
-        result.status mustBe OK
-        result.body mustBe """{"message":"Publish all called and is working in the background, check application logs for progress"}"""
+        result.status shouldBe OK
+        result.body shouldBe """{"message":"Publish all called and is working in the background, check application logs for progress"}"""
       }
 
       "respond with 200 when publish is successful" in new Setup {
@@ -190,8 +190,8 @@ class PublishControllerISpec
         primeApiPublish(publishResponseAsJsonString, OK)
 
         val result: WSResponse = callPublishAllEndpoint()
-        result.status mustBe OK
-        result.body mustBe """{"message":"Publish all called and is working in the background, check application logs for progress"}"""
+        result.status shouldBe OK
+        result.body shouldBe """{"message":"Publish all called and is working in the background, check application logs for progress"}"""
       }
     }
   }
