@@ -22,12 +22,15 @@ import uk.gov.hmrc.apicataloguepublish.apicatalogue.config.ApiCatalogueAdminConn
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
 import uk.gov.hmrc.apicataloguepublish.apidefinition.config.ApiDefinitionConnectorConfigProvider
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.config.ApiPlatformMicroserviceConnectorConfigProvider
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApiPlatformMicroserviceConnector
 
 class ConfigurationModule extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[ApiDefinitionConnector.Config]).toProvider(classOf[ApiDefinitionConnectorConfigProvider])
     bind(classOf[ApiCatalogueAdminConnector.Config]).toProvider(classOf[ApiCatalogueAdminConnectorConfigProvider])
+    bind(classOf[ApiPlatformMicroserviceConnector.Config]).toProvider(classOf[ApiPlatformMicroserviceConnectorConfigProvider])
   }
 
 }

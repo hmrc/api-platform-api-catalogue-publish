@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apicataloguepublish.apicatalogue.connector
+package uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,21 +25,40 @@ import org.apache.pekko.stream.Materializer
 import play.api.Logging
 import play.api.http.HttpEntity
 import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.libs.json.OFormat
 import play.api.libs.ws.{WSClient, WSResponse}
-import uk.gov.hmrc.http.{InternalServerException, NotFoundException}
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundException, StringContextOps}
+
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiDefinition, Locator, ServiceName}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{ApiVersionNbr, Environment}
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApiPlatformMicroserviceConnector.Config
 
 @Singleton
-class ApiMicroserviceConnector @Inject() (ws: WSClient)(implicit val ec: ExecutionContext, implicit val mat: Materializer) extends Logging {
+class ApiPlatformMicroserviceConnector @Inject() (
+    val http: HttpClientV2,
+    val ws: WSClient,
+    val config: Config
+  )(implicit val ec: ExecutionContext,
+    mat: Materializer
+  ) extends Logging {
 
-  @deprecated("Replace with an APM call", "before finishing this PR")
-  def fetchApiDocumentationResourceByUrl(url: String): Future[Either[Throwable, String]] = {
-    logger.warn(s"Calling local microservice to fetch resource by URL: $url")
+  def fetchApiForServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Locator[ApiDefinition]] = {
+    implicit val locatorFormatter: OFormat[Locator[ApiDefinition]] = Locator.buildLocatorFormatter[ApiDefinition]
+    http.get(url"$config.baseUrl}//api-definitions/service-name/$serviceName")
+      .execute[Locator[ApiDefinition]]
+  }
+
+  def fetchApiDocumentationResource(environment: Environment, serviceName: ServiceName, version: ApiVersionNbr, resource: String)(implicit hc: HeaderCarrier)
+      : Future[Either[Throwable, String]] = {
+    val url = url"${config.baseUrl}/environment/$environment/$serviceName/$version/documentation/$resource".toString()
     ws.url(url).withMethod("GET").stream().flatMap {
       streamedResponse =>
         streamedResponse.status match {
           case OK          => EitherT.liftF(convertStreamToYamlString(streamedResponse)).value
           case NOT_FOUND   =>
-            logger.error(s"local microservice resource by URL: $url not found")
+            logger.error(s"API microservice resource by URL: $url not found")
             Future.successful(Left(new NotFoundException(s"Resource not found - $url")))
           case status: Int =>
             logger.error(s"Error downloading resource - $url status returned : $status")
@@ -61,4 +80,8 @@ class ApiMicroserviceConnector @Inject() (ws: WSClient)(implicit val ec: Executi
     }).consumeData
       .map(byteString => byteString.decodeString("UTF-8"))
   }
+}
+
+object ApiPlatformMicroserviceConnector {
+  case class Config(baseUrl: String)
 }

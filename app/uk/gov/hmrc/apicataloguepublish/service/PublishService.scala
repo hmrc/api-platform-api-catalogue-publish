@@ -58,7 +58,7 @@ class PublishService @Inject() (
 
   def publishByServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
     (for {
-      apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult(_, serviceName)))
+      apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult(_, serviceName))) // change
       result              <- publishDefinitionResult(apiDefinitionResult)
     } yield result).value
   }
@@ -80,7 +80,7 @@ class PublishService @Inject() (
   def getOasOrFail(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
 
     def getYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[Throwable, String]] = {
-      apiMicroserviceConnector.fetchApiDocumentationResourceByUrl(apiDefinitionResult.url + ".yaml")
+      apiMicroserviceConnector.fetchApiDocumentationResourceByUrl(apiDefinitionResult.url + ".yaml") // change
     }
 
     def handleYamlResult(result: Either[Throwable, String]): Future[Either[ApiCataloguePublishResult, OasResult]] = {
