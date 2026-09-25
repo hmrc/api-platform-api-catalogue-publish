@@ -17,8 +17,7 @@
 package uk.gov.hmrc.apicataloguepublish.support
 
 import org.apache.pekko.stream.Materializer
-import org.scalatest.OptionValues
-import org.scalatestplus.play.{PlaySpec, WsScalaTestClient}
+import org.scalatestplus.play.WsScalaTestClient
 
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -26,8 +25,10 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
+import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.AsyncHmrcSpec
+
 abstract class BaseISpec
-    extends PlaySpec with OptionValues with WsScalaTestClient with WireMockSupport with MetricsTestSupport {
+    extends AsyncHmrcSpec with WsScalaTestClient with WireMockSupport with MetricsTestSupport {
 
   def app: Application
   protected def appBuilder: GuiceApplicationBuilder

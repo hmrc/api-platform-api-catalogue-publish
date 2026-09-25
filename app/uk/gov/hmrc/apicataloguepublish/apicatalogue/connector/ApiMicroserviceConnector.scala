@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.{InternalServerException, NotFoundException}
 @Singleton
 class ApiMicroserviceConnector @Inject() (ws: WSClient)(implicit val ec: ExecutionContext, implicit val mat: Materializer) extends Logging {
 
-  @deprecated("Replace with an APM call", "before finishing this PR")
+  @deprecated("Replace with an APM call", "delete this method (and the class) before finishing this PR")
   def fetchApiDocumentationResourceByUrl(url: String): Future[Either[Throwable, String]] = {
     logger.warn(s"Calling local microservice to fetch resource by URL: $url")
     ws.url(url).withMethod("GET").stream().flatMap {

@@ -46,7 +46,7 @@ class ApiPlatformMicroserviceConnector @Inject() (
 
   def fetchApiForServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Locator[ApiDefinition]] = {
     implicit val locatorFormatter: OFormat[Locator[ApiDefinition]] = Locator.buildLocatorFormatter[ApiDefinition]
-    http.get(url"$config.baseUrl}//api-definitions/service-name/$serviceName")
+    http.get(url"${config.baseUrl}/api-definitions/service-name/$serviceName")
       .execute[Locator[ApiDefinition]]
   }
 

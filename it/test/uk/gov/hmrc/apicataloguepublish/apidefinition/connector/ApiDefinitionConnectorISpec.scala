@@ -67,6 +67,7 @@ class ApiDefinitionConnectorISpec
     ApiDefinitionResult(getUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName, getStatusOfLatestVersion(definition))
   }
 
+  // TODO: DELETE
   "ApiDefinitionConnector" when {
 
     "getDefinitionByServiceName" should {
@@ -79,7 +80,7 @@ class ApiDefinitionConnectorISpec
           serviceName
         )
         await(objInTest.getDefinitionByServiceName(serviceName)) match {
-          case Right(x: ApiDefinitionResult) => x mustBe definitionResult1
+          case Right(x: ApiDefinitionResult) => x shouldBe definitionResult1
           case _                             => fail()
 
         }
@@ -120,7 +121,7 @@ class ApiDefinitionConnectorISpec
       await(objInTest.getAllServices()) match {
         case Left(_: GeneralFailedResult)              => fail()
         case Right(results: List[ApiDefinitionResult]) =>
-          results mustBe List(definitionResult1, definitionResult2)
+          results shouldBe List(definitionResult1, definitionResult2)
 
       }
     }
@@ -128,7 +129,7 @@ class ApiDefinitionConnectorISpec
     "return right with empty list when no definitions returned" in new Setup {
       primeGetAll(OK, "[]")
       await(objInTest.getAllServices()) match {
-        case Right(x: List[ApiDefinitionResult]) => x mustBe List.empty
+        case Right(x: List[ApiDefinitionResult]) => x shouldBe List.empty
         case x                                   => fail()
       }
     }
@@ -137,7 +138,7 @@ class ApiDefinitionConnectorISpec
       primeGetAll(INTERNAL_SERVER_ERROR, "[]")
       await(objInTest.getAllServices()) match {
         case Left(x: GeneralFailedResult) =>
-          x.message mustBe s"GET of 'http://localhost:$wireMockPort/api-definition?type=all' returned 500. Response body: '[]'"
+          x.message shouldBe s"GET of 'http://localhost:$wireMockPort/api-definition?type=all' returned 500. Response body: '[]'"
         case _                            => fail()
       }
     }
