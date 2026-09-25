@@ -42,6 +42,7 @@ class ApiDefinitionConnector @Inject() (
 
   private val fetchAllUrl = s"${config.baseUrl}/api-definition"
 
+  @deprecated("Replace with an APM call", "before finishing this PR")
   def getDefinitionByServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]] = {
     logger.info(s"${this.getClass.getSimpleName} - fetchApiDefinition $serviceName")
     http.get(url"${definitionUrl(serviceName)}")
