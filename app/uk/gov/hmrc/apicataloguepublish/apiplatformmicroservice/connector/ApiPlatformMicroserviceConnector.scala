@@ -18,6 +18,7 @@ package uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 import cats.data.EitherT
 import org.apache.pekko.stream.Materializer
@@ -31,9 +32,10 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundException, StringContextOps}
 
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiDefinition, Locator, ServiceName}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiAccessType, ApiDefinition, ApiStatus, Locator, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{ApiVersionNbr, Environment}
-import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApiPlatformMicroserviceConnector.Config
+import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApiPlatformMicroserviceConnector._
 
 @Singleton
 class ApiPlatformMicroserviceConnector @Inject() (
@@ -42,16 +44,37 @@ class ApiPlatformMicroserviceConnector @Inject() (
     val config: Config
   )(implicit val ec: ExecutionContext,
     mat: Materializer
-  ) extends Logging {
+  ) extends Logging
+    with ApiDefinitionUtils {
 
-  def fetchApiForServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Locator[ApiDefinition]] = {
+  def fetchApiForServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]] = {
     implicit val locatorFormatter: OFormat[Locator[ApiDefinition]] = Locator.buildLocatorFormatter[ApiDefinition]
     http.get(url"${config.baseUrl}/api-definitions/service-name/$serviceName")
-      .execute[Locator[ApiDefinition]]
+      .execute[Option[Locator[ApiDefinition]]]
+      .map {
+        case Some(locator) =>
+          logger.info(s"${this.getClass.getSimpleName} - fetchApiForServiceName $serviceName Successful")
+          Right(definitionToResult(locator))
+        case _             =>
+          logger.warn(s"${this.getClass.getSimpleName} - fetchApiForServiceName $serviceName Failed")
+          Left(NotFoundResult(s"unable to fetch definition: $serviceName"))
+      }.recover {
+        case NonFatal(e) =>
+          logger.error(s"Failed to getDefinitionByServiceName: $serviceName ", e)
+          Left(GeneralFailedResult(e.getMessage))
+      }
   }
 
-  def fetchApiDocumentationResource(environment: Environment, serviceName: ServiceName, version: ApiVersionNbr, resource: String)(implicit hc: HeaderCarrier)
-      : Future[Either[Throwable, String]] = {
+  private def definitionToResult(locator: Locator[ApiDefinition]): ApiDefinitionResult = {
+    val (environment, definition: ApiDefinition) = locator match {
+      case Locator.Sandbox(sandbox)       => (Environment.SANDBOX, sandbox)
+      case Locator.Production(production) => (Environment.PRODUCTION, production)
+      case Locator.Both(_, production)    => (Environment.PRODUCTION, production)
+    }
+    ApiDefinitionResult(environment, getAccessTypeOfLatestVersion(definition), definition.serviceName, getLatestVersion(definition), getStatusOfLatestVersion(definition))
+  }
+
+  def fetchApiDocumentationResource(environment: Environment, serviceName: ServiceName, version: ApiVersionNbr, resource: String): Future[Either[Throwable, String]] = {
     val url = url"${config.baseUrl}/environment/$environment/$serviceName/$version/documentation/$resource".toString()
     ws.url(url).withMethod("GET").stream().flatMap {
       streamedResponse =>
@@ -84,4 +107,12 @@ class ApiPlatformMicroserviceConnector @Inject() (
 
 object ApiPlatformMicroserviceConnector {
   case class Config(baseUrl: String)
+  case class ApiDefinitionResult(environment: Environment, access: ApiAccessType, serviceName: ServiceName, version: ApiVersionNbr, status: ApiStatus)
+
+  sealed trait ApiDefinitionFailedResult {
+    val message: String
+  }
+  case class NotFoundResult(message: String)      extends ApiDefinitionFailedResult
+  case class GeneralFailedResult(message: String) extends ApiDefinitionFailedResult
+
 }
