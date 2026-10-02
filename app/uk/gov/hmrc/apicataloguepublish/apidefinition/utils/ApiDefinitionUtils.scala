@@ -21,14 +21,6 @@ import uk.gov.hmrc.apiplatform.modules.common.domain.models.ApiVersionNbr
 
 trait ApiDefinitionUtils {
 
-  def getUri(apiDefinition: ApiDefinition) = {
-    getBaseUrl(apiDefinition) + s"/api/conf/${getLatestVersion(apiDefinition)}/application"
-  }
-
-  private def getBaseUrl(apiDefinition: ApiDefinition): String = {
-    apiDefinition.serviceBaseUrl
-  }
-
   private val sortedVersionsHighestFirst: ApiDefinition => List[ApiVersion] = (defn) =>
     defn.versionsAsList
       .sorted

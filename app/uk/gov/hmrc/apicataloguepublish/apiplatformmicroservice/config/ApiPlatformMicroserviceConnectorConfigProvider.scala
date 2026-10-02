@@ -22,13 +22,13 @@ import com.google.inject.Provider
 
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApiPlatformMicroserviceConnector
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApmConnector
 
 @Singleton
-class ApiPlatformMicroserviceConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApiPlatformMicroserviceConnector.Config] {
+class ApiPlatformMicroserviceConnectorConfigProvider @Inject() (sc: ServicesConfig) extends Provider[ApmConnector.Config] {
 
-  override def get(): ApiPlatformMicroserviceConnector.Config = {
+  override def get(): ApmConnector.Config = {
     lazy val baseUrl = sc.baseUrl("api-platform-microservice")
-    ApiPlatformMicroserviceConnector.Config(baseUrl)
+    ApmConnector.Config(baseUrl)
   }
 }

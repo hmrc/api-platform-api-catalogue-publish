@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.apicataloguepublish.support
 
+import scala.io.Source
+
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
@@ -42,12 +44,16 @@ trait ApiPlatformMicroserviceStub {
       ))
   }
 
+  def primeFetchApiDocumentationResourceNotFound(expectedUrl: String): StubMapping = {
+    stubFor(get(urlEqualTo(expectedUrl))
+      .willReturn(
+        aResponse()
+          .withStatus(404)
+      ))
+  }
+
   private def loadFileAsByteArray(relativePath: String): Array[Byte] = {
-    import java.nio.file.{Files, Paths}
-
-    val filePath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + relativePath
-    Files.readAllBytes(Paths.get(filePath))
-
+    Source.fromResource(relativePath).mkString.getBytes()
   }
 
 }

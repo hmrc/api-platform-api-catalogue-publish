@@ -26,11 +26,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiDefinition, Locator, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{ApiVersionNbr, Environment}
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
-import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApiPlatformMicroserviceConnector.{ApiDefinitionResult, GeneralFailedResult, NotFoundResult}
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApmConnector
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.support.{ApiPlatformMicroserviceStub, ServerBaseISpec}
 
-class ApiPlatformMicroserviceConnectorISpec
+class ApmConnectorISpec
     extends ServerBaseISpec
     with ApiPlatformMicroserviceStub
     with ApiDefinitionData
@@ -58,18 +58,18 @@ class ApiPlatformMicroserviceConnectorISpec
   trait Setup {
     implicit val locatorFormatter: OFormat[Locator[ApiDefinition]] = Locator.buildLocatorFormatter[ApiDefinition]
 
-    val objInTest: ApiPlatformMicroserviceConnector = app.injector.instanceOf[ApiPlatformMicroserviceConnector]
+    val objInTest: ApmConnector = app.injector.instanceOf[ApmConnector]
 
-    def buildResult(environment: Environment, definition: ApiDefinition): ApiDefinitionResult = {
-      ApiDefinitionResult(environment, getAccessTypeOfLatestVersion(definition), definition.serviceName, getLatestVersion(definition), getStatusOfLatestVersion(definition))
+    def buildResult(environment: Environment, definition: ApiDefinition): ApmConnector.Result = {
+      ApmConnector.Result(environment, getAccessTypeOfLatestVersion(definition), definition.serviceName, getLatestVersion(definition), getStatusOfLatestVersion(definition))
     }
   }
 
   "fetchApiForServiceName" should {
 
-    "returns an API definition" in new Setup {
+    "returns an API definition from production" in new Setup {
 
-      val definitionResult: ApiDefinitionResult = buildResult(Environment.PRODUCTION, apiDefinition1)
+      val definitionResult: ApmConnector.Result = buildResult(Environment.PRODUCTION, apiDefinition1)
       val locator: Locator[ApiDefinition]       = Locator.Production(apiDefinition1)
       val jsonBody: String                      = Json.toJson(locator).toString
       primeFetchApiForServiceName(
@@ -79,7 +79,41 @@ class ApiPlatformMicroserviceConnectorISpec
       )
 
       await(objInTest.fetchApiForServiceName(serviceName)) match {
-        case Right(x: ApiDefinitionResult) => x shouldBe definitionResult
+        case Right(x: ApmConnector.Result) => x shouldBe definitionResult
+        case _                             => fail()
+      }
+    }
+
+    "returns an API definition from sandbox" in new Setup {
+
+      val definitionResult: ApmConnector.Result = buildResult(Environment.SANDBOX, apiDefinition1)
+      val locator: Locator[ApiDefinition]       = Locator.Sandbox(apiDefinition1)
+      val jsonBody: String                      = Json.toJson(locator).toString
+      primeFetchApiForServiceName(
+        OK,
+        jsonBody,
+        serviceName
+      )
+
+      await(objInTest.fetchApiForServiceName(serviceName)) match {
+        case Right(x: ApmConnector.Result) => x shouldBe definitionResult
+        case _                             => fail()
+      }
+    }
+
+    "returns an API definition from production over sandbox" in new Setup {
+
+      val definitionResult: ApmConnector.Result = buildResult(Environment.PRODUCTION, apiDefinition1)
+      val locator: Locator[ApiDefinition]       = Locator.Both(sandboxValue = apiDefinition2, productionValue = apiDefinition1)
+      val jsonBody: String                      = Json.toJson(locator).toString
+      primeFetchApiForServiceName(
+        OK,
+        jsonBody,
+        serviceName
+      )
+
+      await(objInTest.fetchApiForServiceName(serviceName)) match {
+        case Right(x: ApmConnector.Result) => x shouldBe definitionResult
         case _                             => fail()
       }
     }
@@ -91,8 +125,8 @@ class ApiPlatformMicroserviceConnectorISpec
         serviceName
       )
       await(objInTest.fetchApiForServiceName(serviceName)) match {
-        case Left(_: NotFoundResult) => succeed
-        case _                       => fail()
+        case Left(_: ApmConnector.NotFoundResult) => succeed
+        case _                                    => fail()
 
       }
     }
@@ -103,8 +137,8 @@ class ApiPlatformMicroserviceConnectorISpec
         serviceName
       )
       await(objInTest.fetchApiForServiceName(serviceName)) match {
-        case Left(_: GeneralFailedResult) => succeed
-        case _                            => fail()
+        case Left(_: ApmConnector.GeneralFailedResult) => succeed
+        case _                                         => fail()
       }
     }
   }
@@ -116,8 +150,8 @@ class ApiPlatformMicroserviceConnectorISpec
     val version     = ApiVersionNbr("1.0")
     val resource    = "resource.yaml"
 
-    val filePath      = "it/resources/test-yaml-file.yaml"
-    val largeFilePath = "it/resources/test-large-yaml-file.yaml"
+    val filePath      = "test-yaml-file.yaml"
+    val largeFilePath = "test-large-yaml-file.yaml"
     val path          = s"/environment/$environment/$serviceName/$version/documentation/$resource"
 
     "returns a Right if call to microservice returns OK with a small file" in new Setup {

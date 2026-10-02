@@ -18,23 +18,10 @@ package uk.gov.hmrc.apicataloguepublish.support
 
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.stubbing.StubMapping
-
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ServiceName
 
 trait ApiDefinitionStub {
 
-  def getDefinitionByNamedUrl(serviceName: ServiceName) = s"/api-definition/$serviceName" // TODO: DELETE
-  val getAllDefinitionsUrl                              = s"/api-definition?type=all"
-
-  // TODO: DELETE
-  def primeGetByServiceName(status: Int, responseBody: String, serviceName: ServiceName): StubMapping = {
-    primeGETWithBody(status, responseBody, getDefinitionByNamedUrl(serviceName))
-  }
-
-  def primeGETWithBody(status: Int, responseBody: String, urlResolver: => String): StubMapping = {
-    primeWithBody(get(urlEqualTo(urlResolver)), responseBody, status)
-  }
+  val getAllDefinitionsUrl = s"/api-definition?type=all"
 
   def primeGetAll(status: Int, responseBody: String) = {
     primeWithBody(get(getAllDefinitionsUrl), responseBody, status)

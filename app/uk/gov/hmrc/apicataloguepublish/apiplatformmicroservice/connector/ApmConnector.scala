@@ -35,10 +35,10 @@ import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, NotFoundExcepti
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiAccessType, ApiDefinition, ApiStatus, Locator, ServiceName}
 import uk.gov.hmrc.apiplatform.modules.common.domain.models.{ApiVersionNbr, Environment}
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
-import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApiPlatformMicroserviceConnector._
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApmConnector._
 
 @Singleton
-class ApiPlatformMicroserviceConnector @Inject() (
+class ApmConnector @Inject() (
     val http: HttpClientV2,
     val ws: WSClient,
     val config: Config
@@ -47,7 +47,7 @@ class ApiPlatformMicroserviceConnector @Inject() (
   ) extends Logging
     with ApiDefinitionUtils {
 
-  def fetchApiForServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]] = {
+  def fetchApiForServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApmConnector.FailedResult, ApmConnector.Result]] = {
     implicit val locatorFormatter: OFormat[Locator[ApiDefinition]] = Locator.buildLocatorFormatter[ApiDefinition]
     http.get(url"${config.baseUrl}/api-definitions/service-name/$serviceName")
       .execute[Option[Locator[ApiDefinition]]]
@@ -65,17 +65,17 @@ class ApiPlatformMicroserviceConnector @Inject() (
       }
   }
 
-  private def definitionToResult(locator: Locator[ApiDefinition]): ApiDefinitionResult = {
+  private def definitionToResult(locator: Locator[ApiDefinition]): ApmConnector.Result = {
     val (environment, definition: ApiDefinition) = locator match {
       case Locator.Sandbox(sandbox)       => (Environment.SANDBOX, sandbox)
       case Locator.Production(production) => (Environment.PRODUCTION, production)
       case Locator.Both(_, production)    => (Environment.PRODUCTION, production)
     }
-    ApiDefinitionResult(environment, getAccessTypeOfLatestVersion(definition), definition.serviceName, getLatestVersion(definition), getStatusOfLatestVersion(definition))
+    ApmConnector.Result(environment, getAccessTypeOfLatestVersion(definition), definition.serviceName, getLatestVersion(definition), getStatusOfLatestVersion(definition))
   }
 
   def fetchApiDocumentationResource(environment: Environment, serviceName: ServiceName, version: ApiVersionNbr, resource: String): Future[Either[Throwable, String]] = {
-    val url = url"${config.baseUrl}/environment/$environment/$serviceName/$version/documentation/$resource".toString()
+    val url = url"${config.baseUrl}/environment/$environment/$serviceName/$version/documentation/".toString() + resource
     ws.url(url).withMethod("GET").stream().flatMap {
       streamedResponse =>
         streamedResponse.status match {
@@ -105,14 +105,14 @@ class ApiPlatformMicroserviceConnector @Inject() (
   }
 }
 
-object ApiPlatformMicroserviceConnector {
+object ApmConnector {
   case class Config(baseUrl: String)
-  case class ApiDefinitionResult(environment: Environment, access: ApiAccessType, serviceName: ServiceName, version: ApiVersionNbr, status: ApiStatus)
+  case class Result(environment: Environment, access: ApiAccessType, serviceName: ServiceName, version: ApiVersionNbr, status: ApiStatus)
 
-  sealed trait ApiDefinitionFailedResult {
+  sealed trait FailedResult {
     val message: String
   }
-  case class NotFoundResult(message: String)      extends ApiDefinitionFailedResult
-  case class GeneralFailedResult(message: String) extends ApiDefinitionFailedResult
+  case class NotFoundResult(message: String)      extends FailedResult
+  case class GeneralFailedResult(message: String) extends FailedResult
 
 }

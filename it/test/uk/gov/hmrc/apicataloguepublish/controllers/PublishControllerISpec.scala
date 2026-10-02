@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apicataloguepublish.controllers
 
-import java.nio.file.Paths
 import java.util.UUID
 
 import org.scalatest.BeforeAndAfterEach
@@ -27,7 +26,8 @@ import play.api.libs.json.Json
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 
-import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiDefinition, ServiceName}
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiDefinition.api
+import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiDefinition, Locator, ServiceName}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{ApiCatalogueAdminJsonFormatters, IntegrationId, PublishResponse}
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
@@ -39,6 +39,7 @@ class PublishControllerISpec
     with BeforeAndAfterEach
     with MetricsTestSupport
     with ApiDefinitionStub
+    with ApiPlatformMicroserviceStub
     with ApiProducerTeamStub
     with ApiDefinitionData
     with ApiDefinitionUtils
@@ -54,6 +55,8 @@ class PublishControllerISpec
         "auditing.consumer.baseUri.port"                             -> wireMockPort,
         "microservice.services.api-definition.host"                  -> wireMockHost,
         "microservice.services.api-definition.port"                  -> wireMockPort,
+        "microservice.services.api-platform-microservice.host"       -> wireMockHost,
+        "microservice.services.api-platform-microservice.port"       -> wireMockPort,
         "microservice.services.integration-catalogue-admin-api.host" -> wireMockHost,
         "microservice.services.integration-catalogue-admin-api.port" -> wireMockPort
       )
@@ -88,11 +91,7 @@ class PublishControllerISpec
       callPostEndpoint(s"$url/publish-all", body = "", List.empty)
     }
 
-    def absoluteYamlPath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "it/resources/test-yaml-file.yaml"
-
-    def getYamlUri(apiDefinition: ApiDefinition) = {
-      getUri(apiDefinition) + ".yaml"
-    }
+    def yamlPath = "test-yaml-file.yaml"
 
   }
 
@@ -102,12 +101,14 @@ class PublishControllerISpec
       "respond with 200 when publish successful" in new Setup {
         val serviceName                         = ServiceName("my-service")
         val apiDefinition1withwiremock          = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
-        val apiDefinitionAsString               = Json.toJson(apiDefinition1withwiremock).toString
+        val locator                             = Locator.Production(apiDefinition1withwiremock)
+        implicit val fmt                        = Locator.buildLocatorFormatter[ApiDefinition](api)
+        val apiDefinitionAsString               = Json.toJson[Locator[ApiDefinition]](locator).toString
         val publishResponse: PublishResponse    = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef")
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
-        primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
-        primeGETWithFileContents("/" + getYamlUri(apiDefinition1), absoluteYamlPath, OK)
+        primeFetchApiForServiceName(OK, apiDefinitionAsString, serviceName)
+        primeFetchApiDocumentationResource("/environment/PRODUCTION/my-service/2.0/documentation/application.yaml", yamlPath, OK)
         primeApiPublish(publishResponseAsJsonString, OK)
 
         val result: WSResponse = callPublishEndpoint(serviceName)
@@ -117,7 +118,7 @@ class PublishControllerISpec
       "respond with 404 when api definition not found" in new Setup {
         val serviceName = ServiceName("my-service")
 
-        primeGetByServiceName(NOT_FOUND, "{}}", serviceName)
+        primeFetchApiForServiceName(NOT_FOUND, "{}", serviceName)
 
         val result: WSResponse = callPublishEndpoint(serviceName)
         result.status shouldBe NOT_FOUND
@@ -128,8 +129,8 @@ class PublishControllerISpec
         val apiDefinition1withwiremock = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString      = Json.toJson(apiDefinition1withwiremock).toString
 
-        primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
-        primeGETReturnsNotFound("/" + getYamlUri(apiDefinition1))
+        primeFetchApiForServiceName(OK, apiDefinitionAsString, serviceName)
+        primeFetchApiDocumentationResourceNotFound("/xxx")
 
         val result: WSResponse = callPublishEndpoint(serviceName)
         result.status shouldBe INTERNAL_SERVER_ERROR
@@ -142,8 +143,8 @@ class PublishControllerISpec
         val publishResponse: PublishResponse    = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef")
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
-        primeGetByServiceName(OK, apiDefinitionAsString, serviceName)
-        primeGETWithFileContents("/" + getYamlUri(apiDefinition1), absoluteYamlPath, OK)
+        primeFetchApiForServiceName(OK, apiDefinitionAsString, serviceName)
+        primeFetchApiDocumentationResource("/xxx", yamlPath, OK)
         primeApiPublish(publishResponseAsJsonString, BAD_REQUEST)
 
         val result: WSResponse = callPublishEndpoint(serviceName)
@@ -171,7 +172,7 @@ class PublishControllerISpec
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeGetAll(OK, apiDefinitionAsString)
-        primeGETWithFileContents("/" + getYamlUri(apiDefinition1), absoluteYamlPath, OK)
+        primeFetchApiDocumentationResource("/xxx", yamlPath, OK)
         primeApiPublish(publishResponseAsJsonString, BAD_REQUEST)
 
         val result: WSResponse = callPublishAllEndpoint()
@@ -186,7 +187,7 @@ class PublishControllerISpec
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeGetAll(OK, apiDefinitionAsString)
-        primeGETWithFileContents("/" + getYamlUri(apiDefinition1), absoluteYamlPath, OK)
+        primeFetchApiDocumentationResource("/xxx", yamlPath, OK)
         primeApiPublish(publishResponseAsJsonString, OK)
 
         val result: WSResponse = callPublishAllEndpoint()
