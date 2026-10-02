@@ -28,16 +28,17 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.{ApiStatus, ServiceName}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.{ApiVersionNbr, Environment}
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueGeneralFailureResult
-import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.{IntegrationId, PublishResponse}
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionFailedResult, ApiDefinitionResult, GeneralFailedResult, NotFoundResult}
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.ApiDefinitionUtils
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApmConnector
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apicataloguepublish.parser.OasParser
@@ -53,45 +54,48 @@ class PublishServiceSpec
     with ApiDefinitionUtils {
 
   trait Setup {
-    val mockConnector                = mock[ApiDefinitionConnector]
-    val mockOasParser                = mock[OasParser]
-    val mockCatalogueConnector       = mock[ApiCatalogueAdminConnector]
-    val mockApiMicroserviceConnector = mock[ApiMicroserviceConnector]
+    val mockConnector          = mock[ApiDefinitionConnector]
+    val mockOasParser          = mock[OasParser]
+    val mockCatalogueConnector = mock[ApiCatalogueAdminConnector]
+    val mockApmConnector       = mock[ApmConnector]
 
     import java.nio.file.{Files, Paths}
 
     val filePath            = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "test/resources/noIntCatExtensions.yaml"
     val expectedOasFilePath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "test/resources/expectedYamlConverted.yaml"
 
-    implicit val hc: HeaderCarrier               = HeaderCarrier()
-    val yamlResponseString                       = Files.readAllLines(Paths.get(filePath)).asScala.mkString
-    val expectedEnhancedOasString                = Files.readAllLines(Paths.get(expectedOasFilePath)).asScala.mkString
-    val apiDefinitionResult: ApiDefinitionResult = ApiDefinitionResult(getUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.STABLE)
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    val yamlResponseString         = Files.readAllLines(Paths.get(filePath)).asScala.mkString
+    val expectedEnhancedOasString  = Files.readAllLines(Paths.get(expectedOasFilePath)).asScala.mkString
 
-    val apiDefinitionResult2: ApiDefinitionResult =
-      ApiDefinitionResult(getUri(apiDefinition2), getAccessTypeOfLatestVersion(apiDefinition2), apiDefinition2.serviceName, ApiStatus.STABLE)
-    val expectedDescription                       = "A description."
-    val convertedWebApiToOasResult: OasResult     = OasResult(expectedEnhancedOasString, serviceName, expectedDescription)
-    val yamlOasResult: OasResult                  = OasResult(yamlResponseString, serviceName, expectedDescription)
-    val publishResponse: PublishResponse          = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef")
-    val ramlError: PublishFailedResult            = PublishFailedResult(serviceName, "YAML not found & RAML is no longer supported")
+    val apiDefinitionResult =
+      ApmConnector.Result(Environment.PRODUCTION, getAccessTypeOfLatestVersion(apiDefinition1), serviceName, getLatestVersion(apiDefinition1), ApiStatus.STABLE)
 
-    val objInTest = new PublishService(mockConnector, mockOasParser, mockCatalogueConnector, mockApiMicroserviceConnector)
+    val apiDefinitionResult2                  =
+      ApmConnector.Result(Environment.PRODUCTION, getAccessTypeOfLatestVersion(apiDefinition2), apiDefinition2.serviceName, getLatestVersion(apiDefinition2), ApiStatus.STABLE)
+    val expectedDescription                   = "A description."
+    val convertedWebApiToOasResult: OasResult = OasResult(expectedEnhancedOasString, serviceName, expectedDescription)
+    val yamlOasResult: OasResult              = OasResult(yamlResponseString, serviceName, expectedDescription)
+    val publishResponse: PublishResponse      = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef")
+    val ramlError: PublishFailedResult        = PublishFailedResult(serviceName, "YAML not found & RAML is no longer supported")
 
-    def primeApiDefinitionSuccess(): ScalaOngoingStubbing[Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]]] = {
-      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+    val objInTest = new PublishService(mockConnector, mockOasParser, mockCatalogueConnector, mockApmConnector)
+
+    def primeApiDefinitionSuccess(): ScalaOngoingStubbing[Future[Either[ApmConnector.FailedResult, ApmConnector.Result]]] = {
+      when(mockApmConnector.fetchApiForServiceName(eqTo(serviceName))(*))
         .thenReturn(Future.successful(Right(apiDefinitionResult)))
     }
 
-    def primeApiDefinitionSuccessWithRetiredApi(): ScalaOngoingStubbing[Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]]] = {
-      val apiDefinitionResultRetired = ApiDefinitionResult(getUri(apiDefinition1), getAccessTypeOfLatestVersion(apiDefinition1), serviceName, ApiStatus.RETIRED)
+    def primeApiDefinitionSuccessWithRetiredApi(): ScalaOngoingStubbing[Future[Either[ApmConnector.FailedResult, ApmConnector.Result]]] = {
+      val apiDefinitionResultRetired =
+        ApmConnector.Result(Environment.PRODUCTION, getAccessTypeOfLatestVersion(apiDefinition1), serviceName, getLatestVersion(apiDefinition1), ApiStatus.RETIRED)
 
-      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+      when(mockApmConnector.fetchApiForServiceName(eqTo(serviceName))(*))
         .thenReturn(Future.successful(Right(apiDefinitionResultRetired)))
     }
 
-    def primeApiDefinitionFailure(result: ApiDefinitionFailedResult): ScalaOngoingStubbing[Future[Either[ApiDefinitionFailedResult, ApiDefinitionResult]]] = {
-      when(mockConnector.getDefinitionByServiceName(eqTo(serviceName))(eqTo(hc)))
+    def primeApiDefinitionFailure(result: ApmConnector.FailedResult): ScalaOngoingStubbing[Future[Either[ApmConnector.FailedResult, ApmConnector.Result]]] = {
+      when(mockApmConnector.fetchApiForServiceName(eqTo(serviceName))(*))
         .thenReturn(Future.successful(Left(result)))
     }
 
@@ -104,11 +108,7 @@ class PublishServiceSpec
     }
 
     def primeApiMicroserviceConnectorSuccess(): ScalaOngoingStubbing[Future[Either[Throwable, String]]] = {
-      when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(*[String])).thenReturn(Future.successful(Right(yamlResponseString)))
-    }
-
-    def primeApiMicroserviceConnectorFailure(): ScalaOngoingStubbing[Future[Either[Throwable, String]]] = {
-      when(mockApiMicroserviceConnector.fetchApiDocumentationResourceByUrl(*[String])).thenReturn(Future.successful(Left(new NotFoundException("error"))))
+      when(mockApmConnector.fetchApiDocumentationResource(*[Environment], *[ServiceName], *[ApiVersionNbr], *[String])).thenReturn(Future.successful(Right(yamlResponseString)))
     }
 
     def primeSuccessApartFromPublish(): ScalaOngoingStubbing[Either[ApiCataloguePublishResult, String]] = {
@@ -148,7 +148,7 @@ class PublishServiceSpec
 
       "return Left when api definition get by service name fails, general fail" in new Setup {
         val expectedError = PublishFailedResult(serviceName, "some error")
-        primeApiDefinitionFailure(GeneralFailedResult("some error"))
+        primeApiDefinitionFailure(ApmConnector.GeneralFailedResult("some error"))
 
         val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
 
@@ -162,7 +162,7 @@ class PublishServiceSpec
       "return Left when api definition get by service name fails not found" in new Setup {
         val expectedError = ApiDefinitionNotFoundResult(serviceName, "some error")
 
-        primeApiDefinitionFailure(NotFoundResult("some error"))
+        primeApiDefinitionFailure(ApmConnector.NotFoundResult("some error"))
 
         val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
 
@@ -220,7 +220,7 @@ class PublishServiceSpec
   "publishAll" should {
 
     "return left with error when connector returns an error" in new Setup {
-      when(mockConnector.getAllServices()).thenReturn(Future.successful(Left(GeneralFailedResult("error"))))
+      when(mockConnector.getAllServices()).thenReturn(Future.successful(Left(ApmConnector.GeneralFailedResult("error"))))
       val results = await(objInTest.publishAll())
       results match {
         case List(Right(_))                         => fail()

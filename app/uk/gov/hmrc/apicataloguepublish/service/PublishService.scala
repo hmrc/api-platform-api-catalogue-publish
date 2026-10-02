@@ -27,11 +27,11 @@ import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models._
+import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminConnector.ApiCatalogueFailedResult
-import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.{ApiCatalogueAdminConnector, ApiMicroserviceConnector}
 import uk.gov.hmrc.apicataloguepublish.apicatalogue.models.PublishResponse
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
-import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector._
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApmConnector
 import uk.gov.hmrc.apicataloguepublish.openapi.OasResult
 import uk.gov.hmrc.apicataloguepublish.parser.OasParser
 
@@ -50,7 +50,7 @@ class PublishService @Inject() (
     apiDefinitionConnector: ApiDefinitionConnector,
     oasParser: OasParser,
     catalogueConnector: ApiCatalogueAdminConnector,
-    apiMicroserviceConnector: ApiMicroserviceConnector
+    apmConnector: ApmConnector
   )(implicit val ec: ExecutionContext
   ) extends Logging {
 
@@ -58,46 +58,46 @@ class PublishService @Inject() (
 
   def publishByServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
     (for {
-      apiDefinitionResult <- EitherT(apiDefinitionConnector.getDefinitionByServiceName(serviceName).map(mapApiDefinitionResult(_, serviceName))) // change
-      result              <- publishDefinitionResult(apiDefinitionResult)
+      apmResult <- EitherT(apmConnector.fetchApiForServiceName(serviceName).map(mapApmResult(_, serviceName)))
+      result    <- publishDefinitionResult(apmResult)
     } yield result).value
   }
 
-  def publishDefinitionResult(apiDefinitionResult: ApiDefinitionResult): EitherT[Future, ApiCataloguePublishResult, PublishResponse] = {
-    val serviceName = apiDefinitionResult.serviceName
+  def publishDefinitionResult(result: ApmConnector.Result): EitherT[Future, ApiCataloguePublishResult, PublishResponse] = {
+    val serviceName = result.serviceName
     logger.info(s"publishDefinitionResult START for $serviceName")
-    apiDefinitionResult.status match {
+    result.status match {
       case ApiStatus.RETIRED =>
-        EitherT.left(successful(ApiDefinitionInvalidStatusResult(apiDefinitionResult.serviceName, "definition record was RETIRED for this service")))
+        EitherT.left(successful(ApiDefinitionInvalidStatusResult(result.serviceName, "definition record was RETIRED for this service")))
       case _                 => for {
-          oasValue              <- EitherT(getOasOrFail(apiDefinitionResult))
+          oasValue              <- EitherT(getOasOrFail(result))
           oasDataWithExtensions <- EitherT(successful(oasParser.handleEnhancingOasForCatalogue(oasValue)))
           result                <- EitherT(catalogueConnector.publishApi(oasDataWithExtensions).map(mapCataloguePublishResult(_, serviceName)))
         } yield result
     }
   }
 
-  def getOasOrFail(apiDefinitionResult: ApiDefinitionResult): Future[Either[ApiCataloguePublishResult, OasResult]] = {
+  def getOasOrFail(result: ApmConnector.Result): Future[Either[ApiCataloguePublishResult, OasResult]] = {
 
-    def getYaml(apiDefinitionResult: ApiDefinitionResult): Future[Either[Throwable, String]] = {
-      apiMicroserviceConnector.fetchApiDocumentationResourceByUrl(apiDefinitionResult.url + ".yaml") // change
+    def getYaml(result: ApmConnector.Result): Future[Either[Throwable, String]] = {
+      apmConnector.fetchApiDocumentationResource(result.environment, result.serviceName, result.version, "application.yaml")
     }
 
-    def handleYamlResult(result: Either[Throwable, String]): Future[Either[ApiCataloguePublishResult, OasResult]] = {
-      result match {
+    def handleYamlResult(yamlResult: Either[Throwable, String]): Future[Either[ApiCataloguePublishResult, OasResult]] = {
+      yamlResult match {
         case Right(oas: String) => successful(Right(OasResult(
             oas,
-            apiDefinitionResult.serviceName,
-            PublishService.apiAccessToDescription(apiDefinitionResult.access)
+            result.serviceName,
+            PublishService.apiAccessToDescription(result.access)
           )))
         case Left(_)            =>
-          logger.warn(s"handleYamlResult for ${apiDefinitionResult.serviceName} failed YAML not found & RAML is no longer supported")
-          successful(Left(PublishFailedResult(apiDefinitionResult.serviceName, "YAML not found & RAML is no longer supported")))
+          logger.warn(s"handleYamlResult for ${result.serviceName} failed YAML not found & RAML is no longer supported")
+          successful(Left(PublishFailedResult(result.serviceName, "YAML not found & RAML is no longer supported")))
       }
     }
 
     for {
-      yamlResult    <- getYaml(apiDefinitionResult)
+      yamlResult    <- getYaml(result)
       handledResult <- handleYamlResult(yamlResult)
     } yield handledResult
 
@@ -106,9 +106,9 @@ class PublishService @Inject() (
   def publishAll()(implicit hc: HeaderCarrier): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
     apiDefinitionConnector.getAllServices()
       .flatMap {
-        case Right(definitionList: List[ApiDefinitionResult]) =>
+        case Right(definitionList: List[ApmConnector.Result]) =>
           batchFutures(definitionList, List.empty)
-        case Left(_: GeneralFailedResult)                     =>
+        case Left(_: ApmConnector.GeneralFailedResult)        =>
           logger.warn(s"publish All failed - something went wrong calling api definition")
           successful(List(Left(PublishFailedResult(ServiceName("All Services"), "something went wrong calling api definition"))))
       }
@@ -116,15 +116,15 @@ class PublishService @Inject() (
   }
 
   def batchFutures(
-      input: Seq[ApiDefinitionResult],
+      input: Seq[ApmConnector.Result],
       results: List[Either[ApiCataloguePublishResult, PublishResponse]]
     )(implicit ec: ExecutionContext
     ): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
     val startTime = System.currentTimeMillis()
     input.splitAt(BATCH_AMOUNT) match {
       case (Nil, Nil)                                                           => Future.successful(results)
-      case (doNow: Seq[ApiDefinitionResult], doLater: Seq[ApiDefinitionResult]) =>
-        Future.sequence(doNow.map(publishDefinitionResult(_).value)).flatMap(newResults => {
+      case (doNow: Seq[ApmConnector.Result], doLater: Seq[ApmConnector.Result]) =>
+        Future.sequence(doNow.map(x => publishDefinitionResult(x).value)).flatMap(newResults => {
           logger.info(s"batchFutures - Done batch of items ${doNow.map(_.serviceName).mkString(" - ")}")
           val totalTime = System.currentTimeMillis() - startTime
           logger.info(s"batchFutures took $totalTime milliseconds")
@@ -143,13 +143,13 @@ class PublishService @Inject() (
     }
   }
 
-  def mapApiDefinitionResult(result: Either[ApiDefinitionFailedResult, ApiDefinitionResult], serviceName: ServiceName): Either[ApiCataloguePublishResult, ApiDefinitionResult] =
+  def mapApmResult(result: Either[ApmConnector.FailedResult, ApmConnector.Result], serviceName: ServiceName): Either[ApiCataloguePublishResult, ApmConnector.Result] =
     result match {
-      case Right(x: ApiDefinitionResult)                  => Right(x)
-      case Left(e: ApiDefinitionConnector.NotFoundResult) =>
+      case Right(x: ApmConnector.Result)        => Right(x)
+      case Left(e: ApmConnector.NotFoundResult) =>
         logger.error(s"Api definition not found: ${e.message}")
         Left(ApiDefinitionNotFoundResult(serviceName, e.message))
-      case Left(e: ApiDefinitionFailedResult)             =>
+      case Left(e: ApmConnector.FailedResult)   =>
         logger.error(s"Api definition failed: ${e.message}")
         Left(PublishFailedResult(serviceName, e.message))
     }

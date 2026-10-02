@@ -23,7 +23,7 @@ import uk.gov.hmrc.apicataloguepublish.apicatalogue.connector.ApiCatalogueAdminC
 import uk.gov.hmrc.apicataloguepublish.apidefinition.config.ApiDefinitionConnectorConfigProvider
 import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector
 import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.config.ApiPlatformMicroserviceConnectorConfigProvider
-import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApiPlatformMicroserviceConnector
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApmConnector
 
 class ConfigurationModule extends AbstractModule {
 
@@ -32,7 +32,7 @@ class ConfigurationModule extends AbstractModule {
       .toProvider(classOf[ApiCatalogueAdminConnectorConfigProvider])
     bind(classOf[ApiDefinitionConnector.Config])
       .toProvider(classOf[ApiDefinitionConnectorConfigProvider])
-    bind(classOf[ApiPlatformMicroserviceConnector.Config])
+    bind(classOf[ApmConnector.Config])
       .toProvider(classOf[ApiPlatformMicroserviceConnectorConfigProvider])
   }
 

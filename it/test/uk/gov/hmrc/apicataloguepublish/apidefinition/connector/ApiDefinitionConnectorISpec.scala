@@ -24,8 +24,9 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import uk.gov.hmrc.apiplatform.modules.apis.domain.models.ApiDefinition
-import uk.gov.hmrc.apicataloguepublish.apidefinition.connector.ApiDefinitionConnector.{ApiDefinitionResult, GeneralFailedResult, NotFoundResult}
+import uk.gov.hmrc.apiplatform.modules.common.domain.models.Environment
 import uk.gov.hmrc.apicataloguepublish.apidefinition.utils.{ApiDefinitionBuilder, ApiDefinitionUtils}
+import uk.gov.hmrc.apicataloguepublish.apiplatformmicroservice.connector.ApmConnector
 import uk.gov.hmrc.apicataloguepublish.data.ApiDefinitionData
 import uk.gov.hmrc.apicataloguepublish.support.{ApiDefinitionStub, MetricsTestSupport, ServerBaseISpec}
 
@@ -57,70 +58,30 @@ class ApiDefinitionConnectorISpec
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   trait Setup {
-    val definitionResult1: ApiDefinitionResult = buildResult(apiDefinition1)
-    val definitionResult2: ApiDefinitionResult = buildResult(apiDefinition2)
+    val definitionResult1: ApmConnector.Result = buildResult(apiDefinition1)
+    val definitionResult2: ApmConnector.Result = buildResult(apiDefinition2)
 
     val objInTest: ApiDefinitionConnector = app.injector.instanceOf[ApiDefinitionConnector]
   }
 
   def buildResult(definition: ApiDefinition) = {
-    ApiDefinitionResult(getUri(definition), getAccessTypeOfLatestVersion(definition), definition.serviceName, getStatusOfLatestVersion(definition))
+    ApmConnector.Result(
+      Environment.PRODUCTION,
+      getAccessTypeOfLatestVersion(definition),
+      definition.serviceName,
+      getLatestVersion(definition),
+      getStatusOfLatestVersion(definition)
+    )
   }
 
-  // TODO: DELETE
-  "ApiDefinitionConnector" when {
-
-    "getDefinitionByServiceName" should {
-      "returns an api definition" in new Setup {
-
-        val jsonBody: String = Json.toJson(apiDefinition1).toString
-        primeGetByServiceName(
-          OK,
-          jsonBody,
-          serviceName
-        )
-        await(objInTest.getDefinitionByServiceName(serviceName)) match {
-          case Right(x: ApiDefinitionResult) => x shouldBe definitionResult1
-          case _                             => fail()
-
-        }
-      }
-
-      "returns a Left ApiDefinitionNotFoundResult when not found returned" in new Setup {
-        primeGetByServiceName(
-          NOT_FOUND,
-          "{}",
-          serviceName
-        )
-        await(objInTest.getDefinitionByServiceName(serviceName)) match {
-          case Left(_: NotFoundResult) => succeed
-          case _                       => fail()
-
-        }
-      }
-      "returns a Left ApiDefinitionBadGatewayResult when bad gateway returned" in new Setup {
-        primeGetByServiceName(
-          BAD_GATEWAY,
-          "{}",
-          serviceName
-        )
-        await(objInTest.getDefinitionByServiceName(serviceName)) match {
-          case Left(_: GeneralFailedResult) => succeed
-          case _                            => fail()
-
-        }
-      }
-
-    }
-  }
   "getAllServices" should {
 
     "returns right with list of definitions when successful" in new Setup {
       val jsonBody = Json.toJson(List(apiDefinition1, apiDefinition2)).toString
       primeGetAll(OK, jsonBody)
       await(objInTest.getAllServices()) match {
-        case Left(_: GeneralFailedResult)              => fail()
-        case Right(results: List[ApiDefinitionResult]) =>
+        case Left(_: ApmConnector.GeneralFailedResult) => fail()
+        case Right(results: List[ApmConnector.Result]) =>
           results shouldBe List(definitionResult1, definitionResult2)
 
       }
@@ -129,7 +90,7 @@ class ApiDefinitionConnectorISpec
     "return right with empty list when no definitions returned" in new Setup {
       primeGetAll(OK, "[]")
       await(objInTest.getAllServices()) match {
-        case Right(x: List[ApiDefinitionResult]) => x shouldBe List.empty
+        case Right(x: List[ApmConnector.Result]) => x shouldBe List.empty
         case x                                   => fail()
       }
     }
@@ -137,9 +98,9 @@ class ApiDefinitionConnectorISpec
     "return left with error when error returned" in new Setup {
       primeGetAll(INTERNAL_SERVER_ERROR, "[]")
       await(objInTest.getAllServices()) match {
-        case Left(x: GeneralFailedResult) =>
+        case Left(x: ApmConnector.GeneralFailedResult) =>
           x.message shouldBe s"GET of 'http://localhost:$wireMockPort/api-definition?type=all' returned 500. Response body: '[]'"
-        case _                            => fail()
+        case _                                         => fail()
       }
     }
   }
