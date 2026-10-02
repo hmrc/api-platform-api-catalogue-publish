@@ -109,7 +109,7 @@ class ApiCatalogueAdminConnectorISpec
       )
       val result: Either[ApiCatalogueAdminConnector.ApiCatalogueFailedResult, PublishResponse] = await(objInTest.publishApi("serviceName"))
       result match {
-        case Left(e: ApiCatalogueGeneralFailureResult) => e.message.startsWith("Js Parse Errors") mustBe true
+        case Left(e: ApiCatalogueGeneralFailureResult) => e.message.startsWith("Js Parse Errors") shouldBe true
         case _                                         => fail()
       }
     }
