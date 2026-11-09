@@ -33,7 +33,8 @@ lazy val it = (project in file("it"))
   .dependsOn(microservice % "test->test")
   .settings(
     name := "integration-tests",
-    DefaultBuildSettings.itSettings()
+    DefaultBuildSettings.itSettings(),
+    Test / unmanagedResourceDirectories += baseDirectory.value / "resources"
   )
 
 commands ++= Seq(
