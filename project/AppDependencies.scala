@@ -13,7 +13,6 @@ object AppDependencies {
     "uk.gov.hmrc"                       %% "bootstrap-backend-play-30"      % bootstrapVersion,
     "org.typelevel"                     %% "cats-core"                      % "2.13.0",
     "io.swagger.parser.v3"              %  "swagger-parser"                 % "2.1.44",
-    "uk.gov.hmrc"                       %% "api-platform-common-domain"     % commonDomainVersion,
     "uk.gov.hmrc"                       %% "api-platform-api-domain"        % apiDomainVersion,
     "uk.gov.hmrc"                       %% "api-platform-common-domain"     % commonDomainVersion,
     "org.playframework"                 %% "play-json"                      % "3.1.0-M10"
