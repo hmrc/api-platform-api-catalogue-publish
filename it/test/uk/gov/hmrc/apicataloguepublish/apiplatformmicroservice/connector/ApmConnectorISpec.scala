@@ -152,7 +152,7 @@ class ApmConnectorISpec
 
     val filePath      = "test-yaml-file.yaml"
     val largeFilePath = "test-large-yaml-file.yaml"
-    val path          = s"/environment/$environment/$serviceName/$version/documentation/$resource"
+    val path          = s"/api-definitions/environment/$environment/$serviceName/$version/documentation/$resource"
 
     "returns a Right if call to microservice returns OK with a small file" in new Setup {
 

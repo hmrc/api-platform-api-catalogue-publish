@@ -108,7 +108,7 @@ class PublishControllerISpec
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeFetchApiForServiceName(OK, apiDefinitionAsString, serviceName)
-        primeFetchApiDocumentationResource("/environment/PRODUCTION/my-service/2.0/documentation/application.yaml", yamlPath, OK)
+        primeFetchApiDocumentationResource("/api-definitions/environment/PRODUCTION/my-service/2.0/documentation/application.yaml", yamlPath, OK)
         primeApiPublish(publishResponseAsJsonString, OK)
 
         val result: WSResponse = callPublishEndpoint(serviceName)
