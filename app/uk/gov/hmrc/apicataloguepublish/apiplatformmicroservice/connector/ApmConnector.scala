@@ -75,7 +75,7 @@ class ApmConnector @Inject() (
   }
 
   def fetchApiDocumentationResource(environment: Environment, serviceName: ServiceName, version: ApiVersionNbr, resource: String): Future[Either[Throwable, String]] = {
-    val url = url"${config.baseUrl}/environment/$environment/$serviceName/$version/documentation/".toString() + resource
+    val url = url"${config.baseUrl}/api-definitions/environment/$environment/$serviceName/$version/documentation/".toString() + resource
     ws.url(url).withMethod("GET").stream().flatMap {
       streamedResponse =>
         streamedResponse.status match {
