@@ -27,8 +27,10 @@ object IntegrationId {
   import play.api.libs.json.Json
 
   implicit val apiIdFormat: Format[IntegrationId] = Json.valueFormat[IntegrationId]
+
+  def random = IntegrationId(UUID.randomUUID())
 }
 
 //NOTE this model also has platformType returned but we dont care as we know it is API_PLATFORM so no reason to map it.
 // We set API_PLATFORM in the connector call so we set tell catalogue what platform we are.
-case class PublishResponse(id: IntegrationId, publisherReference: String)
+case class PublishResponse(id: Option[IntegrationId], publisherReference: String)

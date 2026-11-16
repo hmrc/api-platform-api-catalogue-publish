@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apicataloguepublish.controllers
 
-import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -53,7 +52,7 @@ class PublishControllerSpec extends HmrcSpec with BeforeAndAfterEach with Matche
       val serviceName = ServiceName("service1")
       "return 200 and an api definition" in {
 
-        val publishResult          = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef")
+        val publishResult          = PublishResponse(Some(IntegrationId.random), "someRef")
         when(mockPublishService.publishByServiceName(*[ServiceName])(*[HeaderCarrier]))
           .thenReturn(Future.successful(Right(publishResult)))
         val result: Future[Result] = controller.publish(serviceName)(fakeRequest)
