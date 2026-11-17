@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.apicataloguepublish.service
 
-import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
@@ -59,14 +58,23 @@ class PublishServiceSpec
     val mockCatalogueConnector = mock[ApiCatalogueAdminConnector]
     val mockApmConnector       = mock[ApmConnector]
 
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+  }
+
+  trait SetupWithoutPublishing extends Setup {
+    val objInTest = new PublishService(mockConnector, mockOasParser, mockCatalogueConnector, mockApmConnector, PublishService.Config(false))
+  }
+
+  trait SetupWithPublishing extends Setup {
+    val objInTest = new PublishService(mockConnector, mockOasParser, mockCatalogueConnector, mockApmConnector, PublishService.Config(true))
+
     import java.nio.file.{Files, Paths}
 
     val filePath            = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "test/resources/noIntCatExtensions.yaml"
     val expectedOasFilePath = Paths.get(".").toAbsolutePath.toString.replace(".", "") + "test/resources/expectedYamlConverted.yaml"
 
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-    val yamlResponseString         = Files.readAllLines(Paths.get(filePath)).asScala.mkString
-    val expectedEnhancedOasString  = Files.readAllLines(Paths.get(expectedOasFilePath)).asScala.mkString
+    val yamlResponseString        = Files.readAllLines(Paths.get(filePath)).asScala.mkString
+    val expectedEnhancedOasString = Files.readAllLines(Paths.get(expectedOasFilePath)).asScala.mkString
 
     val apiDefinitionResult =
       ApmConnector.Result(Environment.PRODUCTION, getAccessTypeOfLatestVersion(apiDefinition1), serviceName, getLatestVersion(apiDefinition1), ApiStatus.STABLE)
@@ -76,10 +84,8 @@ class PublishServiceSpec
     val expectedDescription                   = "A description."
     val convertedWebApiToOasResult: OasResult = OasResult(expectedEnhancedOasString, serviceName, expectedDescription)
     val yamlOasResult: OasResult              = OasResult(yamlResponseString, serviceName, expectedDescription)
-    val publishResponse: PublishResponse      = PublishResponse(IntegrationId(UUID.randomUUID()), "someRef")
+    val publishResponse: PublishResponse      = PublishResponse(Some(IntegrationId.random), "someRef")
     val ramlError: PublishFailedResult        = PublishFailedResult(serviceName, "YAML not found & RAML is no longer supported")
-
-    val objInTest = new PublishService(mockConnector, mockOasParser, mockCatalogueConnector, mockApmConnector)
 
     def primeApiDefinitionSuccess(): ScalaOngoingStubbing[Future[Either[ApmConnector.FailedResult, ApmConnector.Result]]] = {
       when(mockApmConnector.fetchApiForServiceName(eqTo(serviceName))(*))
@@ -134,7 +140,7 @@ class PublishServiceSpec
   "publishService" when {
 
     "getApiDefinitionByServiceName" should {
-      "return Left ApiDefinitionInvalidStatusResult when connector returns definition with RETIRED status" in new Setup {
+      "return Left ApiDefinitionInvalidStatusResult when connector returns definition with RETIRED status" in new SetupWithPublishing {
         val expectedError = ApiDefinitionInvalidStatusResult(serviceName, "definition record was RETIRED for this service")
         primeApiDefinitionSuccessWithRetiredApi()
 
@@ -146,7 +152,7 @@ class PublishServiceSpec
         }
       }
 
-      "return Left when api definition get by service name fails, general fail" in new Setup {
+      "return Left when api definition get by service name fails, general fail" in new SetupWithPublishing {
         val expectedError = PublishFailedResult(serviceName, "some error")
         primeApiDefinitionFailure(ApmConnector.GeneralFailedResult("some error"))
 
@@ -159,7 +165,7 @@ class PublishServiceSpec
 
       }
 
-      "return Left when api definition get by service name fails not found" in new Setup {
+      "return Left when api definition get by service name fails not found" in new SetupWithPublishing {
         val expectedError = ApiDefinitionNotFoundResult(serviceName, "some error")
 
         primeApiDefinitionFailure(ApmConnector.NotFoundResult("some error"))
@@ -175,7 +181,7 @@ class PublishServiceSpec
     }
 
     "publishByServiceName Yaml flow" should {
-      "return Right with publish details when publish is successful" in new Setup {
+      "return Right with publish details when publish is successful" in new SetupWithPublishing {
         primePublishSuccess()
 
         val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
@@ -186,7 +192,17 @@ class PublishServiceSpec
         }
       }
 
-      "return Left when publish to api catalogue fails" in new Setup {
+      "return Right with when integration catalogue publishing is not enabled" in new SetupWithoutPublishing {
+
+        val result: Either[ApiCataloguePublishResult, PublishResponse] = await(objInTest.publishByServiceName(serviceName))
+
+        result match {
+          case Right(value: PublishResponse) => value shouldBe PublishResponse(None, "Publishing suppressed")
+          case _                             => fail()
+        }
+      }
+
+      "return Left when publish to api catalogue fails" in new SetupWithPublishing {
 
         val expectedError = ApiCataloguePublishFailedResult(serviceName, "publish to catalogue failed some error")
         primePublishFail()
@@ -199,7 +215,7 @@ class PublishServiceSpec
         }
       }
 
-      "return Left when enhance OAS fails" in new Setup {
+      "return Left when enhance OAS fails" in new SetupWithPublishing {
         val expectedError = OpenApiEnhancementFailedResult(serviceName, "some error")
 
         primeApiDefinitionSuccess()
@@ -219,7 +235,7 @@ class PublishServiceSpec
 
   "publishAll" should {
 
-    "return left with error when connector returns an error" in new Setup {
+    "return left with error when connector returns an error" in new SetupWithPublishing {
       when(mockConnector.getAllServices()).thenReturn(Future.successful(Left(ApmConnector.GeneralFailedResult("error"))))
       val results = await(objInTest.publishAll())
       results match {
@@ -230,7 +246,7 @@ class PublishServiceSpec
       verify(mockConnector).getAllServices()(*[HeaderCarrier])
     }
 
-    "return results with Left when handleEnhancingOasForCatalogue fails" in new Setup {
+    "return results with Left when handleEnhancingOasForCatalogue fails" in new SetupWithPublishing {
 
       when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
       primeApiMicroserviceConnectorSuccess()
@@ -248,7 +264,7 @@ class PublishServiceSpec
       verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(*[OasResult])
     }
 
-    "return left when publish to catalogue fails" in new Setup {
+    "return left when publish to catalogue fails" in new SetupWithPublishing {
 
       when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
       primeApiMicroserviceConnectorSuccess()
@@ -269,7 +285,7 @@ class PublishServiceSpec
 
     }
 
-    "return right with publish responses when all successful" in new Setup {
+    "return right with publish responses when all successful" in new SetupWithPublishing {
 
       when(mockConnector.getAllServices()).thenReturn(Future.successful(Right(List(apiDefinitionResult, apiDefinitionResult2))))
       primeApiMicroserviceConnectorSuccess()
@@ -283,6 +299,12 @@ class PublishServiceSpec
 
       verify(mockOasParser, times(2)).handleEnhancingOasForCatalogue(*[OasResult])
       verify(mockCatalogueConnector, times(2)).publishApi(*[String])
+    }
+
+    "return right when integration catalogue publishing is not enabled" in new SetupWithoutPublishing {
+
+      val results = await(objInTest.publishAll())
+      results shouldBe List.empty
     }
 
   }

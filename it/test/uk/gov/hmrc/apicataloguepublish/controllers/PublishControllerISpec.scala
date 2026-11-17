@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.apicataloguepublish.controllers
 
-import java.util.UUID
-
 import org.scalatest.BeforeAndAfterEach
 
 import play.api.http.HeaderNames.CONTENT_TYPE
@@ -104,7 +102,7 @@ class PublishControllerISpec
         val locator                             = Locator.Production(apiDefinition1withwiremock)
         implicit val fmt                        = Locator.buildLocatorFormatter[ApiDefinition](api)
         val apiDefinitionAsString               = Json.toJson[Locator[ApiDefinition]](locator).toString
-        val publishResponse: PublishResponse    = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef")
+        val publishResponse: PublishResponse    = PublishResponse(Some(IntegrationId.random), "somePublisherRef")
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeFetchApiForServiceName(OK, apiDefinitionAsString, serviceName)
@@ -140,7 +138,7 @@ class PublishControllerISpec
         val serviceName                         = ServiceName("my-service")
         val apiDefinition1withwiremock          = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString               = Json.toJson(apiDefinition1withwiremock).toString
-        val publishResponse: PublishResponse    = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef")
+        val publishResponse: PublishResponse    = PublishResponse(Some(IntegrationId.random), "somePublisherRef")
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeFetchApiForServiceName(OK, apiDefinitionAsString, serviceName)
@@ -168,7 +166,7 @@ class PublishControllerISpec
       "respond with 200 when publish fails" in new Setup {
         val apiDefinition1withwiremock          = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString               = Json.toJson(List(apiDefinition1withwiremock)).toString
-        val publishResponse: PublishResponse    = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef")
+        val publishResponse: PublishResponse    = PublishResponse(Some(IntegrationId.random), "somePublisherRef")
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeGetAll(OK, apiDefinitionAsString)
@@ -183,7 +181,7 @@ class PublishControllerISpec
       "respond with 200 when publish is successful" in new Setup {
         val apiDefinition1withwiremock          = apiDefinition1.copy(serviceBaseUrl = s"http://$wireMockHost:$wireMockPort/${apiDefinition1.serviceBaseUrl}")
         val apiDefinitionAsString               = Json.toJson(List(apiDefinition1withwiremock)).toString
-        val publishResponse: PublishResponse    = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef")
+        val publishResponse: PublishResponse    = PublishResponse(Some(IntegrationId.random), "somePublisherRef")
         val publishResponseAsJsonString: String = Json.toJson(publishResponse).toString
 
         primeGetAll(OK, apiDefinitionAsString)

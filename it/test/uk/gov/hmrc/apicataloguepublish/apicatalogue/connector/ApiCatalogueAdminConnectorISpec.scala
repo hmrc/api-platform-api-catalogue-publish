@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.apicataloguepublish.apicatalogue.connector
 
-import java.util.UUID
-
 import org.scalatest.BeforeAndAfterEach
 
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -62,7 +60,7 @@ class ApiCatalogueAdminConnectorISpec
 
   "ApiCatalogueAdminConnector" should {
     "returns a Right with PublishResponse when successful" in new Setup {
-      val response: PublishResponse = PublishResponse(IntegrationId(UUID.randomUUID()), "somePublisherRef")
+      val response: PublishResponse = PublishResponse(Some(IntegrationId.random), "somePublisherRef")
       val jsonBody: String          = Json.toJson(response).toString
 
       primeApiPublish(

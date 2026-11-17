@@ -37,6 +37,8 @@ import uk.gov.hmrc.apicataloguepublish.parser.OasParser
 
 object PublishService {
 
+  case class Config(integrationCataloguePublishingEnabled: Boolean)
+
   def apiAccessToDescription(accessType: ApiAccessType): String = {
     accessType match {
       case ApiAccessType.PUBLIC                              => "This is a public API."
@@ -50,17 +52,22 @@ class PublishService @Inject() (
     apiDefinitionConnector: ApiDefinitionConnector,
     oasParser: OasParser,
     catalogueConnector: ApiCatalogueAdminConnector,
-    apmConnector: ApmConnector
+    apmConnector: ApmConnector,
+    config: PublishService.Config
   )(implicit val ec: ExecutionContext
   ) extends Logging {
 
   val BATCH_AMOUNT = 5
 
   def publishByServiceName(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Either[ApiCataloguePublishResult, PublishResponse]] = {
-    (for {
-      apmResult <- EitherT(apmConnector.fetchApiForServiceName(serviceName).map(mapApmResult(_, serviceName)))
-      result    <- publishDefinitionResult(apmResult)
-    } yield result).value
+    if (config.integrationCataloguePublishingEnabled) {
+      (for {
+        apmResult <- EitherT(apmConnector.fetchApiForServiceName(serviceName).map(mapApmResult(_, serviceName)))
+        result    <- publishDefinitionResult(apmResult)
+      } yield result).value
+    } else {
+      successful(Right(PublishResponse(None, "Publishing suppressed")))
+    }
   }
 
   def publishDefinitionResult(result: ApmConnector.Result): EitherT[Future, ApiCataloguePublishResult, PublishResponse] = {
@@ -104,15 +111,18 @@ class PublishService @Inject() (
   }
 
   def publishAll()(implicit hc: HeaderCarrier): Future[List[Either[ApiCataloguePublishResult, PublishResponse]]] = {
-    apiDefinitionConnector.getAllServices()
-      .flatMap {
-        case Right(definitionList: List[ApmConnector.Result]) =>
-          batchFutures(definitionList, List.empty)
-        case Left(_: ApmConnector.GeneralFailedResult)        =>
-          logger.warn(s"publish All failed - something went wrong calling api definition")
-          successful(List(Left(PublishFailedResult(ServiceName("All Services"), "something went wrong calling api definition"))))
-      }
-
+    if (config.integrationCataloguePublishingEnabled) {
+      apiDefinitionConnector.getAllServices()
+        .flatMap {
+          case Right(definitionList: List[ApmConnector.Result]) =>
+            batchFutures(definitionList, List.empty)
+          case Left(_: ApmConnector.GeneralFailedResult)        =>
+            logger.warn(s"publish All failed - something went wrong calling api definition")
+            successful(List(Left(PublishFailedResult(ServiceName("All Services"), "something went wrong calling api definition"))))
+        }
+    } else {
+      successful(List.empty)
+    }
   }
 
   def batchFutures(
